@@ -1,1 +1,1 @@
-pyinstaller -F kindo.py --upx-dir=. --clean -i ./app.ico --distpath=.
+pyinstaller -F kindo.py --upx-dir=. --clean -i ./app.ico --distpath=. && rd /s /q dist build
