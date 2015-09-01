@@ -29,6 +29,10 @@ class Build(KindoCore):
         self.kic_path_infos = []
         for option in options:
             filename, ext = os.path.splitext(option)
+            if "." not in ext:
+                ext = ".kic"
+                option = "%s.kic" % option
+
             if ext.lower() != ".kic":
                 continue
 
