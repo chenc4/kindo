@@ -21,10 +21,9 @@ class Workdir(Command):
 
     def run(self, command, deps_folder, position):
         if "action" not in command:
-            return False
+            return -1, position, ""
 
         if command["action"] != "WORKDIR":
-            return False
+            return -1, position, ""
 
-        self.position = command["args"]["dir"]
-        return True
+        return 1, command["args"]["dir"], ""

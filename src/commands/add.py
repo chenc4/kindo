@@ -19,30 +19,29 @@ class Add(Command):
                 f_file = strs[0]
                 t_file = strs[1]
 
-                self.deps.append(f_file)
-
-                filename = re.split("[\?|\+|\*|\<|\>|:]", os.path.split(f_file)[1])
+                filename = re.sub("[\?|\+|\*|\<|\>|:]", "", os.path.split(f_file)[1])
 
                 return {
                     "action": "ADD",
-                    "args": {"from": filename[0], "to": t_file},
-                    "variables": []
+                    "args": {"from": filename, "to": t_file},
+                    "variables": [],
+                    "files": [f_file]
                 }
         return {}
 
     def run(self, command, deps_folder, position=None):
         if "action" not in command:
-            return False
+            return -1, position, ""
 
         if command["action"] != "ADD":
-            return False
+            return -1, position, ""
 
         src = os.path.join(deps_folder, command["args"]["from"])
         if not os.path.isfile(src):
-            raise Exception("%s not existed" % src)
+            return 0, position, "ADD ERROR: %s not found" % src
 
         with cd(position):
-            self.position = position
             if not self.upload(src, command["args"]["to"]):
-                raise Exception("upload failed")
-        return False
+                return 0, position, "ADD ERROR: %s upload failed" % src
+            return 1, position, ""
+        return -1, position, ""

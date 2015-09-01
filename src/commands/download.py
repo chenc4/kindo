@@ -28,23 +28,21 @@ class Download(Command):
 
     def run(self, command, deps_folder, position):
         if "action" not in command:
-            return False
+            return -1, position, ""
 
         if command["action"] != "DOWNLOAD":
-            return False
+            return -1, position, ""
 
         with cd(position):
-            self.position = position
-
             target = os.path.realpath(command["args"]["to"])
             if os.path.isfile(target):
                 os.remove(target)
 
             if command["args"]["from"][:7].lower() != "http://" and command["args"]["from"][:8].lower() != "https://":
                 if not self.download(command["args"]["from"], target):
-                    raise Exception("download failed")
+                    return 0, position, "DOWNLOAD ERROR: %s download failed" % command["args"]["from"]
             else:
                 if not self.download_by_url(command["args"]["from"], target):
-                    raise Exception("download failed")
-
-        return False
+                    return 0, position, "DOWNLOAD ERROR: %s download failed" % command["args"]["from"]
+            return 1, position, ""
+        return -1, position, ""

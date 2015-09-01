@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    install_requires=['setuptools', "fabric", "requests", "pyinstaller"],
+    install_requires=['setuptools', "fabric", "requests", "pyinstaller", "simplejson", "PrettyTable"],
 
     name='kindo',
     version="1.0.0.0",

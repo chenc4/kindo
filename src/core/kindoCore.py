@@ -1,0 +1,108 @@
+#!/usr/bin/env python
+#-*- coding: utf-8 -*-
+
+import os
+from utils.configParser import ConfigParser
+import tempfile
+
+
+class KindoCore():
+    def __init__(self, command, startfolder, configs, options, logger):
+        self.command = command
+        self.startfolder = startfolder
+        self.configs = configs
+        self.options = options
+        self.logger = logger
+
+        self.kindo_tmps_path = os.path.join(tempfile.gettempdir(), "kindo")
+        self.kindo_caches_path = os.getenv("KINDO_CACHES_PATH")
+        self.kindo_kics_path = os.getenv("KINDO_KICS_PATH")
+        self.kindo_packages_path = os.getenv("KINDO_PACKAGES_PATH")
+        self.kindo_settings_path = os.getenv("KINDO_SETTINGS_PATH")
+
+        if self.kindo_caches_path is None:
+            if os.getenv("APPDATA") is None:
+                if os.path.isdir("/var/cache"):
+                    self.kindo_caches_path = "/var/cache/kindo"
+                else:
+                    self.kindo_caches_path = os.path.join(self.kindo_tmps_path, "caches")
+            else:
+                self.kindo_caches_path = os.path.join(os.getenv("APPDATA"), "kindo", "caches")
+
+        if self.kindo_kics_path is None:
+            confs_path = os.path.join(self.startfolder, "kics")
+            if not os.path.isdir(confs_path):
+                if os.getenv("APPDATA") is None:
+                    if os.path.isdir("/var/opt"):
+                        self.kindo_kics_path = "/var/opt/kindo/kics"
+                    else:
+                        self.kindo_kics_path = os.path.join(self.kindo_tmps_path, "kics")
+                else:
+                    self.kindo_kics_path = os.path.join(os.getenv("APPDATA"), "kindo", "kics")
+            else:
+                self.kindo_kics_path = confs_path
+
+        if self.kindo_packages_path is None:
+            packages_path = os.path.join(self.startfolder, "packages")
+            if not os.path.isdir(packages_path):
+                if os.getenv("APPDATA") is None:
+                    if os.path.isdir("/var/opt"):
+                        self.kindo_packages_path = "/var/opt/kindo/packages"
+                    else:
+                        self.kindo_packages_path = os.path.join(self.kindo_tmps_path, "packages")
+                else:
+                    self.kindo_packages_path = os.path.join(os.getenv("APPDATA"), "kindo", "packages")
+            else:
+                self.kindo_packages_path = packages_path
+
+        if self.kindo_settings_path is None:
+            settings_path = os.path.join(self.startfolder, "settings")
+            if not os.path.isdir(settings_path):
+                if os.getenv("APPDATA") is None:
+                    if os.path.isdir("/etc/opt"):
+                        self.kindo_settings_path = "/etc/opt/kindo"
+                    else:
+                        self.kindo_settings_path = os.path.join(self.kindo_tmps_path, "settings")
+                else:
+                    self.kindo_settings_path = os.path.join(os.getenv("APPDATA"), "kindo", "settings")
+            else:
+                self.kindo_settings_path = settings_path
+
+        self.configs = dict(self.get_kindo_setting(), **self.configs)
+
+    def get_kindo_setting(self):
+        ini_path = os.path.join(self.kindo_settings_path, "kindo.ini")
+        if not os.path.isfile(ini_path):
+            return {}
+
+        cf = ConfigParser()
+        cf.read(ini_path)
+
+        configs = {}
+        for section in cf.sections():
+            items = cf.items(section)
+            section = section.lower()
+
+            for k, v in items:
+                k = k.strip()
+                v = v.strip()
+                configs[k] = v
+        return configs
+
+    def set_kindo_setting(self, key, value):
+        ini_path = os.path.join(self.kindo_settings_path, "kindo.ini")
+        if not os.path.isdir(self.kindo_settings_path):
+            os.makedirs(self.kindo_settings_path)
+
+        if not os.path.isfile(ini_path):
+            with open(ini_path, "w") as fs:
+                fs.write("[default]")
+
+        cf = ConfigParser()
+        cf.read(ini_path)
+
+        cf.set("default", key, value)
+        cf.write(open(ini_path, "w"))
+
+
+

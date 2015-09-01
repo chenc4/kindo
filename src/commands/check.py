@@ -34,20 +34,20 @@ class Check(Command):
 
     def run(self, command, deps_folder, position=None):
         if "action" not in command:
-            return False
+            return -1, position, ""
 
         if command["action"] != "CHECK":
-            return False
+            return -1, position, ""
 
         with cd(position):
-            self.position = position
-
             for port in command["args"]["ports"]:
                 stdout = self.execute("netstat –apn | grep %s" % port)
                 if not stdout.strip():
-                    raise Exception("%s not existed" % port)
+                    return 0, position, "CHECK ERROR: %s not found" % port
 
             for f in command["args"]["files"]:
                 if not exists(f):
-                    raise Exception("%s not existed" % f)
-        return True
+                    return 0, position, "CHECK ERROR: %s not found" % f
+
+            return 1, position, ""
+        return 1, position, ""

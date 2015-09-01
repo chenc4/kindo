@@ -11,13 +11,9 @@ class Command:
         self._has_sudo = None
         self._system_info = None
         self.deps = []
-        self.position = "~"
 
     def get_deps(self):
         return self.deps
-
-    def get_posiotion(self):
-        return self.position
 
     def has_sudo(self):
         if self._has_sudo is None:
@@ -31,6 +27,13 @@ class Command:
         if self.has_sudo():
             return sudo(cmd)
         return run(cmd)
+
+    def clean(self):
+        for dep in self.deps:
+            try:
+                self.execute("rm -rf %s" % dep)
+            except:
+                pass
 
     def upload(self, filepath, target, unzip=False):
         if not os.path.isfile(filepath):
@@ -98,25 +101,26 @@ class Command:
 
     def get_system_info(self):
         if self._system_info is None:
-            memery_stdouts = [v for v in self.execute("free -l|sed -n '2,2p' |awk '{print $0}'").split(" ") if v != ""]
-            disk_stdouts = [v for v in self.execute("df -hl|sed -n '2,2p' |awk '{print $0}'").split(" ") if v != ""]
+            with settings(hide('stderr', 'warnings'), warn_only=True):
+                memery_stdouts = [v for v in self.execute("free -l|sed -n '2,2p' |awk '{print $0}'").split(" ") if v != ""]
+                disk_stdouts = [v for v in self.execute("df -hl|sed -n '2,2p' |awk '{print $0}'").split(" ") if v != ""]
 
-            self._system_info = {
-                "kernel": self.execute("uname -a"),
-                "system": self.execute("cat /etc/issue"),
-                "bit": int(self.execute("getconf LONG_BIT")),
-                "memery": {
-                    "total": int(memery_stdouts[1]),
-                    "used": int(memery_stdouts[2]),
-                    "free": int(memery_stdouts[3]),
-                    "shared": int(memery_stdouts[4]),
-                    "buffers": int(memery_stdouts[5]),
-                    "cached": int(memery_stdouts[6])
-                },
-                "disk": {
-                    "total": disk_stdouts[1],
-                    "used": disk_stdouts[2],
-                    "avail": disk_stdouts[3]
+                self._system_info = {
+                    "kernel": self.execute("uname -a"),
+                    "system": self.execute("cat /etc/issue"),
+                    "bit": int(self.execute("getconf LONG_BIT")),
+                    "memery": {
+                        "total": int(memery_stdouts[1]),
+                        "used": int(memery_stdouts[2]),
+                        "free": int(memery_stdouts[3]),
+                        "shared": int(memery_stdouts[4]),
+                        "buffers": int(memery_stdouts[5]),
+                        "cached": int(memery_stdouts[6])
+                    },
+                    "disk": {
+                        "total": disk_stdouts[1],
+                        "used": disk_stdouts[2],
+                        "avail": disk_stdouts[3]
+                    }
                 }
-            }
         return self._system_info

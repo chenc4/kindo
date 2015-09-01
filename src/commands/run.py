@@ -23,13 +23,11 @@ class Run(Command):
 
     def run(self, command, deps_folder, position):
         if "action" not in command:
-            return False
+            return -1, position, ""
 
         if command["action"] != "RUN":
-            return False
+            return -1, position, ""
 
         with cd(position):
-            self.position = position
             self.execute(command["args"]["command"])
-
-        return True
+        return 1, position, ""

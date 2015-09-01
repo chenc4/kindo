@@ -9,32 +9,12 @@ class ArgsParse:
         self.skip = skip
         self.options = {}
 
-    def add_option(self, group, description=None, short_name=None, long_name=None, dest=None, default=None, help=None):
-        if short_name is None and long_name is None:
-            return
-
-        if dest is None:
-            if long_name is not None:
-                dest = long_name
-            elif short_name is not None:
-                dest = short_name
-
-        if group not in self.options:
-            self.options[group] = {"description": "" if description is None else description, "options": []}
-
-        self.options[group]["options"].append(
-            {
-                "short_name": short_name,
-                "long_name": long_name,
-                "dest": dest,
-                "default": default,
-                "help": "" if help is None else help
-            }
-        )
-
     def parse_args(self):
         args, options, last_key = {}, [], None
         for argc in self.argv[self.skip:]:
+            if not argc:
+                continue
+
             if last_key is not None and argc[0] != "-":
                 args[last_key] = argc
                 last_key = None
@@ -76,7 +56,6 @@ class ArgsParse:
                         is_parsed = True
             if not is_parsed:
                 args_parsed[arg_k] = arg_v
-
 
         return options, args_parsed
 

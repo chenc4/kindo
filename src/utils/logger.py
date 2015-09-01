@@ -72,3 +72,6 @@ class Logger:
 
     def critical(self, message):
         self.logger.critical(message)
+
+    def response(self, message):
+        self.logger.info(message)
