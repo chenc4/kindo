@@ -45,10 +45,10 @@ if the kindo package installed on your system,  can run the package to your targ
 
 ```shell
 # Windows
-kindo.exe demo.ki
+kindo.exe demo.ki -h 192.168.1.10 -p examplepwd
 
 # Linux 
-kindo demo.ki
+kindo demo.ki -h 192.168.1.10 -p examplepwd
 ```
 
 or
