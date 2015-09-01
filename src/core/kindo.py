@@ -5,7 +5,7 @@ import sys
 import tempfile
 import traceback
 import tarfile
-from utils.argsParse import ArgsParse
+from utils.argsParser import ArgsParser
 from utils.logger import Logger
 from core.run import RunCommand
 from core.build import Build

@@ -29,7 +29,7 @@ python setup.py install
 
 ### Search Command
 
-if you try to use kindo, first, you will search a kindo package. for example, can run this demo package as follows:
+try to use kindo, firstly, you can search a kindo package. for example, run this demo package as follows:
 
 ```txt
 # Windows
