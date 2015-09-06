@@ -14,7 +14,8 @@ class HelpModule(KindoModule):
                 "command": "kindo build [kic path]",
                 "options": {
                     "-d": "Enable debug information",
-                    "-o": "Specify the output folder"
+                    "-o": "Specify the output folder",
+                    "--kipwd": "set unpackage password"
                 }
             },
             "clean": {
@@ -79,7 +80,9 @@ class HelpModule(KindoModule):
                 "options": {
                     "-d": "Enable debug information",
                     "-h": "host, for example: account@ip:port",
-                    "-p": "account password"
+                    "-p": "account password",
+                    "-g": "set the hosts group name",
+                    "--kipwd": "set unpackage password"
                 }
             },
             "search": {
