@@ -1,11 +1,11 @@
-## Get Started
+## Geting Started
 
 ### Download Kindo
 
 if you will use kindo on windows, download from this url:
 
 ```txt
-https://github.com/shenghe/kindo/dist/kindo-setup.exe
+https://github.com/shenghe/kindo/dist/kindo_setup.exe
 ```
 
 if you will use kindo on linux, download from this url:
@@ -47,7 +47,7 @@ if the kindo package installed on your system,  can run the package to your targ
 # Windows
 kindo.exe demo.ki -h 192.168.1.10 -p examplepwd
 
-# Linux 
+# Linux
 kindo demo.ki -h 192.168.1.10 -p examplepwd
 ```
 
@@ -64,7 +64,7 @@ kindo run demo
 or
 
 ```shell
-# Windows 
+# Windows
 kindo.exe run demo.ki
 
 # Linux
@@ -91,17 +91,17 @@ RUN echo "Hello World"
 second, build `example.kic` as follows, `example.ki` will be created:
 
 ```shell
-# Windows 
+# Windows
 kindo.exe example.kic
 
 # Linux
 kindo example.kic
 ```
 
-or 
+or
 
 ```shell
-# Windows 
+# Windows
 kindo.exe build example.kic
 
 # Linux
@@ -111,7 +111,7 @@ kindo build example.kic
 or
 
 ```shell
-# Windows 
+# Windows
 kindo.exe build example
 
 # Linux
@@ -139,7 +139,7 @@ an account created, then you can upload it to the kindo's repository that everyo
 # Windows
 kindo.exe commit example.ki
 
-# Linux 
+# Linux
 kindo commit example.ki
 ```
 
