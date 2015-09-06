@@ -5,7 +5,7 @@
 if you will use kindo on windows, download from this url:
 
 ```txt
-https://github.com/shenghe/kindo/dist/kindo_setup.exe
+https://github.com/shenghe/kindo/blob/master/dist/kindo_setup.exe?raw=true
 ```
 
 if you will use kindo on linux, download from this url:
