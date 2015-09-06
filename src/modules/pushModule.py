@@ -4,17 +4,17 @@
 import os
 import traceback
 import requests
-from core.kindoCore import KindoCore
+from modules.kindoModule import KindoModule
 
 
-class Commit(KindoCore):
+class PushModule(KindoModule):
     def __init__(self, command, startfolder, configs, options, logger):
-        KindoCore.__init__(self, command, startfolder, configs, options, logger)
+        KindoModule.__init__(self, command, startfolder, configs, options, logger)
 
     def start(self):
-        commit_engine_url = "%s/v1/commit" % self.configs.get("index", "kindo.cycore.cn")
-        if commit_engine_url[:7].lower() != "http://" and commit_engine_url[:8].lower() != "https://":
-            commit_engine_url = "http://%s" % commit_engine_url
+        push_engine_url = "%s/v1/push" % self.configs.get("index", "kindo.cycore.cn")
+        if push_engine_url[:7].lower() != "http://" and push_engine_url[:8].lower() != "https://":
+            push_engine_url = "http://%s" % push_engine_url
 
         for option in self.options[2:]:
             try:
@@ -27,7 +27,7 @@ class Commit(KindoCore):
                     self.logger.warn("\"%s\" not found" % option)
                     continue
 
-                self.logger.info("commiting %s" % option)
+                self.logger.info("pushing %s" % option)
 
                 data = {}
                 if "username" in self.configs:
@@ -36,10 +36,10 @@ class Commit(KindoCore):
                 if "password" in self.configs:
                     data["token"] = hashlib.new("md5", self.configs["password"]).hexdigest()
 
-                self.logger.info("connecting %s" % commit_engine_url)
-                r = requests.post(commit_engine_url, data=data, files={"file": package_path})
+                self.logger.info("connecting %s" % push_engine_url)
+                r = requests.post(push_engine_url, data=data, files={"file": package_path})
                 if r.status_code != 200:
-                    self.logger.error("\"%s\" can't connect" % commit_engine_url)
+                    self.logger.error("\"%s\" can't connect" % push_engine_url)
                     return
 
                 response = r.json()
@@ -48,10 +48,10 @@ class Commit(KindoCore):
                     self.logger.error(response["msg"])
                     return
 
-                self.logger.response("commited %s" % option)
+                self.logger.response("pushed %s" % option)
             except:
                 self.logger.debug(traceback.format_exc())
-                self.logger.error("\"%s\" can't connect" % commit_engine_url)
+                self.logger.error("\"%s\" can't connect" % push_engine_url)
 
     def get_package_path(self, name):
         self.logger.info("finding %s" % name)

@@ -2,21 +2,23 @@
 #-*- coding: utf-8 -*-
 import re
 import os
+import time
 from fabric.api import cd
 from fabric.api import env
 from commands.command import Command
 
 
-class Run(Command):
+class UbuntuCommand(Command):
     def __init__(self):
         Command.__init__(self)
 
     def parse(self, value):
         value = value.strip()
-        if len(value) > 4 and value[:4].lower() == "run ":
+
+        if len(value) > 7 and value[:7].lower() == "ubuntu ":
             return {
-                "action": "RUN",
-                "args": {"command": value[4:]},
+                "action": "UBUNTU",
+                "args": {"command": value[7:]},
                 "variables": []
             }
         return {}
@@ -25,9 +27,12 @@ class Run(Command):
         if "action" not in command:
             return -1, position, ""
 
-        if command["action"] != "RUN":
+        if command["action"] != "UBUNTU":
             return -1, position, ""
 
-        with cd(position):
-            self.execute(command["args"]["command"])
-        return 1, position, ""
+        if "Ubuntu" in self.get_system_info()["system"]:
+            with cd(position):
+                self.execute(command["args"]["command"])
+
+            return 1, position, ""
+        return -1, position, ""

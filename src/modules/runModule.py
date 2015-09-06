@@ -10,20 +10,20 @@ import simplejson
 from fabric.state import output
 from fabric.tasks import execute
 from fabric.api import env
-from core.kindoCore import KindoCore
+from modules.kindoModule import KindoModule
 from utils.configParser import ConfigParser
-from commands.add import Add
-from commands.check import Check
-from commands.run import Run
-from commands.workdir import Workdir
-from commands.download import Download
-from commands.ubuntu import Ubuntu
-from commands.centos import CentOS
+from commands.addCommand import AddCommand
+from commands.checkCommand import CheckCommand
+from commands.runCommand import RunCommand
+from commands.workdirCommand import WorkdirCommand
+from commands.downloadCommand import DownloadCommand
+from commands.ubuntuCommand import UbuntuCommand
+from commands.centosCommand import CentOSCommand
 
 
-class RunCommand(KindoCore):
+class RunModule(KindoModule):
     def __init__(self, command, startfolder, configs, options, logger):
-        KindoCore.__init__(self, command, startfolder, configs, options, logger)
+        KindoModule.__init__(self, command, startfolder, configs, options, logger)
 
         env.colorize_errors = True
         env.command_timeout = 60 * 30
@@ -61,13 +61,13 @@ class RunCommand(KindoCore):
         self.ki_path = self.get_ki_path()
 
         self.handlers = {
-            "add": Add(),
-            "check": Check(),
-            "run": Run(),
-            "workdir": Workdir(),
-            "download": Download(),
-            "ubuntu": Ubuntu(),
-            "centos": CentOS()
+            "add": AddCommand(),
+            "check": CheckCommand(),
+            "run": RunCommand(),
+            "workdir": WorkdirCommand(),
+            "download": DownloadCommand(),
+            "ubuntu": UbuntuCommand(),
+            "centos": CentOSCommand()
         }
 
     def start(self):
@@ -188,6 +188,10 @@ class RunCommand(KindoCore):
                 os.makedirs(unziptodir)
 
             zfobj = zipfile.ZipFile(zipfilename)
+
+            if "kipwd" in self.configs and self.configs["kipwd"]:
+                zfobj.setpassword(self.configs["kipwd"])
+
             for name in zfobj.namelist():
                 name = name.replace('\\','/')
 

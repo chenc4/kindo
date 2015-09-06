@@ -6,7 +6,7 @@ from utils.configParser import ConfigParser
 import tempfile
 
 
-class KindoCore():
+class KindoModule():
     def __init__(self, command, startfolder, configs, options, logger):
         self.command = command
         self.startfolder = startfolder
@@ -14,10 +14,12 @@ class KindoCore():
         self.options = options
         self.logger = logger
 
+        self.kindo_version = "1.0"
+        self.kindo_api_version = "1.0"
         self.kindo_tmps_path = os.path.join(tempfile.gettempdir(), "kindo")
         self.kindo_caches_path = os.getenv("KINDO_CACHES_PATH")
         self.kindo_kics_path = os.getenv("KINDO_KICS_PATH")
-        self.kindo_packages_path = os.getenv("KINDO_PACKAGES_PATH")
+        self.kindo_images_path = os.getenv("KINDO_IMAGES_PATH")
         self.kindo_settings_path = os.getenv("KINDO_SETTINGS_PATH")
 
         if self.kindo_caches_path is None:
@@ -42,18 +44,18 @@ class KindoCore():
             else:
                 self.kindo_kics_path = confs_path
 
-        if self.kindo_packages_path is None:
-            packages_path = os.path.join(self.startfolder, "packages")
-            if not os.path.isdir(packages_path):
+        if self.kindo_images_path is None:
+            images_path = os.path.join(self.startfolder, "images")
+            if not os.path.isdir(images_path):
                 if os.getenv("APPDATA") is None:
                     if os.path.isdir("/var/opt"):
-                        self.kindo_packages_path = "/var/opt/kindo/packages"
+                        self.kindo_images_path = "/var/opt/kindo/images"
                     else:
-                        self.kindo_packages_path = os.path.join(self.kindo_tmps_path, "packages")
+                        self.kindo_images_path = os.path.join(self.kindo_tmps_path, "images")
                 else:
-                    self.kindo_packages_path = os.path.join(os.getenv("APPDATA"), "kindo", "packages")
+                    self.kindo_images_path = os.path.join(os.getenv("APPDATA"), "kindo", "images")
             else:
-                self.kindo_packages_path = packages_path
+                self.kindo_images_path = images_path
 
         if self.kindo_settings_path is None:
             settings_path = os.path.join(self.startfolder, "settings")

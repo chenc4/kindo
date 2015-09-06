@@ -7,18 +7,25 @@ import traceback
 import tarfile
 from utils.argsParser import ArgsParser
 from utils.logger import Logger
-from core.run import RunCommand
-from core.build import Build
-from core.search import Search
-from core.clean import Clean
-from core.register import Register
-from core.commit import Commit
+from modules.runModule import RunModule
+from modules.buildModule import BuildModule
+from modules.searchModule import SearchModule
+from modules.cleanModule import CleanModule
+from modules.registerModule import RegisterModule
+from modules.pushModule import PushModule
+from modules.imagesModule import ImagesModule
+from modules.rmiModule import RmiModule
+from modules.infoModule import InfoModule
+from modules.versionModule import VersionModule
+from modules.helpModule import HelpModule
+from modules.pullModule import PullModule
+
 
 class Kindo:
     def __init__(self, startfolder, argv):
         self.startfolder = startfolder
         self.argv = argv
-        self.options, self.configs = ArgsParse(self.argv).parse_args()
+        self.options, self.configs = ArgsParser(self.argv).parse_args()
 
         logs_path = "/var/log/kindo" if os.path.isdir("/var/log") else os.path.join(self.startfolder, "logs")
         is_debug = True if "d" in self.configs else False
@@ -26,12 +33,18 @@ class Kindo:
         self.logger = Logger(logs_path, is_debug)
 
         self.core_commands = {
-            "run": RunCommand,
-            "build": Build,
-            "search": Search,
-            "clean": Clean,
-            "register": Register,
-            "commit": Commit
+            "run": RunModule,
+            "build": BuildModule,
+            "search": SearchModule,
+            "clean": CleanModule,
+            "register": RegisterModule,
+            "push": PushModule,
+            "images": ImagesModule,
+            "rmi": RmiModule,
+            "info": InfoModule,
+            "version": VersionModule,
+            "help": HelpModule,
+            "pull": PullModule
         }
 
     def start(self):
@@ -62,28 +75,29 @@ class Kindo:
             self.logger.error("KINDO RUN ERROR")
 
     def show_help(self):
-        banner = """Usage: kindo [options]
-search:
-    kindo search [package/conf name]
+        banner = """a simple tool for packaging and deploying your codes
+kindo commands:
+    build       Build an image from the kicfile
+    clean       Clean the local caches
+    help        Show the command options
+    images      List local images
+    info        Display system-wide information
+    pull        Pull an image from the kindo hub
+    push        Push an image to the kindo hub
+    register    Register the kindo hub's account
+    rmi         Remove one or more local images
+    run         Run image commands to the target operating system
+    search      Search an image on the kindo hub
+    version     Show the kindo information
 
-build:
-    kindo build [.kic] -o [outfolder]
-    or
-    kindo [.kic] -o [outfolder]
-
-run:
-    kindo run [.ki] -h [account@host:port] -p [password] --[varible]=[value]
-    or
-    kindo run [.ki] -h [account@host:port] -p [password] --[varible]=[value]
-
-clean:
-    kindo clean
-
-register:
-    kindo register [name] [password]
-
-commit:
-    kindo commit [package / conf path]
+script commands:
+    add        Add local or remote file to the target operating system
+    centos     Run an shell command on CentOS, others ignore
+    check      Check whether the file or port existed or not
+    download   Download file from the target operating system
+    run        Run an shell command
+    ubuntu     Run an shell command on Ubuntu, others ignore
+    workdir    set the work directory when the shell command is running
 """
         self.logger.response(banner)
 

@@ -3,12 +3,12 @@
 
 import os
 import shutil
-from core.kindoCore import KindoCore
+from modules.kindoModule import KindoModule
 
 
-class Clean(KindoCore):
+class CleanModule(KindoModule):
     def __init__(self, command, startfolder, configs, options, logger):
-        KindoCore.__init__(self, command, startfolder, configs, options, logger)
+        KindoModule.__init__(self, command, startfolder, configs, options, logger)
 
     def start(self):
         shutil.rmtree(self.kindo_caches_path)

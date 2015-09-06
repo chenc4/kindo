@@ -5,12 +5,12 @@ import os
 import re
 import traceback
 from fabric.operations import prompt
-from core.kindoCore import KindoCore
+from modules.kindoModule import KindoModule
 
 
-class Register(KindoCore):
+class RegisterModule(KindoModule):
     def __init__(self, command, startfolder, configs, options, logger):
-        KindoCore.__init__(self, command, startfolder, configs, options, logger)
+        KindoModule.__init__(self, command, startfolder, configs, options, logger)
 
     def start(self):
         register_engine_url = "%s/v1/register" % self.configs.get("index", "kindo.cycore.cn")

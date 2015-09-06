@@ -7,7 +7,7 @@ from fabric.contrib.files import exists
 from commands.command import Command
 
 
-class Check(Command):
+class CheckCommand(Command):
     def __init__(self):
         Command.__init__(self)
 

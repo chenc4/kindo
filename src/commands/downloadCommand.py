@@ -6,7 +6,7 @@ from fabric.api import cd
 from commands.command import Command
 
 
-class Download(Command):
+class DownloadCommand(Command):
     def __init__(self):
         Command.__init__(self)
 

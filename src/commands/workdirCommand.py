@@ -5,7 +5,7 @@ import os
 from commands.command import Command
 
 
-class Workdir(Command):
+class WorkdirCommand(Command):
     def __init__(self):
         Command.__init__(self)
 

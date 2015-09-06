@@ -8,16 +8,16 @@ from fabric.api import env
 from commands.command import Command
 
 
-class Ubuntu(Command):
+class CentOSCommand(Command):
     def __init__(self):
         Command.__init__(self)
 
     def parse(self, value):
         value = value.strip()
 
-        if len(value) > 7 and value[:7].lower() == "ubuntu ":
+        if len(value) > 7 and value[:7].lower() == "centos ":
             return {
-                "action": "UBUNTU",
+                "action": "CENTOS",
                 "args": {"command": value[7:]},
                 "variables": []
             }
@@ -27,10 +27,10 @@ class Ubuntu(Command):
         if "action" not in command:
             return -1, position, ""
 
-        if command["action"] != "UBUNTU":
+        if command["action"] != "CENTOS":
             return -1, position, ""
 
-        if "Ubuntu" in self.get_system_info()["system"]:
+        if "CentOS" in self.get_system_info()["system"]:
             with cd(position):
                 self.execute(command["args"]["command"])
 

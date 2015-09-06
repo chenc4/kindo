@@ -12,19 +12,19 @@ import shutil
 import pickle
 import zipfile
 import simplejson
-from core.kindoCore import KindoCore
-from commands.add import Add
-from commands.check import Check
-from commands.run import Run
-from commands.workdir import Workdir
-from commands.download import Download
-from commands.ubuntu import Ubuntu
-from commands.centos import CentOS
+from modules.kindoModule import KindoModule
+from commands.addCommand import AddCommand
+from commands.checkCommand import CheckCommand
+from commands.runCommand import RunCommand
+from commands.workdirCommand import WorkdirCommand
+from commands.downloadCommand import DownloadCommand
+from commands.ubuntuCommand import UbuntuCommand
+from commands.centosCommand import CentOSCommand
 
 
-class Build(KindoCore):
+class BuildModule(KindoModule):
     def __init__(self, command, startfolder, configs, options, logger):
-        KindoCore.__init__(self, command, startfolder, configs, options, logger)
+        KindoModule.__init__(self, command, startfolder, configs, options, logger)
 
         self.kic_path_infos = []
         for option in options:
@@ -49,13 +49,13 @@ class Build(KindoCore):
             )
 
         self.handlers = {
-            "add": Add(),
-            "check": Check(),
-            "run": Run(),
-            "workdir": Workdir(),
-            "download": Download(),
-            "ubuntu": Ubuntu(),
-            "centos": CentOS()
+            "add": AddCommand(),
+            "check": CheckCommand(),
+            "run": RunCommand(),
+            "workdir": WorkdirCommand(),
+            "download": DownloadCommand(),
+            "ubuntu": UbuntuCommand(),
+            "centos": CentOSCommand()
         }
 
         self.re_pattern =  "^\s*(%s)\s+" % "|".join(self.handlers.keys())
@@ -255,9 +255,13 @@ class Build(KindoCore):
                 for name in files:
                     filelist.append(os.path.join(root, name))
 
-        zf = zipfile.ZipFile(zipfilename, "w", zipfile.zlib.DEFLATED)
+        zf = zipfile.ZipFile(zipfilename, "w", zipfile.ZIP_DEFLATED)
+        if "kipwd" in self.configs and self.configs["kipwd"]:
+            zf.setpassword(self.configs["kipwd"])
+
         for tar in filelist:
             arcname = tar[len(dirname):]
             zf.write(tar,arcname)
+
         zf.close()
 
