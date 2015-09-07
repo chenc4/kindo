@@ -1,0 +1,25 @@
+# ${project.version}
+
+# 上传文件
+ADD kindo-hub/kindo-hub-${project.version}-application.tar.gz /var/tmp/kindo/kindo-hub-${project.version}-application.tar.gz
+
+# 检查并卸载已安装文件
+RUN if [ -f "/usr/local/kindo-hub/${project.version}/bin/stop.sh" ]; then /usr/local/kindo-hub/${project.version}/bin/stop.sh;fi
+RUN rm -rf /var/log/kindo-hub/${project.version}
+RUN rm -f /etc/rc.d/init.d/kindo-hub
+RUN if [ -f "/etc/init.d/kindo-hub" ]; then rm -f /etc/init.d/kindo-hub && chkconfig --del kindo-hub;fi
+RUN rm -rf /usr/local/kindo-hub/${project.version}
+
+# 初始化文件夹
+RUN mkdir -p /usr/local/kindo-hub
+
+# 安装新文件
+RUN tar -xzvf /var/tmp/kindo/kindo-hub-${project.version}-application.tar.gz -C /usr/local/cycore
+RUN mv /usr/local/kindo-hub-${project.version} /usr/local/kindo-hub/${project.version}
+RUN chmod +x /usr/local/kindo-hub/${project.version}/bin/startup.sh && chmod +x /usr/local/kindo-hub/${project.version}/bin/stop.sh
+RUN cp /usr/local/kindo-hub/${project.version}/kindo-hub /etc/init.d/kindo-hub
+RUN cp /usr/local/kindo-hub/${project.version}/kindo-hub /etc/rc.d/init.d/kindo-hub
+RUN chmod +x /etc/init.d/kindo-hub && chmod +x /etc/rc.d/init.d/kindo-hub
+RUN chkconfig --add kindo-hub && chkconfig kindo-hub on
+RUN rm -f /var/tmp/kindo/kindo-hub-${project.version}-application.tar.gz
+RUN service kindo-hub start

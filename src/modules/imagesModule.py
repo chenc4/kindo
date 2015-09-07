@@ -13,14 +13,14 @@ class ImagesModule(KindoModule):
     def start(self):
         images = self.get_images_list()
 
-        table = PrettyTable(["Name", "Version", "Author", "Size", "BuildTime"])
+        table = PrettyTable(["Name", "Version", "Pusher", "Size", "BuildTime"])
         table.padding_width = 1
 
         for section, image in images.items():
             table.add_row([
                 image.get("name", ""),
                 image.get("version", "1.0"),
-                image.get("author", "anonymous"),
+                image.get("pusher", "anonymous"),
                 image.get("size", 0),
                 image.get("buildtime", "")
                 ]

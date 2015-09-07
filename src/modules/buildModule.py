@@ -37,8 +37,8 @@ class BuildModule(KindoModule):
                 continue
 
             kic_path, outfolder = self.get_kic_info(option)
-            if not kic_path:
-                self.logger.debug("KIC NOT FOUND: %" % kic_path)
+            if kic_path is None or not kic_path:
+                self.logger.debug("KIC NOT FOUND")
                 continue
 
             self.kic_path_infos.append(
@@ -97,6 +97,18 @@ class BuildModule(KindoModule):
                 if commands is None:
                     return
 
+                if len(re.findall("[^a-zA-Z0-9]", author)) > 0:
+                    self.logger.error("INVALID AUTHOR NAME, JUST ALLOW 'a-zA-Z0-9-_'")
+                    return
+
+                if len(re.findall("[^a-zA-Z0-9-_]", name)) > 0:
+                    self.logger.error("INVALID NAME, JUST ALLOW 'a-zA-Z0-9-_'")
+                    return
+
+                if len(re.findall("[^0-9\.]", version)) > 0:
+                    self.logger.error("INVALID VERSION, JUST ALLOW '0-9.'")
+                    return
+
                 shutil.copy(kic_path_info["path"],  os.path.join(kic_build_folder, "kics", filename))
 
                 files = []
@@ -129,7 +141,10 @@ class BuildModule(KindoModule):
                     simplejson.dump(manifest_json, fs)
 
                 output_ki_path = os.path.join(kic_path_info["outfolder"], "%s.ki" % name)
+
+                self.logger.info("packaging %s" % output_ki_path)
                 self.zip_dir(kic_build_folder, output_ki_path)
+                self.logger.info("packaged %s" % output_ki_path)
             except:
                 self.logger.debug(traceback.format_exc())
                 self.logger.error("BUILD FAILED: exception raised")
@@ -166,7 +181,7 @@ class BuildModule(KindoModule):
     def build_kic(self, kic_path, kic_build_folder):
         commands = []
         deps = []
-        author = ""
+        author = self.configs.get("username", "anonymous")
         version = "1.0"
         website = ""
         summary = ""
@@ -175,6 +190,7 @@ class BuildModule(KindoModule):
         filedir, filename = os.path.split(kic_path)
         name, ext = os.path.splitext(filename)
 
+        self.logger.info("parsing %s" % kic_path)
         with open(kic_path, "r") as fs:
             line = 0
             for content in fs:
@@ -183,7 +199,7 @@ class BuildModule(KindoModule):
                 content = content.strip()
                 if content and content[0] == "#":
                     patterns = re.search(
-                        '#\s*(AUTHOR|VERSION|WEBSITE|NAME|SUMMARY|LICENSE):\s*(.+)',
+                        '#\s*(AUTHOR|VERSION|WEBSITE|NAME|SUMMARY|LICENSE)[:|\s]\s*(.+)',
                         content,
                         re.IGNORECASE
                     )
@@ -191,16 +207,21 @@ class BuildModule(KindoModule):
                         groups = patterns.groups()
                         if groups[0].lower() == "author":
                             author = groups[1]
+                            self.logger.info("parsed author: %s" % author)
                         elif groups[0].lower() == "version":
                             version = groups[1]
+                            self.logger.info("parsed version: %s" % version)
                         elif groups[0].lower() == "website":
                             website = groups[1]
+                            self.logger.info("parsed website: %s" % website)
                         elif groups[0].lower() == "name":
                             name = groups[1]
+                            self.logger.info("parsed name: %s" % name)
                         elif groups[0].lower() == "summary":
                             summary = groups[1]
                         elif groups[0].lower() == "license":
                             license = groups[1]
+                            self.logger.info("parsed license: %s" % license)
                     continue
 
                 if not content:
@@ -221,6 +242,7 @@ class BuildModule(KindoModule):
 
         with open(os.path.join(kic_build_folder, "kibcs", "%s.kibc" % name), 'wb') as fs:
             pickle.dump(commands, fs)
+        self.logger.info("parsed %s" % kic_path)
 
         return commands, author, version, website, name, summary, license
 
@@ -245,6 +267,8 @@ class BuildModule(KindoModule):
         for kic_maybe_path in kic_maybe_paths:
             if os.path.isfile(kic_maybe_path):
                 return kic_maybe_path, os.path.realpath(self.configs.get("o", os.path.dirname(kic_maybe_path)))
+
+        return None, None
 
     def zip_dir(self, dirname, zipfilename):
         filelist = []

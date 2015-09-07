@@ -121,7 +121,7 @@ class RunModule(KindoModule):
                     )
                 except:
                     self.logger.debug(traceback.format_exc())
-                    self.logger.error("EXECUTE ERROR")
+                    self.logger.error("can't connect host")
 
     def execute_script_commands(self, commands, files_folder):
         position = "~"
@@ -141,28 +141,31 @@ class RunModule(KindoModule):
                 self.logger.error(errormsg)
 
     def get_ki_path(self):
-        ki_path = self.options[0] if len(self.options) == 1 else self.options[1]
-        if ki_path[-3:] != ".ki":
-            ki_path = "%s.ki" % ki_path
+        self.logger.debug(self.options)
 
-        if not os.path.isfile(ki_path):
-           path = os.path.realpath(ki_path)
-           if not os.path.isfile(path):
-                path = os.path.join(self.startfolder, "packages", ki_path)
-                if not os.path.isfile(path):
-                    path = os.path.join(self.startfolder, ki_path)
+        ki_path = ""
+        for option in self.options:
+            ki_path = option
+            if ki_path[-3:] != ".ki":
+                ki_path = "%s.ki" % ki_path
+
+
+            if not os.path.isfile(ki_path):
+               path = os.path.realpath(ki_path)
+               if not os.path.isfile(path):
+                    path = os.path.join(self.startfolder, "images", ki_path)
                     if not os.path.isfile(path):
-                        path = os.path.join(self.kindo_packages_path, ki_path)
+                        path = os.path.join(self.startfolder, ki_path)
                         if not os.path.isfile(path):
-                            # for example: /var/opt/kindo/packages/nginx/nginx-1.0.0/nginx-1.0.0.ki
-                            whole_name, ext = os.path.splitext(ki_path)
-                            last_hyphen_pos = whole_name.rfind("-")
-                            name = whole_name if last_hyphen_pos == -1 else whole_name[:last_hyphen_pos]
-                            path = os.path.join(self.kindo_packages_path, name, whole_name, ki_path)
+                            path = self.get_image_path(option)
 
-                if os.path.isfile(path):
-                    ki_path = path
+                    if os.path.isfile(path):
+                        ki_path = path
 
+            if os.path.isfile(ki_path):
+                break
+
+        self.logger.debug(ki_path)
         return ki_path
 
     def get_cache_info(self, filename):
@@ -181,6 +184,24 @@ class RunModule(KindoModule):
                 return cache_folder, int(fs.read())
             except:
                 return cache_folder, 0
+
+    def get_image_path(self, section):
+        ini_path = os.path.join(self.kindo_settings_path, "images.ini")
+        if not os.path.isfile(ini_path):
+            return {}
+
+        cf = ConfigParser()
+        cf.read(ini_path)
+
+        sections = cf.sections()
+
+        if section in sections:
+            items = cf.items(section)
+
+            for k, v in items:
+                if k == "path":
+                    return v
+        return ""
 
     def unzip_file(self, zipfilename, unziptodir):
         try:

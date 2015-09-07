@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
 import os
+import traceback
+from utils.configParser import ConfigParser
 from modules.kindoModule import KindoModule
 
 class RmiModule(KindoModule):
@@ -12,11 +14,15 @@ class RmiModule(KindoModule):
             self.logger.warn("NO IMAGES")
             return
 
-        self.delete_image(self.options[2])
+        self.logger.debug(self.options)
+
+        try:
+            self.delete_image(self.options[2])
+        except:
+            self.logger.debug(traceback.format_exc())
+            self.logger.error("delete failed")
 
     def delete_image(self, image_name):
-        image_name = image_name.replace("/", "-").replace(":", "-")
-
         ini_path = os.path.join(self.kindo_settings_path, "images.ini")
         if not os.path.isfile(ini_path):
             return {}
@@ -25,19 +31,23 @@ class RmiModule(KindoModule):
         cf.read(ini_path)
 
         sections = cf.sections()
-        for section in sections:
-            options = cf.options(section)
+        if image_name in sections:
+            items = cf.items(image_name)
 
-            author = options.get("author", "anonymous")
-            version = options.get("version", "1.0")
-            name = options.get("name", "")
+            self.logger.debug(items)
 
-            if name != image_name and section != image_name:
-                continue
+            kiname = ""
+            for k, v in items:
+                if k == "name":
+                    kiname = v.replace("/", "-").replace(":", "-")
 
-            kiname = "%s-%s-%s.ki" % (name[:-3], version) if name[-3:] == ".ki" else "%s-%s-%s.ki" % (author, name, version)
+                    if kiname[-3:] != ".ki":
+                        kiname = "%s.ki" % kiname
+                    break
+
             target = os.path.join(self.kindo_images_path, kiname)
             if os.path.isfile(target):
                 os.remove(target)
 
-            cf.remove_section(section)
+            cf.remove_section(image_name)
+            cf.write(open(ini_path, "w"))

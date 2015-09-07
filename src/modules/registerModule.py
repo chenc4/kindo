@@ -3,6 +3,7 @@
 
 import os
 import re
+import requests
 import traceback
 from fabric.operations import prompt
 from modules.kindoModule import KindoModule
@@ -24,6 +25,8 @@ class RegisterModule(KindoModule):
 
             if len(self.options) <= 2:
                 username = prompt("please input the username:", default="").strip()
+            else:
+                username = self.options[2]
 
             if not username or len(re.findall("[^a-zA-Z0-9]", username)) > 0:
                 self.logger.error("username invalid")
@@ -31,6 +34,8 @@ class RegisterModule(KindoModule):
 
             if len(self.options) <= 3:
                 password = prompt("please input the password:", default="").strip()
+            else:
+                password = self.options[3]
 
             if not password:
                 self.logger.error("invalid password")
