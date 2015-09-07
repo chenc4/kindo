@@ -8,24 +8,10 @@ if you will use kindo on windows, download from this url:
 https://github.com/shenghe/kindo/blob/master/dist/kindo_setup.exe?raw=true
 ```
 
-if you will use kindo on linux, download from this url:
-
-```txt
-https://github.com/shenghe/kindo/dist/kindo.tar.gz
-```
-
 ### Install Kindo
 
 if you will install kindo on windows, just press a step until the installation is finished. the kindo command will be installed in environment path.
 
-if you will install kindo on linux, compile it from kindo sources, as follows:
-
-```shell
-wget https://github.com/shenghe/kindo/dist/kindo.tar.gz
-tar -xzvf kindo.tar.gz
-cd kindo
-python setup.py install
-```
 
 ### Search Command
 
@@ -71,7 +57,7 @@ kindo.exe run demo.ki
 kindo run demo.ki
 ```
 
-### Build Package
+### Build Image
 
 if you can't search kindo package that you want, writing it is also very easy.
 
@@ -131,15 +117,35 @@ kindo.exe register
 kindo register
 ```
 
-### Upload Package
+### Push Image
 
 an account created, then you can upload it to the kindo's repository that everyone can search.
 
 ```shell
 # Windows
-kindo.exe commit example.ki
+kindo.exe push example.ki
 
 # Linux
-kindo commit example.ki
+kindo push example.ki
 ```
 
+or
+
+```shell
+# Windows
+kindo.exe push C:/example.ki
+
+# Linux
+kindo push ~/example.ki
+```
+
+or
+
+
+```shell
+# Windows
+kindo.exe push shenghe/example:1.0
+
+# Linux
+kindo push shenghe/example:1.0
+```
