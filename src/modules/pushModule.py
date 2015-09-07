@@ -98,8 +98,7 @@ class PushModule(KindoModule):
             self.logger.info("finded %s" % path)
             return path
 
-        kiname = kiname.replace("/", "-").kiname(":", "-")
-        path = os.path.join(self.kindo_packages_path, kiname)
+        path = self.get_image_path(name)
         self.logger.info("finding %s" % path)
         if os.path.isfile(path):
             self.logger.info("finded %s" % path)
@@ -111,12 +110,30 @@ class PushModule(KindoModule):
         kiname = "anonymous-%s" % name if not author else "%s-%s" % (author, name)
         kiname = "%s-1.0" % kiname if not version else "%s-%s" % (kiname, version)
 
-        path = os.path.join(self.kindo_packages_path, kiname)
+        path = self.get_image_path(kiname)
         self.logger.info("finding %s" % path)
         if os.path.isfile(path):
             self.logger.info("finded %s" % path)
             return path
 
+        return ""
+
+    def get_image_path(self, section):
+        ini_path = os.path.join(self.kindo_settings_path, "images.ini")
+        if not os.path.isfile(ini_path):
+            return {}
+
+        cf = ConfigParser()
+        cf.read(ini_path)
+
+        sections = cf.sections()
+
+        if section in sections:
+            items = cf.items(section)
+
+            for k, v in items:
+                if k == "path":
+                    return v
         return ""
 
     def get_cache_folder(self, filepath):
