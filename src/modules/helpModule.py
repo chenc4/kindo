@@ -15,6 +15,7 @@ class HelpModule(KindoModule):
                 "options": {
                     "-d": "Enable debug information",
                     "-o": "Specify the output folder",
+                    "-t": "set the image tag, for example: author/name:version",
                     "--kipwd": "set unpackage password"
                 }
             },

@@ -19,6 +19,7 @@ from modules.infoModule import InfoModule
 from modules.versionModule import VersionModule
 from modules.helpModule import HelpModule
 from modules.pullModule import PullModule
+from modules.commitModule import CommitModule
 
 
 class Kindo:
@@ -44,7 +45,8 @@ class Kindo:
             "info": InfoModule,
             "version": VersionModule,
             "help": HelpModule,
-            "pull": PullModule
+            "pull": PullModule,
+            "commit": CommitModule
         }
 
     def start(self):
@@ -78,6 +80,7 @@ class Kindo:
         banner = """a simple tool for packaging and deploying your codes
 kindo commands:
     build       Build an image from the kicfile
+    commit      Commit local image to the image's path
     clean       Clean the local caches
     help        Show the command options
     images      List local images

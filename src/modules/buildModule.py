@@ -244,6 +244,11 @@ class BuildModule(KindoModule):
             pickle.dump(commands, fs)
         self.logger.info("parsed %s" % kic_path)
 
+        if "t" in self.configs:
+            tag = self.configs["t"]
+            name, version = tag.split(":") if ":"in tag else (tag, version)
+            author, name = name.split("/") if "/" in name else (author, name)
+
         return commands, author, version, website, name, summary, license
 
     def get_kic_info(self, option):

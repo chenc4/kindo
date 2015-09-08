@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
-
+import os
 from prettytable import PrettyTable
 from modules.kindoModule import KindoModule
 from utils.configParser import ConfigParser
