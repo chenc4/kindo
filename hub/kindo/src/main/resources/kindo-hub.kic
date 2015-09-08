@@ -25,3 +25,6 @@ RUN chmod +x /etc/init.d/kindo-hub && chmod +x /etc/rc.d/init.d/kindo-hub
 RUN chkconfig --add kindo-hub && chkconfig kindo-hub on
 RUN rm -f /var/tmp/kindo/kindo-hub-${project.version}-application.tar.gz
 RUN service kindo-hub start
+
+# custom config on run
+ADDONRUN conf /usr/local/kindo-hub/${project.version}
