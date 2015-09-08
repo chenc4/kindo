@@ -32,7 +32,11 @@ class ArgsParser:
             elif last_key is None and argc[0] != "-":
                 options.append(argc)
             elif last_key is None and len(argc) > 2 and argc[:2] == "--":
-                last_key = argc[2:]
+                if "=" not in argc:
+                    last_key = argc[2:]
+                else:
+                    pos = argc.index("=")
+                    args[argc[2:pos]] = argc[pos + 1:]
             elif last_key is None and len(argc) > 1 and argc[0] == "-" and argc[1] != "-":
                 if len(argc) > 2:
                     args[argc[1]] = argc[2:]

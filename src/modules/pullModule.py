@@ -75,14 +75,15 @@ class PullModule(KindoModule):
         url = image_info["url"]
         name = image_info["name"]
 
-        self.logger.info("downloading %s" % name)
+        self.logger.info("downloading %s from %s" % (name, url))
 
         kiname = name.replace("/", "-").replace(":", "-")
         kiname = kiname if name[-3:] == ".ki" else "%s.ki" % kiname
         target = os.path.join(self.kindo_images_path, kiname)
 
         if os.path.isfile(target):
-            return target
+            self.logger.debug("%s existed, removing" % target)
+            os.remove(target)
 
         r = requests.get(url)
         if r.status_code == 200:
@@ -92,11 +93,14 @@ class PullModule(KindoModule):
             with open(target, "wb") as fs:
                 fs.write(r.content)
             return target
-
+        else:
+            self.logger.error("download failed")
+            self.logger.debug(r.content)
         return ""
 
     def add_image_info(self, image_info, path):
         if not path:
+            self.logger.debug("path is empty")
             return False
 
         ini_path = os.path.join(self.kindo_settings_path, "images.ini")

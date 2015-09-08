@@ -28,7 +28,12 @@ class PushModule(KindoModule):
 
                 self.logger.info("pushing %s" % option)
 
-                data = {"code": self.configs.get("code", "")}
+                code = self.configs.get("code", "")
+                if code and len(code) != 6:
+                    self.logger.error("only six characters are allowed")
+                    return
+
+                data = {"code": code}
                 if "username" in self.configs:
                     data["username"] = self.configs["username"]
                     data["author"] = self.configs["username"]
@@ -57,6 +62,7 @@ class PushModule(KindoModule):
                     data["buildtime"] = manifest.get("buildtime", "")
 
                 self.logger.info("connecting %s" % push_engine_url)
+                self.logger.debug(data)
                 r = requests.post(push_engine_url, data=data, files={"file": open(package_path, "rb")})
                 if r.status_code != 200:
                     self.logger.error("\"%s\" can't connect" % push_engine_url)

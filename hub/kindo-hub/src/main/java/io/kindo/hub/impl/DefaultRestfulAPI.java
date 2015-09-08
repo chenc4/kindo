@@ -227,4 +227,58 @@ public class DefaultRestfulAPI implements RestfulAPI {
 
         return imageInfo;
     }
+
+    @Override
+    public AccountInfo login(@RequestParam(value = "username") String username, @RequestParam(value = "token") String token) {
+        if (username.isEmpty() || token.isEmpty()) {
+            throw new KindoException(ErrorCode.PARAMETER_EMPTY);
+        }
+
+        Account account = accountRepository.findOneByUsername(username);
+        if (account == null || !token.equals(account.getPassword())){
+            throw new KindoException(ErrorCode.PERMISSION_DENIED);
+        }
+
+        AccountInfo accountInfo = new AccountInfo();
+        accountInfo.setUsername(username);
+        accountInfo.setUid(account.getId());
+        return accountInfo;
+    }
+
+    @Override
+    public ImageInfo rm(
+            @RequestParam(value = "username") String username,
+            @RequestParam(value = "token") String token,
+            @RequestParam(value = "uniqueName") String uniqueName
+    ) {
+        if (uniqueName.isEmpty() || username.isEmpty() || token.isEmpty()) {
+            throw new KindoException(ErrorCode.PARAMETER_EMPTY);
+        }
+
+        Account account = accountRepository.findOneByUsername(username);
+        if (account == null || !token.equals(account.getPassword())){
+            throw new KindoException(ErrorCode.PERMISSION_DENIED);
+        }
+
+        Image image = imageRepository.findOneByUniqueName(uniqueName);
+        if (image == null) {
+            throw new KindoException(ErrorCode.IMAGE_NOT_FOUND);
+        }
+
+        if (!image.getPusher().equals(username)) {
+            throw new KindoException(ErrorCode.PERMISSION_DENIED);
+        }
+
+        imageRepository.delete(image);
+
+        ImageInfo imageInfo = new ImageInfo();
+        imageInfo.setVersion(image.getVersion());
+        imageInfo.setUrl(String.format("%s/%s", host, image.getPath()));
+        imageInfo.setBuildtime(image.getBuildtime());
+        imageInfo.setPusher(image.getPusher());
+        imageInfo.setSize(image.getSize());
+        imageInfo.setName(image.getUniqueName());
+
+        return imageInfo;
+    }
 }

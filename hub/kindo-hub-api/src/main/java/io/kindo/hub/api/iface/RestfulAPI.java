@@ -37,6 +37,7 @@ public interface RestfulAPI {
             @RequestParam(value="password") String password
     );
 
+
     @RequestMapping(value="/push", method = RequestMethod.POST)
     @ResponseBody
     ImageInfo push(
@@ -54,4 +55,19 @@ public interface RestfulAPI {
             @RequestParam(value = "file", required = true) MultipartFile file
 
     ) throws IOException, ParseException;
+
+    @RequestMapping(value="/login", method = RequestMethod.POST)
+    @ResponseBody
+    AccountInfo login(
+            @RequestParam(value="username") String username,
+            @RequestParam(value="token") String token
+    );
+
+    @RequestMapping(value="/rm", method = RequestMethod.POST)
+    @ResponseBody
+    ImageInfo rm(
+            @RequestParam(value = "username") String username,
+            @RequestParam(value = "token") String token,
+            @RequestParam(value="uniqueName") String uniqueName
+    );
 }

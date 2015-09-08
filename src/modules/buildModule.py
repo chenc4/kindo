@@ -105,8 +105,8 @@ class BuildModule(KindoModule):
                     self.logger.error("INVALID NAME, JUST ALLOW 'a-zA-Z0-9-_'")
                     return
 
-                if len(re.findall("[^0-9\.]", version)) > 0:
-                    self.logger.error("INVALID VERSION, JUST ALLOW '0-9.'")
+                if len(re.findall("[^a-zA-Z0-9\.-]", version)) > 0:
+                    self.logger.error("INVALID VERSION, JUST ALLOW 'a-zA-Z0-9\.-'")
                     return
 
                 shutil.copy(kic_path_info["path"],  os.path.join(kic_build_folder, "kics", filename))

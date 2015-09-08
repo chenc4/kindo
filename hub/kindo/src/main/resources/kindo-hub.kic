@@ -1,4 +1,6 @@
-# ${project.version}
+# Author: shenghe
+# Name: kindo-hub
+# Version: ${project.version}
 
 # 上传文件
 ADD kindo-hub/kindo-hub-${project.version}-application.tar.gz /var/tmp/kindo/kindo-hub-${project.version}-application.tar.gz

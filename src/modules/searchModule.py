@@ -55,12 +55,9 @@ class SearchModule(KindoModule):
 
                 self.logger.response(table)
 
-                if len(response) == 1:
-                    self.pull_image(response[0]["name"])
-                else:
-                    number = self.get_input_number(response)
-                    if number > -1:
-                        self.pull_image(response[number]["name"])
+                number = self.get_input_number(response)
+                if number > -1:
+                    self.pull_image(response[number]["name"])
             except:
                 self.logger.debug(traceback.format_exc())
                 self.logger.error("\"%s\" can't connect" % search_engine_url)

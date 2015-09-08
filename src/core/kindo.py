@@ -20,6 +20,9 @@ from modules.versionModule import VersionModule
 from modules.helpModule import HelpModule
 from modules.pullModule import PullModule
 from modules.commitModule import CommitModule
+from modules.logoutModule import LogoutModule
+from modules.loginModule import LoginModule
+from modules.rmModule import RmModule
 
 
 class Kindo:
@@ -41,8 +44,11 @@ class Kindo:
             "register": RegisterModule,
             "push": PushModule,
             "images": ImagesModule,
+            "rm": RmModule,
             "rmi": RmiModule,
             "info": InfoModule,
+            "login": LoginModule,
+            "logout": LogoutModule,
             "version": VersionModule,
             "help": HelpModule,
             "pull": PullModule,
@@ -72,6 +78,8 @@ class Kindo:
             )
 
             core_command_cls.start()
+        except KeyboardInterrupt as e:
+            self.logger.warn("quit")
         except:
             self.logger.debug(traceback.format_exc())
             self.logger.error("KINDO RUN ERROR")
@@ -85,9 +93,12 @@ kindo commands:
     help        Show the command options
     images      List local images
     info        Display system-wide information
+    login       Account login
+    logout      Account logout
     pull        Pull an image from the kindo hub
     push        Push an image to the kindo hub
     register    Register the kindo hub's account
+    rm          Delete the owned image in the kindo hub
     rmi         Remove one or more local images
     run         Run image commands to the target operating system
     search      Search an image on the kindo hub

@@ -26,7 +26,7 @@ class RunModule(KindoModule):
         KindoModule.__init__(self, command, startfolder, configs, options, logger)
 
         env.colorize_errors = True
-        env.command_timeout = 60 * 30
+        env.command_timeout = self.configs.get("timout", 60 * 30)
         env.output_prefix = ""
         env.passwords = {}
         output.debug = False

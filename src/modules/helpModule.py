@@ -19,6 +19,14 @@ class HelpModule(KindoModule):
                     "--kipwd": "set unpackage password"
                 }
             },
+            "commit": {
+                "description": "Commit local image to the image's path",
+                "command": "kindo commit [ki path]",
+                "options": {
+                    "-d": "Enable debug information",
+                    "-t": "set the image tag, for example: author/name:version"
+                }
+            },
             "clean": {
                 "description": "Clean the local caches",
                 "command": "kindo clean",
@@ -47,23 +55,46 @@ class HelpModule(KindoModule):
                     "-d": "Enable debug information"
                 }
             },
+            "login": {
+                "description": "account login, set account info automatically",
+                "command": "kindo login [username] [password]",
+                "options": {
+                    "-d": "Enable debug information"
+                }
+            },
+            "logout": {
+                "description": "account logout, clean account info automatically",
+                "command": "kindo logout",
+                "options": {
+                    "-d": "Enable debug information"
+                }
+            },
             "pull": {
                 "description": "Pull an image from the kindo hub",
                 "command": "kindo pull [author/name:version]",
                 "options": {
-                    "-d": "Enable debug information"
+                    "-d": "Enable debug information",
+                    "--code": "Set the extraction code, only six characters are allowed"
                 }
             },
             "push": {
                 "description": "Push an image to the kindo hub",
                 "command": "kindo push [ki image path|ki image name]",
                 "options": {
-                    "-d": "Enable debug information"
+                    "-d": "Enable debug information",
+                    "--code": "Set the extraction code, only six characters are allowed"
                 }
             },
             "register": {
                 "description": "Register the kindo hub's account",
                 "command": "kindo register",
+                "options": {
+                    "-d": "Enable debug information"
+                }
+            },
+            "rm": {
+                "description": "Delete the owned image in the kindo hub",
+                "command": "kindo rm [author/name:version]",
                 "options": {
                     "-d": "Enable debug information"
                 }
