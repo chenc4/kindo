@@ -4,16 +4,55 @@ import os
 import requests
 from fabric.contrib.files import exists
 from fabric.api import env, sudo, settings, run, hide, put, get
+from utils.configParser import ConfigParser
 
 
 class Command:
-    def __init__(self):
+    def __init__(self, startfolder, configs, options, logger):
+        self.startfolder = startfolder
+        self.configs = configs
+        self.options = options
+        self.logger = logger
+
         self._has_sudo = None
         self._system_info = None
         self.deps = []
 
-    def get_deps(self):
-        return self.deps
+        self.kindo_settings_path = os.getenv("KINDO_SETTINGS_PATH")
+
+        if self.kindo_settings_path is None:
+            settings_path = os.path.join(self.startfolder, "settings")
+            if not os.path.isdir(settings_path):
+                if os.getenv("APPDATA") is None:
+                    if os.path.isdir("/etc/opt"):
+                        self.kindo_settings_path = "/etc/opt/kindo"
+                    else:
+                        self.kindo_settings_path = os.path.join(self.kindo_tmps_path, "settings")
+                else:
+                    self.kindo_settings_path = os.path.join(os.getenv("APPDATA"), "kindo", "settings")
+            else:
+                self.kindo_settings_path = settings_path
+
+        self.configs = dict(self.get_kindo_setting(), **self.configs)
+
+    def get_kindo_setting(self):
+        ini_path = os.path.join(self.kindo_settings_path, "kindo.ini")
+        if not os.path.isfile(ini_path):
+            return {}
+
+        cf = ConfigParser()
+        cf.read(ini_path)
+
+        configs = {}
+        for section in cf.sections():
+            items = cf.items(section)
+            section = section.lower()
+
+            for k, v in items:
+                k = k.strip()
+                v = v.strip()
+                configs[k] = v
+        return configs
 
     def has_sudo(self):
         if self._has_sudo is None:
@@ -36,20 +75,20 @@ class Command:
                 pass
 
     def upload(self, filepath, target, unzip=False):
-        if not os.path.isfile(filepath):
+        if not os.path.isfile(filepath) and not os.path.isdir(filepath):
             return False
 
+        if target[-1] == "/":
+            folder = target
+        else:
+            folder = os.path.dirname(target)
+
+        if not exists(folder, use_sudo=self.has_sudo()):
+            self.execute("mkdir -p %s" % folder)
+
+        put(filepath, target, use_sudo=self.has_sudo())
+
         if os.path.isfile(filepath):
-            if target[-1] == "/":
-                folder = target
-            else:
-                folder = os.path.dirname(target)
-
-            if not exists(folder, use_sudo=self.has_sudo()):
-                self.execute("mkdir -p %s" % folder)
-
-            put(filepath, target, use_sudo=self.has_sudo())
-
             if exists(target, use_sudo=self.has_sudo()):
                 if unzip:
                     name, ext = os.path.splitext(target)
@@ -61,8 +100,7 @@ class Command:
                         self.execute("tar -xvf %s && rm -f %s" % (target, target))
                     elif ext.lower() == ".zip":
                         self.execute("unzip %s && rm -f %s" % (target, target))
-                return True
-        return False
+        return True
 
     def download(self, remote, local):
         if exists(remote, use_sudo=self.has_sudo()):

@@ -8,8 +8,8 @@ from commands.command import Command
 
 
 class CheckCommand(Command):
-    def __init__(self):
-        Command.__init__(self)
+    def __init__(self, startfolder, configs, options, logger):
+        Command.__init__(self, startfolder, configs, options, logger)
 
     def parse(self, value):
         value = value.strip()

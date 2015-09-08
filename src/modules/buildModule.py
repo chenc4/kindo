@@ -20,6 +20,7 @@ from commands.workdirCommand import WorkdirCommand
 from commands.downloadCommand import DownloadCommand
 from commands.ubuntuCommand import UbuntuCommand
 from commands.centosCommand import CentOSCommand
+from commands.addOnRunCommand import AddOnRunCommand
 
 
 class BuildModule(KindoModule):
@@ -49,13 +50,14 @@ class BuildModule(KindoModule):
             )
 
         self.handlers = {
-            "add": AddCommand(),
-            "check": CheckCommand(),
-            "run": RunCommand(),
-            "workdir": WorkdirCommand(),
-            "download": DownloadCommand(),
-            "ubuntu": UbuntuCommand(),
-            "centos": CentOSCommand()
+            "add": AddCommand(self.startfolder, self.configs, self.options, self.logger),
+            "check": CheckCommand(self.startfolder, self.configs, self.options, self.logger),
+            "run": RunCommand(self.startfolder, self.configs, self.options, self.logger),
+            "workdir": WorkdirCommand(self.startfolder, self.configs, self.options, self.logger),
+            "download": DownloadCommand(self.startfolder, self.configs, self.options, self.logger),
+            "ubuntu": UbuntuCommand(self.startfolder, self.configs, self.options, self.logger),
+            "centos": CentOSCommand(self.startfolder, self.configs, self.options, self.logger),
+            "addonrun": AddOnRunCommand(self.startfolder, self.configs, self.options, self.logger)
         }
 
         self.re_pattern =  "^\s*(%s)\s+" % "|".join(self.handlers.keys())
