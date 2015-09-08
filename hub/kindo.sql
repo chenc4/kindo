@@ -13,7 +13,6 @@ CREATE TABLE `accounts` (
   KEY `username_idx` (`username`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
-
 -- ----------------------------
 -- Table structure for `images`
 -- ----------------------------
@@ -23,7 +22,7 @@ CREATE TABLE `images` (
   `name` varchar(255) DEFAULT NULL,
   `author` varchar(255) DEFAULT NULL,
   `pusher` varchar(255) DEFAULT NULL,
-  `version` varchar(15) DEFAULT NULL,
+  `version` varchar(255) DEFAULT '1.0',
   `website` varchar(255) DEFAULT NULL,
   `summary` text,
   `license` varchar(25) DEFAULT NULL,
