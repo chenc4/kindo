@@ -127,7 +127,7 @@ class PushModule(KindoModule):
     def get_image_path(self, section):
         ini_path = os.path.join(self.kindo_settings_path, "images.ini")
         if not os.path.isfile(ini_path):
-            return {}
+            return ""
 
         cf = ConfigParser()
         cf.read(ini_path)

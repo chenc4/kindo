@@ -122,9 +122,7 @@ class CommitModule(KindoModule):
             if not os.path.isfile(ki_path):
                path = os.path.realpath(ki_path)
                if not os.path.isfile(path):
-                    path = os.path.join(self.startfolder, "images", ki_path)
-                    if not os.path.isfile(path):
-                        path = os.path.join(self.startfolder, ki_path)
+                    path = os.path.join(self.startfolder, ki_path)
 
                     if os.path.isfile(path):
                         ki_path = path
