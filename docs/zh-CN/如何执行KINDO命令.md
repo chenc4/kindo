@@ -49,6 +49,7 @@ kindo text.ki
 用法：kindo clean
 
 支持的参数：
+
     -d          开启DEBUG模式
 
 清理缓存文件夹
@@ -58,6 +59,7 @@ kindo text.ki
 用法：kindo commit [ki_path]
 
 支持的参数：
+
     -d          开启DEBUG模式
     -t          设置安装包名称，格式为:作者/名称:版本
 
@@ -68,6 +70,7 @@ kindo text.ki
 用法：kindo help 或者 kindo help [command_name]
 
 支持的参数：
+
     -d          开启DEBUG模式
 
 输出命令用法
@@ -77,6 +80,7 @@ kindo text.ki
 用法：kindo images
 
 支持的参数：
+
     -d          开启DEBUG模式
 
 列出本地仓库的所有安装包
@@ -86,6 +90,7 @@ kindo text.ki
 用法：kindo info
 
 支持的参数：
+
     -d          开启DEBUG模式
 
 列出kindo当前所有配置信息
@@ -95,6 +100,7 @@ kindo text.ki
 用法：kindo login 或者 kindo login [username] 或者 kindo login [username] [password]
 
 支持的参数：
+
     -d          开启DEBUG模式
 
 登录kindo hub，`push`和`rm`命令依赖帐号信息。
@@ -104,6 +110,7 @@ kindo text.ki
 用法：kindo logout
 
 支持的参数：
+
     -d          开启DEBUG模式
 
 登出，清理配置文件中的帐号信息。
@@ -113,6 +120,7 @@ kindo text.ki
 用法：kindo pull [author/name:version]
 
 支持的参数：
+
     -d          开启DEBUG模式
     --code      设置提取码
 
@@ -123,6 +131,7 @@ kindo text.ki
 用法：kindo push [ki_path] 或者 kindo push [author/name:version]
 
 支持的参数：
+
     -d          开启DEBUG模式
     --code      设置提取码
     --username  登录帐号
@@ -136,6 +145,7 @@ kindo text.ki
 用法：kindo register 或者 kindo register [username] 或者 kindo register [username] [password]
 
 支持的参数：
+
     -d          开启DEBUG模式
 
 注册kindo hub账户
@@ -146,6 +156,7 @@ kindo text.ki
 用法：kindo rmi [author/name:version]
 
 支持的参数：
+
     -d          开启DEBUG模式
 
 删除本地仓库中的安装包
@@ -156,6 +167,7 @@ kindo text.ki
 用法：kindo rm [author/name:version]
 
 支持的参数：
+
     -d          开启DEBUG模式
     --username  登陆账号
     --password  登录密码
@@ -168,6 +180,7 @@ kindo text.ki
 用法：kindo run [ki_path] 或者 kindo run [author/name:version]
 
 支持的参数：
+
     -d          开启DEBUG模式
     -h          服务器登录信息，格式：帐号@IP:端口
     -p          服务器登录密码
@@ -182,6 +195,7 @@ kindo text.ki
 用法：kindo search [name]
 
 支持的参数：
+
     -d          开启DEBUG模式
 
 根据名称模糊搜索安装包
@@ -191,6 +205,7 @@ kindo text.ki
 用法：kindo version
 
 支持的参数：
+
     -d          开启DEBUG模式
 
 显示kindo版本信息
