@@ -143,22 +143,28 @@ class Command:
                 memery_stdouts = [v for v in self.execute("free -l|sed -n '2,2p' |awk '{print $0}'").split(" ") if v != ""]
                 disk_stdouts = [v for v in self.execute("df -hl|sed -n '2,2p' |awk '{print $0}'").split(" ") if v != ""]
 
+                bit = 64
+                try:
+                    bit = int(self.execute("getconf LONG_BIT"))
+                except:
+                    pass
+
                 self._system_info = {
                     "kernel": self.execute("uname -a"),
                     "system": self.execute("cat /etc/issue"),
-                    "bit": int(self.execute("getconf LONG_BIT")),
+                    "bit": bit,
                     "memery": {
-                        "total": int(memery_stdouts[1]),
-                        "used": int(memery_stdouts[2]),
-                        "free": int(memery_stdouts[3]),
-                        "shared": int(memery_stdouts[4]),
-                        "buffers": int(memery_stdouts[5]),
-                        "cached": int(memery_stdouts[6])
+                        "total": int(memery_stdouts[1]) if len(memery_stdouts) > 2 else -1,
+                        "used": int(memery_stdouts[2]) if len(memery_stdouts) > 3 else -1,
+                        "free": int(memery_stdouts[3]) if len(memery_stdouts) > 4 else -1,
+                        "shared": int(memery_stdouts[4]) if len(memery_stdouts) > 5 else -1,
+                        "buffers": int(memery_stdouts[5]) if len(memery_stdouts) > 6 else -1,
+                        "cached": int(memery_stdouts[6]) if len(memery_stdouts) > 7 else -1
                     },
                     "disk": {
-                        "total": disk_stdouts[1],
-                        "used": disk_stdouts[2],
-                        "avail": disk_stdouts[3]
+                        "total": disk_stdouts[1] if len(disk_stdouts) > 2 else -1,
+                        "used": disk_stdouts[2] if len(disk_stdouts) > 3 else -1,
+                        "avail": disk_stdouts[3] if len(disk_stdouts) > 4 else -1
                     }
                 }
         return self._system_info
