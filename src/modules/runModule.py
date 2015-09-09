@@ -155,11 +155,9 @@ class RunModule(KindoModule):
             if not os.path.isfile(ki_path):
                path = os.path.realpath(ki_path)
                if not os.path.isfile(path):
-                    path = os.path.join(self.startfolder, "images", ki_path)
+                    path = os.path.join(self.startfolder, ki_path)
                     if not os.path.isfile(path):
-                        path = os.path.join(self.startfolder, ki_path)
-                        if not os.path.isfile(path):
-                            path = self.get_image_path(option)
+                        path = self.get_image_path(option)
 
                     if os.path.isfile(path):
                         ki_path = path
@@ -190,7 +188,7 @@ class RunModule(KindoModule):
     def get_image_path(self, section):
         ini_path = os.path.join(self.kindo_settings_path, "images.ini")
         if not os.path.isfile(ini_path):
-            return {}
+            return ""
 
         cf = ConfigParser()
         cf.read(ini_path)
