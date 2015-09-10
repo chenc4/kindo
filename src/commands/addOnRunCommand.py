@@ -36,12 +36,16 @@ class AddOnRunCommand(Command):
             return -1, position, ""
 
         src = command["args"]["from"]
+        self.logger.debug(src)
         if not os.path.isfile(src) and not os.path.isdir(src):
             src = os.path.realpath(command["args"]["from"])
+            self.logger.debug(src)
             if not os.path.isfile(src) and not os.path.isdir(src):
                 src = os.path.join(self.startfolder, command["args"]["from"])
+                self.logger.debug(src)
                 if not os.path.isfile(src) and not os.path.isdir(src):
                     src = os.path.join(os.path.dirname(self.get_ki_path()), command["args"]["from"])
+                    self.logger.debug(src)
 
         ignore = True if self.configs.get("ignore", 1) == 1 else False
         if not os.path.isfile(src) and not os.path.isdir(src):
@@ -49,6 +53,7 @@ class AddOnRunCommand(Command):
                 return 1, position, ""
             return 0, position, "ADDONRUN ERROR: %s not found" % src
 
+        self.logger.info("find %s" % src)
         with cd(position):
             if not self.upload(src, command["args"]["to"]):
                 return 0, position, "ADDONRUN ERROR: %s upload failed" % src
@@ -73,8 +78,8 @@ class AddOnRunCommand(Command):
                     if not os.path.isfile(path):
                         path = self.get_image_path(option)
 
-                    if os.path.isfile(path):
-                        ki_path = path
+                        if os.path.isfile(path):
+                            ki_path = path
 
             if os.path.isfile(ki_path):
                 break
