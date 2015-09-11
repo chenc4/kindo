@@ -6,6 +6,8 @@ import os
 import time
 import logging
 import platform
+from fabric.api import env
+
 
 if platform.system() == "Windows":
     import ctypes
@@ -73,5 +75,14 @@ class Logger:
     def critical(self, message):
         self.logger.critical(message)
 
-    def response(self, message):
-        self.logger.info(message)
+    def response(self, message, is_ok=True, host="127.0.0.1"):
+        msg = """
+%s | %s  >>
+
+%s
+""" % (host if env.host is None else env.host, "success" if is_ok else "failed", message)
+
+        if is_ok:
+            self.info(msg)
+        else:
+            self.error(msg)

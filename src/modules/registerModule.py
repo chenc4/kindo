@@ -6,12 +6,12 @@ import re
 import requests
 import traceback
 from fabric.operations import prompt
-from modules.kindoModule import KindoModule
+from core.kindoCore import KindoCore
 
 
-class RegisterModule(KindoModule):
-    def __init__(self, command, startfolder, configs, options, logger):
-        KindoModule.__init__(self, command, startfolder, configs, options, logger)
+class RegisterModule(KindoCore):
+    def __init__(self, startfolder, configs, options, logger):
+        KindoCore.__init__(self, startfolder, configs, options, logger)
 
     def start(self):
         register_engine_url = "%s/v1/register" % self.configs.get("index", "kindo.cycore.cn")
@@ -29,8 +29,7 @@ class RegisterModule(KindoModule):
                 username = self.options[2]
 
             if not username or len(re.findall("[^a-zA-Z0-9]", username)) > 0:
-                self.logger.error("username invalid")
-                return
+                raise Exception("username invalid")
 
             if len(self.options) <= 3:
                 password = prompt("please input the password:", default="").strip()
@@ -38,32 +37,28 @@ class RegisterModule(KindoModule):
                 password = self.options[3]
 
             if not password:
-                self.logger.error("invalid password")
-                return
+                raise Exception("invalid password")
 
             if len(self.options) <= 4:
                 repassword = prompt("please input the password again:", default="").strip()
 
             if password != repassword:
-                self.logger.error("the passwords you typed do not match")
-                return
+                raise Exception("the passwords you typed do not match")
 
             self.logger.debug("connecting %s" % register_engine_url)
             r = requests.post(register_engine_url, data={"username": username, "password": password})
             if r.status_code != 200:
-                self.logger.error("\"%s\" can't connect" % register_engine_url)
-                return
+                raise Exception("\"%s\" can't connect" % register_engine_url)
 
             response = r.json()
 
             if "code" in response:
-                self.logger.error(response["msg"])
-                return
+                raise Exception(response["msg"])
 
             self.set_kindo_setting("username", username)
             self.set_kindo_setting("password", password)
 
             self.logger.response("registered %s" % username)
-        except:
+        except Exception as e:
             self.logger.debug(traceback.format_exc())
-            self.logger.error("\"%s\" can't connect" % register_engine_url)
+            self.logger.response(e, False)

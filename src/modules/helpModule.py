@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
 
-from modules.kindoModule import KindoModule
+from core.kindoCore import KindoCore
 
 
-class HelpModule(KindoModule):
-    def __init__(self, command, startfolder, configs, options, logger):
-        KindoModule.__init__(self, command, startfolder, configs, options, logger)
+class HelpModule(KindoCore):
+    def __init__(self, startfolder, configs, options, logger):
+        KindoCore.__init__(self, startfolder, configs, options, logger)
 
         self.commands_info = {
             "build": {
@@ -154,7 +154,7 @@ class HelpModule(KindoModule):
             for k, v in command_info["options"].items():
                 info += """
        %s      %s""" % (k, v)
-            self.logger.response(info)
+            self.logger.info(info)
 
     def show_kindo_command_options(self, name):
         name = name.lower()
@@ -174,4 +174,4 @@ class HelpModule(KindoModule):
         for k, v in self.commands_info[name]["options"].items():
             info += """
        %s      %s""" % (k, v)
-        self.logger.response(info)
+        self.logger.info(info)

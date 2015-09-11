@@ -8,12 +8,12 @@ import hashlib
 import traceback
 from fabric.operations import prompt
 from utils.configParser import ConfigParser
-from modules.kindoModule import KindoModule
+from core.kindoCore import KindoCore
 
 
-class LoginModule(KindoModule):
-    def __init__(self, command, startfolder, configs, options, logger):
-        KindoModule.__init__(self, command, startfolder, configs, options, logger)
+class LoginModule(KindoCore):
+    def __init__(self, startfolder, configs, options, logger):
+        KindoCore.__init__(self, startfolder, configs, options, logger)
 
     def start(self):
         login_engine_url = self.get_login_engine_url()
@@ -27,7 +27,7 @@ class LoginModule(KindoModule):
             username = self.options[2]
 
         if not username or len(re.findall("[^a-zA-Z0-9]", username)) > 0:
-            self.logger.error("username invalid")
+            self.logger.response("username invalid", False)
             return
 
         if len(self.options) <= 3:
@@ -36,7 +36,7 @@ class LoginModule(KindoModule):
             password = self.options[3]
 
         if not password:
-            self.logger.error("invalid password")
+            self.logger.response("invalid password", False)
             return
 
         try:
@@ -49,8 +49,7 @@ class LoginModule(KindoModule):
                 }
             )
             if r.status_code != 200:
-                self.logger.error("\"%s\" can't connect" % login_engine_url)
-                return
+                raise Exception("\"%s\" can't connect" % login_engine_url)
 
             response = r.json()
 
@@ -65,10 +64,10 @@ class LoginModule(KindoModule):
             self.set_kindo_setting("username", username)
             self.set_kindo_setting("password", password)
 
-            self.logger.info("login successfully")
-        except:
+            self.logger.response("login successfully")
+        except Exception as e:
             self.logger.debug(traceback.format_exc())
-            self.logger.error("login failed")
+            self.logger.response(e, False)
 
     def get_login_engine_url(self):
         login_engine_url = "%s/v1/login" % self.configs.get("index", "kindo.cycore.cn")

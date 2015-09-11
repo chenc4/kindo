@@ -7,31 +7,30 @@ import requests
 import hashlib
 import zipfile
 import simplejson
-from modules.kindoModule import KindoModule
+from core.kindoCore import KindoCore
 
 
-class PushModule(KindoModule):
-    def __init__(self, command, startfolder, configs, options, logger):
-        KindoModule.__init__(self, command, startfolder, configs, options, logger)
+class PushModule(KindoCore):
+    def __init__(self, startfolder, configs, options, logger):
+        KindoCore.__init__(self, startfolder, configs, options, logger)
 
     def start(self):
         push_engine_url = "%s/v1/push" % self.configs.get("index", "kindo.cycore.cn")
         if push_engine_url[:7].lower() != "http://" and push_engine_url[:8].lower() != "https://":
             push_engine_url = "http://%s" % push_engine_url
 
-        for option in self.options[2:]:
-            try:
+
+        try:
+            for option in self.options[2:]:
                 package_path = self.get_package_path(option)
                 if not package_path or not os.path.isfile(package_path):
-                    self.logger.warn("\"%s\" not found" % option)
-                    continue
+                    raise Exception("\"%s\" not found" % option)
 
-                self.logger.info("pushing %s" % option)
+                self.logger.debug("pushing %s" % option)
 
                 code = self.configs.get("code", "")
                 if code and len(code) != 6:
-                    self.logger.error("only six characters are allowed")
-                    return
+                    raise Exception("only six characters are allowed")
 
                 data = {"code": code}
                 if "username" in self.configs:
@@ -43,8 +42,7 @@ class PushModule(KindoModule):
 
                 cache_folder = self.get_cache_folder(package_path)
                 if not self.unzip_file(package_path, cache_folder):
-                    self.logger.warn("UNPACKAGE FAILED: %s" % package_path)
-                    continue
+                    raise Exception("unpackage failed: %s" % package_path)
 
                 manifest_path = "%s/manifest.json" % cache_folder
                 if os.path.isfile(manifest_path):
@@ -61,53 +59,51 @@ class PushModule(KindoModule):
                     data["buildversion"] = manifest.get("buildversion", "")
                     data["buildtime"] = manifest.get("buildtime", "")
 
-                self.logger.info("connecting %s" % push_engine_url)
+                self.logger.debug("connecting %s" % push_engine_url)
                 self.logger.debug(data)
                 r = requests.post(push_engine_url, data=data, files={"file": open(package_path, "rb")})
                 if r.status_code != 200:
-                    self.logger.error("\"%s\" can't connect" % push_engine_url)
-                    return
+                    raise Exception("\"%s\" can't connect" % push_engine_url)
 
                 response = r.json()
 
                 if "code" in response:
-                    self.logger.error(response["msg"])
-                    return
+                    raise Exception(response["msg"])
 
-                self.logger.response("pushed %s" % option)
-            except:
-                self.logger.debug(traceback.format_exc())
-                self.logger.error("\"%s\" can't connect" % push_engine_url)
+            self.logger.response("push ok")
+        except Exception as e:
+            self.logger.debug(traceback.format_exc())
+            self.logger.response(e, False)
 
     def get_package_path(self, name):
         kiname = name if name[-3:] == ".ki" else "%s.ki" % name
-        self.logger.info("finding %s" % kiname)
+        self.logger.debug("finding %s" % kiname)
         if os.path.isfile(kiname):
-            self.logger.info("finded %s" % kiname)
+            self.logger.debug("finded %s" % kiname)
             return kiname
 
         path = os.path.realpath(kiname)
-        self.logger.info("finding %s" % path)
+        self.logger.debug("finding %s" % path)
         if os.path.isfile(path):
-            self.logger.info("finded %s" % path)
+            self.logger.debug("finded %s" % path)
             return path
 
         path = os.path.join(self.startfolder, kiname)
-        self.logger.info("finding %s" % path)
+        self.logger.debug("finding %s" % path)
         if os.path.isfile(path):
-            self.logger.info("finded %s" % path)
+            self.logger.debug("finded %s" % path)
             return path
 
         path = os.path.join(self.startfolder, "images", kiname)
-        self.logger.info("finding %s" % path)
+        self.logger.debug("finding %s" % path)
         if os.path.isfile(path):
-            self.logger.info("finded %s" % path)
+            self.logger.debug("finded %s" % path)
             return path
 
         path = self.get_image_path(name)
-        self.logger.info("finding %s" % path)
+        self.logger.debug("finding %s" % path)
         if os.path.isfile(path):
-            self.logger.info("finded %s" % path)
+            self.logger.debug("finded %s" % path)
             return path
 
         name, version = name.split(":") if ":"in name else (name, "")
@@ -117,9 +113,9 @@ class PushModule(KindoModule):
         kiname = "%s-1.0" % kiname if not version else "%s-%s" % (kiname, version)
 
         path = self.get_image_path(kiname)
-        self.logger.info("finding %s" % path)
+        self.logger.debug("finding %s" % path)
         if os.path.isfile(path):
-            self.logger.info("finded %s" % path)
+            self.logger.debug("finded %s" % path)
             return path
 
         return ""

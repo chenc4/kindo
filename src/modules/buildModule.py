@@ -12,7 +12,7 @@ import shutil
 import pickle
 import zipfile
 import simplejson
-from modules.kindoModule import KindoModule
+from core.kindoCore import KindoCore
 from commands.addCommand import AddCommand
 from commands.checkCommand import CheckCommand
 from commands.runCommand import RunCommand
@@ -23,9 +23,9 @@ from commands.centosCommand import CentOSCommand
 from commands.addOnRunCommand import AddOnRunCommand
 
 
-class BuildModule(KindoModule):
-    def __init__(self, command, startfolder, configs, options, logger):
-        KindoModule.__init__(self, command, startfolder, configs, options, logger)
+class BuildModule(KindoCore):
+    def __init__(self, startfolder, configs, options, logger):
+        KindoCore.__init__(self, startfolder, configs, options, logger)
 
         self.kic_path_infos = []
         for option in options:
@@ -39,7 +39,7 @@ class BuildModule(KindoModule):
 
             kic_path, outfolder = self.get_kic_info(option)
             if kic_path is None or not kic_path:
-                self.logger.debug("KIC NOT FOUND")
+                self.logger.debug("kic not found: %s" % option)
                 continue
 
             self.kic_path_infos.append(
@@ -50,34 +50,33 @@ class BuildModule(KindoModule):
             )
 
         self.handlers = {
-            "add": AddCommand(self.startfolder, self.configs, self.options, self.logger),
-            "check": CheckCommand(self.startfolder, self.configs, self.options, self.logger),
-            "run": RunCommand(self.startfolder, self.configs, self.options, self.logger),
-            "workdir": WorkdirCommand(self.startfolder, self.configs, self.options, self.logger),
-            "download": DownloadCommand(self.startfolder, self.configs, self.options, self.logger),
-            "ubuntu": UbuntuCommand(self.startfolder, self.configs, self.options, self.logger),
-            "centos": CentOSCommand(self.startfolder, self.configs, self.options, self.logger),
-            "addonrun": AddOnRunCommand(self.startfolder, self.configs, self.options, self.logger)
+            "add": AddCommand(startfolder, configs, options, logger),
+            "check": CheckCommand(startfolder, configs, options, logger),
+            "run": RunCommand(startfolder, configs, options, logger),
+            "workdir": WorkdirCommand(startfolder, configs, options, logger),
+            "download": DownloadCommand(startfolder, configs, options, logger),
+            "ubuntu": UbuntuCommand(startfolder, configs, options, logger),
+            "centos": CentOSCommand(startfolder, configs, options, logger),
+            "addonrun": AddOnRunCommand(startfolder, configs, options, logger)
         }
 
         self.re_pattern =  "^\s*(%s)\s+" % "|".join(self.handlers.keys())
 
     def start(self):
         kic_build_number = 0
-        for kic_path_info in self.kic_path_infos:
-            kic_build_number += 1
+        try:
+            if not self.kic_path_infos:
+                self.logger.response("no kics", False)
+                return
 
-            if not os.path.isdir(kic_path_info["outfolder"]):
-                try:
+            for kic_path_info in self.kic_path_infos:
+                kic_build_number += 1
+
+                if not os.path.isdir(kic_path_info["outfolder"]):
                     os.makedirs(kic_path_info["outfolder"])
-                except:
-                    self.logger.debug(traceback.format_exc())
-                    self.logger.error("OUTFOLDER CREATE FAILED: %s" % kic_path_info["outfolder"])
-                    return
 
-            kic_build_folder = os.path.join(self.kindo_tmps_path, uuid.uuid4().hex)
-            if not os.path.isdir(kic_build_folder):
-                try:
+                kic_build_folder = os.path.join(self.kindo_tmps_path, uuid.uuid4().hex)
+                if not os.path.isdir(kic_build_folder):
                     kic_build_sub_folders = [
                         os.path.join(kic_build_folder, "kics"),
                         os.path.join(kic_build_folder, "kibcs"),
@@ -85,73 +84,79 @@ class BuildModule(KindoModule):
                     ]
                     for kic_build_sub_folder in kic_build_sub_folders:
                         os.makedirs(kic_build_sub_folder)
-                except:
+
+                try:
+                    filedir, filename = os.path.split(kic_path_info["path"])
+
+                    commands, author, version, website, name, summary, license = self.build_kic(
+                        kic_path_info["path"], kic_build_folder
+                    )
+
+                    if len(re.findall("[^a-zA-Z0-9]", author)) > 0:
+                        raise Exception("invalid author name, just allow 'a-zA-Z0-9-_'")
+
+                    if len(re.findall("[^a-zA-Z0-9-_]", name)) > 0:
+                        raise Exception("invalid name, just allow 'a-zA-Z0-9-_'")
+
+                    if len(re.findall("[^a-zA-Z0-9\.-]", version)) > 0:
+                        raise Exception("invalid version, just allow 'a-zA-Z0-9\.-'")
+
+                    shutil.copy(kic_path_info["path"],  os.path.join(kic_build_folder, "kics", filename))
+
+                    files = []
+                    for c in commands:
+                        if "files" in c:
+                            files += self.put_files_to_build_path(
+                                c["files"],
+                                kic_build_folder,
+                                kic_path_info["path"]
+                            )
+
+                    manifest_json = {
+                        "name": name,
+                        "version": version,
+                        "author": author,
+                        "website": website,
+                        "summary": summary,
+                        "license": license,
+                        "buildtime": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+                        "buildversion": 2,
+                        "filename": filename,
+                        "files": files
+                    }
+
+                    if len(self.kic_path_infos) == 1:
+                        manifest = os.path.join(kic_build_folder, "manifest.json")
+                    else:
+                        manifest = os.path.join(kic_build_folder, "manifest-%s.json" % kic_build_number)
+                    with open(manifest, 'wb') as fs:
+                        simplejson.dump(manifest_json, fs)
+
+                    output_ki_path = self.configs.get(
+                        "o",
+                        kic_path_info["outfolder"]
+                    )
+
+                    if output_ki_path[-3:].lower() != ".ki":
+                        output_ki_path = os.path.join(output_ki_path, "%s-%s-%s.ki" % (author, name, version))
+
+                    output_ki_dir = os.path.dirname(output_ki_path)
+                    if not os.path.isdir(output_ki_dir):
+                        os.makedirs(output_ki_dir)
+
+                    self.logger.debug("packaging %s" % output_ki_path)
+                    self.zip_dir(kic_build_folder, output_ki_path)
+                    self.logger.debug("packaged %s" % output_ki_path)
+                except Exception as e:
                     self.logger.debug(traceback.format_exc())
-                    self.logger.error("TMPFOLDER CREATE FAILED: %s" % kic_build_folder)
+                    self.logger.response(e, False)
                     return
-
-            try:
-                filedir, filename = os.path.split(kic_path_info["path"])
-
-                commands, author, version, website, name, summary, license = self.build_kic(
-                    kic_path_info["path"], kic_build_folder
-                )
-                if commands is None:
-                    return
-
-                if len(re.findall("[^a-zA-Z0-9]", author)) > 0:
-                    self.logger.error("INVALID AUTHOR NAME, JUST ALLOW 'a-zA-Z0-9-_'")
-                    return
-
-                if len(re.findall("[^a-zA-Z0-9-_]", name)) > 0:
-                    self.logger.error("INVALID NAME, JUST ALLOW 'a-zA-Z0-9-_'")
-                    return
-
-                if len(re.findall("[^a-zA-Z0-9\.-]", version)) > 0:
-                    self.logger.error("INVALID VERSION, JUST ALLOW 'a-zA-Z0-9\.-'")
-                    return
-
-                shutil.copy(kic_path_info["path"],  os.path.join(kic_build_folder, "kics", filename))
-
-                files = []
-                for c in commands:
-                    if "files" in c:
-                        files += self.put_files_to_build_path(
-                            c["files"],
-                            kic_build_folder,
-                            kic_path_info["path"]
-                        )
-
-                manifest_json = {
-                    "name": name,
-                    "version": version,
-                    "author": author,
-                    "website": website,
-                    "summary": summary,
-                    "license": license,
-                    "buildtime": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-                    "buildversion": 2,
-                    "filename": filename,
-                    "files": files
-                }
-
-                if len(self.kic_path_infos) == 1:
-                    manifest = os.path.join(kic_build_folder, "manifest.json")
-                else:
-                    manifest = os.path.join(kic_build_folder, "manifest-%s.json" % kic_build_number)
-                with open(manifest, 'wb') as fs:
-                    simplejson.dump(manifest_json, fs)
-
-                output_ki_path = os.path.join(kic_path_info["outfolder"], "%s.ki" % name)
-
-                self.logger.info("packaging %s" % output_ki_path)
-                self.zip_dir(kic_build_folder, output_ki_path)
-                self.logger.info("packaged %s" % output_ki_path)
-            except:
-                self.logger.debug(traceback.format_exc())
-                self.logger.error("BUILD FAILED: exception raised")
-            finally:
-                shutil.rmtree(kic_build_folder)
+                finally:
+                    shutil.rmtree(kic_build_folder)
+                self.logger.response("build ok: %s" % kic_path_info["path"])
+        except Exception as e:
+            self.logger.debug(traceback.format_exc())
+            self.logger.response(e, False)
 
 
     def put_files_to_build_path(self, files, kic_build_folder, kic_path):
@@ -192,7 +197,7 @@ class BuildModule(KindoModule):
         filedir, filename = os.path.split(kic_path)
         name, ext = os.path.splitext(filename)
 
-        self.logger.info("parsing %s" % kic_path)
+        self.logger.debug("parsing %s" % kic_path)
         with open(kic_path, "r") as fs:
             line = 0
             for content in fs:
@@ -209,21 +214,21 @@ class BuildModule(KindoModule):
                         groups = patterns.groups()
                         if groups[0].lower() == "author":
                             author = groups[1]
-                            self.logger.info("parsed author: %s" % author)
+                            self.logger.debug("parsed author: %s" % author)
                         elif groups[0].lower() == "version":
                             version = groups[1]
-                            self.logger.info("parsed version: %s" % version)
+                            self.logger.debug("parsed version: %s" % version)
                         elif groups[0].lower() == "website":
                             website = groups[1]
-                            self.logger.info("parsed website: %s" % website)
+                            self.logger.debug("parsed website: %s" % website)
                         elif groups[0].lower() == "name":
                             name = groups[1]
-                            self.logger.info("parsed name: %s" % name)
+                            self.logger.debug("parsed name: %s" % name)
                         elif groups[0].lower() == "summary":
                             summary = groups[1]
                         elif groups[0].lower() == "license":
                             license = groups[1]
-                            self.logger.info("parsed license: %s" % license)
+                            self.logger.debug("parsed license: %s" % license)
                     continue
 
                 if not content:
@@ -244,7 +249,7 @@ class BuildModule(KindoModule):
 
         with open(os.path.join(kic_build_folder, "kibcs", "%s.kibc" % name), 'wb') as fs:
             pickle.dump(commands, fs)
-        self.logger.info("parsed %s" % kic_path)
+        self.logger.debug("parsed %s" % kic_path)
 
         if "t" in self.configs:
             tag = self.configs["t"]
@@ -273,7 +278,10 @@ class BuildModule(KindoModule):
 
         for kic_maybe_path in kic_maybe_paths:
             if os.path.isfile(kic_maybe_path):
-                return kic_maybe_path, os.path.realpath(self.configs.get("o", os.path.dirname(kic_maybe_path)))
+                kic_output_dir = self.configs.get("o", os.path.dirname(kic_maybe_path))
+                if kic_output_dir[-3:].lower() == ".ki":
+                    kic_output_dir = os.path.dirname(kic_output_dir)
+                return kic_maybe_path, os.path.realpath(kic_output_dir)
 
         return None, None
 

@@ -10,12 +10,13 @@ import hashlib
 from prettytable import PrettyTable
 from fabric.operations import prompt
 from utils.configParser import ConfigParser
-from modules.kindoModule import KindoModule
+from utils.kindoUtils import download_with_progressbar
+from core.kindoCore import KindoCore
 
 
-class SearchModule(KindoModule):
-    def __init__(self, command, startfolder, configs, options, logger):
-        KindoModule.__init__(self, command, startfolder, configs, options, logger)
+class SearchModule(KindoCore):
+    def __init__(self, startfolder, configs, options, logger):
+        KindoCore.__init__(self, startfolder, configs, options, logger)
 
     def start(self):
         search_engine_url = "%s/v1/search" % self.configs.get("index", "kindo.cycore.cn")
@@ -23,13 +24,13 @@ class SearchModule(KindoModule):
         if search_engine_url[:7].lower() != "http://" and search_engine_url[:8].lower() != "https://":
             search_engine_url = "http://%s" % search_engine_url
 
-        for option in self.options[2:]:
-            try:
-                self.logger.info("searching %s" % option)
+        try:
+            for option in self.options[2:]:
+                self.logger.debug("searching %s" % option)
 
                 params = {"q": option}
 
-                self.logger.info("connecting %s" % search_engine_url)
+                self.logger.debug("connecting %s" % search_engine_url)
                 r = requests.get(search_engine_url, params=params)
                 if r.status_code != 200:
                     self.logger.error("\"%s\" can't connect" % search_engine_url)
@@ -38,10 +39,9 @@ class SearchModule(KindoModule):
                 response = r.json()
 
                 if "code" in response:
-                    self.logger.error(response["msg"])
-                    return
+                    raise Exception(response["msg"])
 
-                self.logger.info("searched %s results" % len(response))
+                self.logger.debug("searched %s results" % len(response))
 
                 table = PrettyTable(["number", "name", "version", "pusher", "size"])
                 index = 0
@@ -50,7 +50,7 @@ class SearchModule(KindoModule):
                     table.add_row([index, ki["name"], ki["version"], ki["pusher"], ki["size"]])
 
                 if len(response) == 0:
-                    self.logger.warn("IMAGE NOT FOUND: %s" % option)
+                    self.logger.response("image not found: %s" % option, False)
                     continue
 
                 self.logger.response(table)
@@ -58,9 +58,9 @@ class SearchModule(KindoModule):
                 number = self.get_input_number(response)
                 if number > -1:
                     self.pull_image(response[number]["name"])
-            except:
-                self.logger.debug(traceback.format_exc())
-                self.logger.error("\"%s\" can't connect" % search_engine_url)
+        except Exception as e:
+            self.logger.debug(traceback.format_exc())
+            self.logger.response(e, False)
 
     def get_input_number(self, kis, max_times=3, now_time=0):
         if now_time < max_times:
@@ -82,7 +82,7 @@ class SearchModule(KindoModule):
         url = image_info["url"]
         name = image_info["name"]
 
-        self.logger.info("downloading %s" % name)
+        self.logger.debug("downloading %s" % name)
 
         kiname = name.replace("/", "-").replace(":", "-")
         kiname = kiname if name[-3:] == ".ki" else "%s.ki" % kiname
@@ -93,21 +93,16 @@ class SearchModule(KindoModule):
 
         self.logger.debug(url)
 
-        r = requests.get(url)
-        if r.status_code == 200:
-            if not os.path.isdir(self.kindo_images_path):
-                os.makedirs(self.kindo_images_path)
+        if not os.path.isdir(self.kindo_images_path):
+            os.makedirs(self.kindo_images_path)
 
-            with open(target, "wb") as fs:
-                fs.write(r.content)
-            return target
-
-        return ""
+        download_with_progressbar(url, target)
+        return target
 
     def pull_image(self, name):
         pull_engine_url = self.get_pull_engine_url()
         try:
-            self.logger.info("pulling image info: %s" % name)
+            self.logger.debug("pulling image info: %s" % name)
 
             response = self.pull_image_info(pull_engine_url, name)
             if response is None:
@@ -117,19 +112,17 @@ class SearchModule(KindoModule):
                 if response["code"] == "040014000":
                     code = prompt("please input the extraction code: ")
 
-                    self.logger.info("pulling image info again: %s" % name)
+                    self.logger.debug("pulling image info again: %s" % name)
                     response = self.pull_image_info(pull_engine_url, name, {"code": code})
 
                 if "code" in response:
-                    self.logger.error(response["msg"])
-                    return
+                    raise Exception(response["msg"])
 
             if not self.add_image_info(response, self.download_package(response)):
-                self.logger.error("pull failed")
+                raise Exception("pull failed")
 
         except:
             self.logger.debug(traceback.format_exc())
-            self.logger.error("\"%s\" can't connect" % pull_engine_url)
 
     def pull_image_info(self, pull_engine_url, name, params=None):
         name, version = name.split(":") if ":"in name else (name, "")
@@ -148,8 +141,7 @@ class SearchModule(KindoModule):
 
         r = requests.get(pull_engine_url, params=params)
         if r.status_code != 200:
-            self.logger.error("\"%s\" can't connect" % pull_engine_url)
-            return
+            raise Exception("\"%s\" can't connect" % pull_engine_url, False)
 
         return r.json()
 

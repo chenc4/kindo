@@ -6,25 +6,25 @@ import hashlib
 import traceback
 import requests
 from utils.configParser import ConfigParser
-from modules.kindoModule import KindoModule
+from core.kindoCore import KindoCore
 
 
-class RmModule(KindoModule):
-    def __init__(self, command, startfolder, configs, options, logger):
-        KindoModule.__init__(self, command, startfolder, configs, options, logger)
+class RmModule(KindoCore):
+    def __init__(self, startfolder, configs, options, logger):
+        KindoCore.__init__(self, startfolder, configs, options, logger)
 
     def start(self):
         if len(self.options) < 3:
-            self.logger.warn("NO IMAGES")
+            self.logger.response("no images", False)
             return
 
         self.logger.debug(self.options)
 
         try:
             self.delete_image(self.options[2])
-        except:
+        except Exception as e:
             self.logger.debug(traceback.format_exc())
-            self.logger.error("delete failed")
+            self.logger.response(e, False)
 
     def delete_image(self, image_name):
         name, version = image_name.split(":") if ":"in image_name else (image_name, "")
@@ -42,18 +42,16 @@ class RmModule(KindoModule):
 
         delete_engine_url = self.get_delete_engine_url()
 
-        self.logger.info("connecting %s" % delete_engine_url)
+        self.logger.debug("connecting %s" % delete_engine_url)
 
         r = requests.post(delete_engine_url, data=data)
         if r.status_code != 200:
-            self.logger.error("\"%s\" can't connect" % delete_engine_url)
-            return
+            raise Exception("\"%s\" can't connect" % delete_engine_url)
 
         response = r.json()
 
         if "code" in response:
-            self.logger.error(response["msg"])
-            return
+            raise Exception(response["msg"])
 
         self.logger.response("delete %s successfully" % image_name)
 

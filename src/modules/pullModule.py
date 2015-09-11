@@ -7,18 +7,19 @@ import traceback
 from fabric.operations import prompt
 from core.errors import ERRORS
 from utils.configParser import ConfigParser
-from modules.kindoModule import KindoModule
+from utils.kindoUtils import download_with_progressbar
+from core.kindoCore import KindoCore
 
 
-class PullModule(KindoModule):
-    def __init__(self, command, startfolder, configs, options, logger):
-        KindoModule.__init__(self, command, startfolder, configs, options, logger)
+class PullModule(KindoCore):
+    def __init__(self, startfolder, configs, options, logger):
+        KindoCore.__init__(self, startfolder, configs, options, logger)
 
     def start(self):
         pull_engine_url = self.get_pull_engine_url()
         try:
             if len(self.options) < 3:
-                self.logger.warn("NO IMAGE NAME")
+                self.logger.response("image no found", False)
                 return
 
             response = self.pull_image_info(pull_engine_url)
@@ -31,15 +32,14 @@ class PullModule(KindoModule):
                     response = self.pull_image_info(pull_engine_url, {"code": code})
 
                 if "code" in response:
-                    self.logger.error(response["msg"])
-                    return
+                    raise Exception(response["msg"])
 
             if not self.add_image_info(response, self.download_package(response)):
-                self.logger.error("pull failed")
+                raise Exception("pull failed")
 
-        except:
+        except Exception as e:
             self.logger.debug(traceback.format_exc())
-            self.logger.error("\"%s\" can't connect" % pull_engine_url)
+            self.logger.response(e, False)
 
     def get_pull_engine_url(self):
         pull_engine_url = "%s/v1/pull" % self.configs.get("index", "kindo.cycore.cn")
@@ -66,8 +66,7 @@ class PullModule(KindoModule):
 
         r = requests.get(pull_engine_url, params=params)
         if r.status_code != 200:
-            self.logger.error("\"%s\" can't connect" % pull_engine_url)
-            return
+            raise Exception("\"%s\" can't connect" % pull_engine_url)
 
         return r.json()
 
@@ -75,7 +74,7 @@ class PullModule(KindoModule):
         url = image_info["url"]
         name = image_info["name"]
 
-        self.logger.info("downloading %s from %s" % (name, url))
+        self.logger.debug("downloading %s from %s" % (name, url))
 
         kiname = name.replace("/", "-").replace(":", "-")
         kiname = kiname if name[-3:] == ".ki" else "%s.ki" % kiname
@@ -85,18 +84,12 @@ class PullModule(KindoModule):
             self.logger.debug("%s existed, removing" % target)
             os.remove(target)
 
-        r = requests.get(url)
-        if r.status_code == 200:
-            if not os.path.isdir(self.kindo_images_path):
-                os.makedirs(self.kindo_images_path)
 
-            with open(target, "wb") as fs:
-                fs.write(r.content)
-            return target
-        else:
-            self.logger.error("download failed")
-            self.logger.debug(r.content)
-        return ""
+        if not os.path.isdir(self.kindo_images_path):
+            os.makedirs(self.kindo_images_path)
+
+        download_with_progressbar(url, target)
+        return target
 
     def add_image_info(self, image_info, path):
         if not path:

@@ -2,13 +2,13 @@
 #-*- coding: utf-8 -*-
 import os
 from prettytable import PrettyTable
-from modules.kindoModule import KindoModule
+from core.kindoCore import KindoCore
 from utils.configParser import ConfigParser
 
 
-class ImagesModule(KindoModule):
-    def __init__(self, command, startfolder, configs, options, logger):
-        KindoModule.__init__(self, command, startfolder, configs, options, logger)
+class ImagesModule(KindoCore):
+    def __init__(self, startfolder, configs, options, logger):
+        KindoCore.__init__(self, startfolder, configs, options, logger)
 
     def start(self):
         images = self.get_images_list()

@@ -3,29 +3,32 @@
 import os
 import traceback
 from utils.configParser import ConfigParser
-from modules.kindoModule import KindoModule
+from core.kindoCore import KindoCore
 
-class RmiModule(KindoModule):
-    def __init__(self, command, startfolder, configs, options, logger):
-        KindoModule.__init__(self, command, startfolder, configs, options, logger)
+class RmiModule(KindoCore):
+    def __init__(self, startfolder, configs, options, logger):
+        KindoCore.__init__(self, startfolder, configs, options, logger)
 
     def start(self):
         if len(self.options) < 3:
-            self.logger.warn("NO IMAGES")
+            self.logger.response("no images", False)
             return
 
         self.logger.debug(self.options)
 
         try:
-            self.delete_image(self.options[2])
-        except:
+            if self.delete_image(self.options[2]):
+                self.logger.response("delete ok")
+            else:
+                self.logger.response("delete failed", False)
+        except Exception as e:
             self.logger.debug(traceback.format_exc())
-            self.logger.error("delete failed")
+            self.logger.response(e, False)
 
     def delete_image(self, image_name):
         ini_path = os.path.join(self.kindo_settings_path, "images.ini")
         if not os.path.isfile(ini_path):
-            return {}
+            return False
 
         cf = ConfigParser()
         cf.read(ini_path)
@@ -51,3 +54,4 @@ class RmiModule(KindoModule):
 
             cf.remove_section(image_name)
             cf.write(open(ini_path, "w"))
+        return True

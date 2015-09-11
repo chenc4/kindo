@@ -6,12 +6,14 @@ import shutil
 import traceback
 import zipfile
 import pickle
+import requests
 import simplejson
 from fabric.state import output
 from fabric.tasks import execute
 from fabric.api import env
-from modules.kindoModule import KindoModule
+from core.kindoCore import KindoCore
 from utils.configParser import ConfigParser
+from utils.kindoUtils import download_with_progressbar
 from commands.addCommand import AddCommand
 from commands.checkCommand import CheckCommand
 from commands.runCommand import RunCommand
@@ -22,9 +24,9 @@ from commands.centosCommand import CentOSCommand
 from commands.addOnRunCommand import AddOnRunCommand
 
 
-class RunModule(KindoModule):
-    def __init__(self, command, startfolder, configs, options, logger):
-        KindoModule.__init__(self, command, startfolder, configs, options, logger)
+class RunModule(KindoCore):
+    def __init__(self, startfolder, configs, options, logger):
+        KindoCore.__init__(self, startfolder, configs, options, logger)
 
         env.colorize_errors = True
         env.command_timeout = self.configs.get("timout", 60 * 30)
@@ -62,23 +64,23 @@ class RunModule(KindoModule):
         self.ki_path = self.get_ki_path()
 
         self.handlers = {
-            "add": AddCommand(self.startfolder, self.configs, self.options, self.logger),
-            "check": CheckCommand(self.startfolder, self.configs, self.options, self.logger),
-            "run": RunCommand(self.startfolder, self.configs, self.options, self.logger),
-            "workdir": WorkdirCommand(self.startfolder, self.configs, self.options, self.logger),
-            "download": DownloadCommand(self.startfolder, self.configs, self.options, self.logger),
-            "ubuntu": UbuntuCommand(self.startfolder, self.configs, self.options, self.logger),
-            "centos": CentOSCommand(self.startfolder, self.configs, self.options, self.logger),
-            "addonrun": AddOnRunCommand(self.startfolder, self.configs, self.options, self.logger)
+            "add": AddCommand(startfolder, configs, options, logger),
+            "check": CheckCommand(startfolder, configs, options, logger),
+            "run": RunCommand(startfolder, configs, options, logger),
+            "workdir": WorkdirCommand(startfolder, configs, options, logger),
+            "download": DownloadCommand(startfolder, configs, options, logger),
+            "ubuntu": UbuntuCommand(startfolder, configs, options, logger),
+            "centos": CentOSCommand(startfolder, configs, options, logger),
+            "addonrun": AddOnRunCommand(startfolder, configs, options, logger)
         }
 
     def start(self):
         if not os.path.isfile(self.ki_path):
-            self.logger.error("KI NOT FOUND: %s" % self.ki_path)
+            self.logger.response("ki not found: %s" % self.ki_path, False)
             return
 
         if env.passwords is None or len(env.passwords) == 0:
-            self.logger.error("ARGS ERROR: hosts not found")
+            self.logger.response("hosts not found", False)
             return
 
         dirname, filename = os.path.split(self.ki_path)
@@ -88,7 +90,7 @@ class RunModule(KindoModule):
             not os.path.isdir(cache_folder)
         ):
             if not self.unzip_file(self.ki_path, cache_folder):
-                self.logger.error("UNPACKAGE ERROR")
+                self.logger.response("unpackage failed", False)
                 return
 
         ki_kibcs_path = os.path.join(cache_folder, "kibcs")
@@ -102,17 +104,17 @@ class RunModule(KindoModule):
             ki_files_path = os.path.join(cache_folder, "deps")
 
         if not os.path.isdir(ki_kibcs_path):
-            self.logger.error("INVALID KI PACKAGE")
+            self.logger.response("invalid ki package", False)
             return
 
-        for f in os.listdir(ki_kibcs_path):
-            filename, ext = os.path.splitext(f)
-            if ext != ".kibc":
-                continue
+        try:
+            for f in os.listdir(ki_kibcs_path):
+                filename, ext = os.path.splitext(f)
+                if ext != ".kibc":
+                    continue
 
-            script = os.path.join(ki_kibcs_path, f)
-            with open(script, 'rb') as fs:
-                try:
+                script = os.path.join(ki_kibcs_path, f)
+                with open(script, 'rb') as fs:
                     script_commands = pickle.load(fs)
 
                     execute(
@@ -121,32 +123,31 @@ class RunModule(KindoModule):
                         files_folder=ki_files_path,
                         hosts=env.passwords.keys()
                     )
-                except:
-                    self.logger.debug(traceback.format_exc())
-                    self.logger.error("can't connect host")
+            self.logger.response("run ok")
+        except Exception as e:
+            self.logger.debug(traceback.format_exc())
+            self.logger.response(e, False)
 
     def execute_script_commands(self, commands, files_folder):
         position = "~"
         for command in commands:
             if "action" not in command:
-                self.logger.error("KI RUN ERROR: command invalid")
-                return
+                raise Exception("command invalid")
 
             action = command["action"].lower()
             if action not in self.handlers:
-                self.logger.error("KI RUN ERROR: %s not supported" % action)
-                return
+                raise Exception("%s not supported" % action)
 
             status, position, errormsg = self.handlers[action].run(command, files_folder, position)
             # if the command is executed(success or fail), not continue
             if status == 0:
-                self.logger.error(errormsg)
+                self.logger.debug(errormsg)
 
     def get_ki_path(self):
         self.logger.debug(self.options)
 
         ki_path = ""
-        for option in self.options:
+        for option in self.options[1:]:
             ki_path = option
             if ki_path[-3:] != ".ki":
                 ki_path = "%s.ki" % ki_path
@@ -158,6 +159,9 @@ class RunModule(KindoModule):
                     path = os.path.join(self.startfolder, ki_path)
                     if not os.path.isfile(path):
                         path = self.get_image_path(option)
+                        if not path and "/" in option and ":" in option:
+                            path = self.pull_image_path(option)
+
 
                     if os.path.isfile(path):
                         ki_path = path
@@ -167,6 +171,110 @@ class RunModule(KindoModule):
 
         self.logger.debug(ki_path)
         return ki_path
+
+    def pull_image_path(self, imagename):
+        pull_engine_url = self.get_pull_engine_url()
+        try:
+            response = self.pull_image_info(pull_engine_url, imagename)
+            if response is None:
+                return
+
+            if "code" in response:
+                if response["code"] == "040014000":
+                    code = prompt("please input the extraction code: ")
+                    response = self.pull_image_info(pull_engine_url, imagename, {"code": code})
+
+                if "code" in response:
+                    raise Exception(response["msg"])
+
+            path = self.download_package(response)
+            if not self.add_image_info(response, path):
+                raise Exception("pull failed")
+            return path
+        except:
+            self.logger.debug(traceback.format_exc())
+        return ""
+
+    def get_pull_engine_url(self):
+        pull_engine_url = "%s/v1/pull" % self.configs.get("index", "kindo.cycore.cn")
+
+        if pull_engine_url[:7].lower() != "http://" and pull_engine_url[:8].lower() != "https://":
+            pull_engine_url = "http://%s" % pull_engine_url
+
+        return pull_engine_url
+
+    def pull_image_info(self, pull_engine_url, imagename, params=None):
+        name, version = imagename.split(":") if ":"in imagename else (imagename, "")
+        author, name = name.split("/") if "/" in name else ("", name)
+
+        params = dict({"uniqueName": name}, **params) if params is not None else {"uniqueName": name}
+        if author:
+            params["uniqueName"] = "%s/%s" % (author, params["uniqueName"])
+        else:
+            params["uniqueName"] = "anonymous/%s" % params["uniqueName"]
+
+        if version:
+            params["uniqueName"] = "%s:%s" % (params["uniqueName"], version)
+        else:
+            params["uniqueName"] = "%s:1.0" % params["uniqueName"]
+
+        r = requests.get(pull_engine_url, params=params)
+        if r.status_code != 200:
+            raise Exception("\"%s\" can't connect" % pull_engine_url)
+
+        return r.json()
+
+    def download_package(self, image_info):
+        url = image_info["url"]
+        name = image_info["name"]
+
+        self.logger.debug("downloading %s from %s" % (name, url))
+
+        kiname = name.replace("/", "-").replace(":", "-")
+        kiname = kiname if name[-3:] == ".ki" else "%s.ki" % kiname
+        target = os.path.join(self.kindo_images_path, kiname)
+
+        try:
+            if os.path.isfile(target):
+                self.logger.debug("%s existed, removing" % target)
+                os.remove(target)
+
+            if not os.path.isdir(self.kindo_images_path):
+                os.makedirs(self.kindo_images_path)
+
+            download_with_progressbar(url, target)
+
+            return target
+        except:
+            self.logger.debug(traceback.format_exc())
+        return ""
+
+    def add_image_info(self, image_info, path):
+        if not path:
+            self.logger.debug("path is empty")
+            return False
+
+        ini_path = os.path.join(self.kindo_settings_path, "images.ini")
+        if not os.path.isdir(self.kindo_settings_path):
+            os.makedirs(self.kindo_settings_path)
+
+        cf = ConfigParser()
+        cf.read(ini_path)
+
+        sections = cf.sections()
+
+        if image_info["name"] not in sections:
+            cf.add_section(image_info["name"])
+        cf.set(image_info["name"], "name", image_info["name"])
+        cf.set(image_info["name"], "version", image_info["version"])
+        cf.set(image_info["name"], "buildtime", image_info["buildtime"])
+        cf.set(image_info["name"], "pusher", image_info["pusher"])
+        cf.set(image_info["name"], "size", image_info["size"])
+        cf.set(image_info["name"], "url", image_info["url"])
+        cf.set(image_info["name"], "path", path)
+
+        cf.write(open(ini_path, "w"))
+        return True
 
     def get_cache_info(self, filename):
         # for example: /var/cache/kindo/nginx/nginx-1.0.0

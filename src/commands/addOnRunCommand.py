@@ -35,17 +35,9 @@ class AddOnRunCommand(Command):
         if command["action"] != "ADDONRUN":
             return -1, position, ""
 
-        src = command["args"]["from"]
-        self.logger.debug(src)
-        if not os.path.isfile(src) and not os.path.isdir(src):
-            src = os.path.realpath(command["args"]["from"])
-            self.logger.debug(src)
-            if not os.path.isfile(src) and not os.path.isdir(src):
-                src = os.path.join(self.startfolder, command["args"]["from"])
-                self.logger.debug(src)
-                if not os.path.isfile(src) and not os.path.isdir(src):
-                    src = os.path.join(os.path.dirname(self.get_ki_path()), command["args"]["from"])
-                    self.logger.debug(src)
+        src = self.get_file_path(command["args"]["from"])
+        if not os.path.isfile(src):
+            src = self.get_dir_path(command["args"]["from"])
 
         ignore = True if self.configs.get("ignore", 1) == 1 else False
         if not os.path.isfile(src) and not os.path.isdir(src):
@@ -53,13 +45,59 @@ class AddOnRunCommand(Command):
                 return 1, position, ""
             return 0, position, "ADDONRUN ERROR: %s not found" % src
 
-        self.logger.info("find %s" % src)
+        files = []
+        if os.path.isfile(src):
+            files.append(src)
+        elif os.path.isdir(src):
+            files = self.get_files_from_dir(src)
+
+        self.logger.debug("find %s" % src)
         with cd(position):
-            if not self.upload(src, command["args"]["to"]):
-                return 0, position, "ADDONRUN ERROR: %s upload failed" % src
+            is_dir = None
+            if len(files) > 1 or os.path.isdir(src):
+                is_dir = True
+
+            self.logger.debug(files)
+            for f in files:
+                self.logger.debug("uploading %s" % f)
+                if not self.upload(f, command["args"]["to"], is_dir) and not ignore:
+                    return 0, position, "ADDONRUN ERROR: %s upload failed" % f
             return 1, position, ""
         return -1, position, ""
 
+    def get_file_path(self, path):
+        if not os.path.isfile(path):
+            src = os.path.realpath(path)
+            if not os.path.isfile(src):
+                src = os.path.join(self.startfolder, path)
+                if not os.path.isfile(src):
+                    src = os.path.join(os.path.dirname(self.get_ki_path()), path)
+                    if os.path.isfile(src):
+                        return src
+        return path
+
+    def get_dir_path(self, path):
+        if not os.path.isdir(path):
+            src = os.path.realpath(path)
+            if not os.path.isdir(src):
+                src = os.path.join(self.startfolder, path)
+                if not os.path.isdir(src):
+                    src = os.path.join(os.path.dirname(self.get_ki_path()), path)
+                    if os.path.isdir(src):
+                        return src
+        return path
+
+    def get_files_from_dir(self, dirpath):
+        files = []
+        for root, dirnames, filenames in os.walk(dirpath):
+            for filename in filenames:
+                self.logger.debug(os.path.join(root, filename))
+                files.append(os.path.join(root, filename))
+
+            for dirname in dirnames:
+                files += self.get_files_from_dir(os.path.join(root, dirname))
+
+        return files
 
     def get_ki_path(self):
         self.logger.debug(self.options)

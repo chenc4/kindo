@@ -70,7 +70,6 @@ class Kindo:
 
         try:
             core_command_cls = self.core_commands[command](
-                command,
                 self.startfolder,
                 self.configs,
                 self.options,

@@ -7,18 +7,18 @@ import traceback
 import zipfile
 import simplejson
 from utils.configParser import ConfigParser
-from modules.kindoModule import KindoModule
+from core.kindoCore import KindoCore
 
 
-class CommitModule(KindoModule):
-    def __init__(self, command, startfolder, configs, options, logger):
-        KindoModule.__init__(self, command, startfolder, configs, options, logger)
+class CommitModule(KindoCore):
+    def __init__(self, startfolder, configs, options, logger):
+        KindoCore.__init__(self, startfolder, configs, options, logger)
 
         self.ki_path = self.get_ki_path()
 
     def start(self):
         if not os.path.isfile(self.ki_path):
-            self.logger.error("KI NOT FOUND: %s" % self.ki_path)
+            self.logger.response("ki not found: %s" % self.ki_path, False)
             return
 
         try:
@@ -29,10 +29,12 @@ class CommitModule(KindoModule):
             ki_output_path, manifest = self.create_new_image()
 
             if not self.add_image_info(manifest, ki_output_path):
-                self.logger.error("commit failed")
-        except:
+                self.logger.response("commit failed", False)
+                return
+            self.logger.response("commit ok")
+        except Exception as e:
             self.logger.debug(traceback.format_exc())
-            self.logger.error("commit failed")
+            self.logger.response("commit failed", False)
 
     def add_image_info(self, image_info, path):
         if not path:
@@ -69,8 +71,7 @@ class CommitModule(KindoModule):
             shutil.rmtree(cache_folder)
 
         if not self.unzip_file(self.ki_path, cache_folder):
-            self.logger.error("UNPACKAGE ERROR")
-            return
+            raise Exception("unpackage error")
 
         manifest_path = os.path.join(cache_folder, "manifest.json")
 
