@@ -18,14 +18,17 @@ class Command(KindoCore):
     def has_sudo(self):
         if self._has_sudo is None:
             self._has_sudo = False
-            with settings(hide('stderr', 'warnings'), warn_only=True):
-                sudo("echo", user=env.user)
-                self._has_sudo = True
+            with settings(hide('stderr', 'warnings', 'stdout'), warn_only=True):
+                result = sudo("echo sudotest", user=env.user)
+                if "sudotest" in result:
+                    self._has_sudo = True
         return self._has_sudo
 
     def execute(self, cmd):
         if self.has_sudo():
+            self.logger.debug("sudo: True")
             return sudo(cmd, user=env.user)
+        self.logger.debug("sudo: False")
         return run(cmd)
 
     def upload(self, filepath, target, target_is_dir=None):
