@@ -10,6 +10,7 @@ from utils.logger import Logger
 from modules.runModule import RunModule
 from modules.buildModule import BuildModule
 from modules.searchModule import SearchModule
+from modules.shellModule import ShellModule
 from modules.cleanModule import CleanModule
 from modules.registerModule import RegisterModule
 from modules.pushModule import PushModule
@@ -40,6 +41,7 @@ class Kindo:
             "run": RunModule,
             "build": BuildModule,
             "search": SearchModule,
+            "shell": ShellModule,
             "clean": CleanModule,
             "register": RegisterModule,
             "push": PushModule,
@@ -81,7 +83,6 @@ class Kindo:
             self.logger.warn("quit")
         except:
             self.logger.debug(traceback.format_exc())
-            self.logger.error("KINDO RUN ERROR")
 
     def show_help(self):
         banner = """a simple tool for packaging and deploying your codes
@@ -101,10 +102,12 @@ kindo commands:
     rmi         Remove one or more local images
     run         Run image commands to the target operating system
     search      Search an image on the kindo hub
+    shell       Execute shell command directly
     version     Show the kindo information
 
 script commands:
     add        Add local or remote file to the target operating system
+    addonrun   Add file or directory to the target operating system when running
     centos     Run an shell command on CentOS, others ignore
     check      Check whether the file or port existed or not
     download   Download file from the target operating system
