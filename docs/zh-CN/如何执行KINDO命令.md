@@ -200,6 +200,19 @@ kindo text.ki
 
 根据名称模糊搜索安装包
 
+### shell
+
+用法：kindo shell [shell_command]
+
+支持的参数：
+
+    -d          开启DEBUG模式
+    -h          服务器登录信息，格式：帐号@IP:端口
+    -p          服务器登录密码
+    -g          服务器组名
+
+直接执行shell命令
+
 ### version
 
 用法：kindo version
