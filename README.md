@@ -36,6 +36,7 @@ kindo pull shenghe/kindo:1.0
 kindo run shenghe/kindo:1.0 -h [账号@服务器地址:端口号] -p [密码]
 ```
 
+
 ### 常见操作
 
 1. 搜索仓库中的Kindo包
@@ -46,6 +47,7 @@ kindo run shenghe/kindo:1.0 -h [账号@服务器地址:端口号] -p [密码]
 kindo search demo
 ```
 
+
 2. 运行仓库中的Kindo包
 
 通过搜索下载好Kindo包后（如果知道仓库中的Kindo包全称，无需搜索下载），你可以直接指定部署包全称在服务器地址和密码运行，例如：
@@ -54,9 +56,11 @@ kindo search demo
 kindo run shenghe/demo:1.0 -h [账号@服务器IP:SSH端口号] -p [密码]
 ```
 
+
 3. 编译Kindo脚本
 
 很多时候，仓库无法找到想要的部署包，我们可以自己写相应的Kindo脚本并编译成Kindo包，然后运行。
+
 [Kindo脚本](https://github.com/shenghe/kindo/wiki/%E5%A6%82%E4%BD%95%E5%86%99%E8%87%AA%E5%8A%A8%E5%8C%96%E9%83%A8%E7%BD%B2%E8%84%9A%E6%9C%AC)是以**.kic**为后缀的普通文本文件，例如**demo.kic**：
 
 ```txt
@@ -76,6 +80,7 @@ kindo build demo
 4. 运行本地Kindo包
 
 生成Kindo包，你有两种方式运行Kindo包。一种，直接指定Kindo包本地绝对地址；第二种，安装Kindo包到本地仓库，然后通过包的名称运行。
+
 第一种，命令如下：
 
 ```shell
@@ -91,11 +96,15 @@ kindo run shenghe/demo:1.0 -h [账号@服务器IP:SSH端口号] -p [密码]
 
 更多的命令和用法，参考[Kindo 命令文档](https://github.com/shenghe/kindo/wiki/%E5%A6%82%E4%BD%95%E6%89%A7%E8%A1%8CKINDO%E5%91%BD%E4%BB%A4)
 
+
 ## 你的想法
 
 如果你对Kindo有好的想法和改进意见，欢迎ISSUES中提出。
+
 如果你想参与开发或者贡献文档，直接fork and push requests即可。
+
 如果你写了Kindo脚本，编译好后，提交到仓库中吧（`kindo push [你的包名]`）
+
 
 ## License
 
