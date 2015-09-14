@@ -13,13 +13,13 @@ Kindo是采用Python开发，基于SSH协议的轻量级自动化部署工具，
 
 ### 安装
 
-1. Windows
+* Windows
 
 [Kindo Setup](https://github.com/shenghe/kindo/blob/master/dist/kindo_setup.exe?raw=true)
 
 下载完成点击下一步即可，安装完成自动在环境变量中注册地址。
 
-2. Linux
+* Linux
 
 [Kindo Setup](https://github.com/shenghe/kindo/blob/master/dist/kindo?raw=true)
 
@@ -39,7 +39,7 @@ kindo run shenghe/kindo:1.0 -h [账号@服务器地址:端口号] -p [密码]
 
 ### 常见操作
 
-1. 搜索仓库中的Kindo包
+* 搜索仓库中的Kindo包
 
 如果第一次运行kindo，可以通过关键词搜索相应的部署包，找到相应包后按照提示操作即可下载到本地，例如：
 
@@ -48,7 +48,7 @@ kindo search demo
 ```
 
 
-2. 运行仓库中的Kindo包
+* 运行仓库中的Kindo包
 
 通过搜索下载好Kindo包后（如果知道仓库中的Kindo包全称，无需搜索下载），你可以直接指定部署包全称在服务器地址和密码运行，例如：
 
@@ -57,7 +57,7 @@ kindo run shenghe/demo:1.0 -h [账号@服务器IP:SSH端口号] -p [密码]
 ```
 
 
-3. 编译Kindo脚本
+* 编译Kindo脚本
 
 很多时候，仓库无法找到想要的部署包，我们可以自己写相应的Kindo脚本并编译成Kindo包，然后运行。
 
@@ -77,7 +77,7 @@ RUN echo "hello kindo"
 kindo build demo
 ```
 
-4. 运行本地Kindo包
+* 运行本地Kindo包
 
 生成Kindo包，你有两种方式运行Kindo包。一种，直接指定Kindo包本地绝对地址；第二种，安装Kindo包到本地仓库，然后通过包的名称运行。
 
