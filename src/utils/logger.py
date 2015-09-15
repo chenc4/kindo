@@ -8,15 +8,14 @@ import logging
 import platform
 from fabric.api import env
 
+FOREGROUND_WHITE = 0x0007
+FOREGROUND_BLUE = 0x01  # text color contains blue.
+FOREGROUND_GREEN = 0x02  # text color contains green.
+FOREGROUND_RED = 0x04  # text color contains red.
+FOREGROUND_YELLOW = FOREGROUND_RED | FOREGROUND_GREEN
 
 if platform.system() == "Windows":
     import ctypes
-
-    FOREGROUND_WHITE = 0x0007
-    FOREGROUND_BLUE = 0x01  # text color contains blue.
-    FOREGROUND_GREEN = 0x02  # text color contains green.
-    FOREGROUND_RED = 0x04  # text color contains red.
-    FOREGROUND_YELLOW = FOREGROUND_RED | FOREGROUND_GREEN
 
     STD_OUTPUT_HANDLE = -11
     std_out_handle = ctypes.windll.kernel32.GetStdHandle(STD_OUTPUT_HANDLE)
@@ -26,6 +25,9 @@ if platform.system() == "Windows":
         return bool
 
 else:
+    def std_out_handle():
+        pass
+
     def set_color(color, handle=std_out_handle):
         pass
 

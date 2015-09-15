@@ -3,14 +3,14 @@
 from setuptools import setup, find_packages
 
 setup(
-    install_requires=['setuptools', "fabric", "requests", "pyinstaller", "simplejson", "PrettyTable"],
+    install_requires=['setuptools', "fabric", "requests", "pyinstaller", "simplejson", "PrettyTable", "progressbar"],
 
     name='kindo',
     version="1.0.0.0",
 
     description="A simple tool for packaging and deploying your code to linux with just a command. it can be used on windows and linux",
     long_description="A simple tool for packaging and deploying your code to linux with just a command. it can be used on windows and linux",
-    keywords='kindo, deploy, package, fabric',
+    keywords='kindo, deploy, package, fabric, DevOps',
 
     author='shenghe',
     author_email='sheng.he.china@gmail.com',
