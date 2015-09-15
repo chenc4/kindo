@@ -71,6 +71,8 @@ kindo run kindo/demo:1.0 -h [账号@服务器IP:SSH端口号] -p [密码]
 RUN echo "hello kindo"
 ```
 
+[![asciicast](https://asciinema.org/a/6rr125cmvc3z8cmab4debwbag.png)](https://asciinema.org/a/0bmxfi5r3l8tw2w4fr7zg5juf)
+
 编写完成后，在脚本所在目录运行运行如下命令即可编译成Kindo包：
 
 ```shell
