@@ -97,7 +97,7 @@ kindo run kindo/demo:1.0 -h [账号@服务器IP:SSH端口号] -p [密码]
 更多的命令和用法，参考[Kindo 命令文档](https://github.com/shenghe/kindo/wiki/%E5%A6%82%E4%BD%95%E6%89%A7%E8%A1%8CKINDO%E5%91%BD%E4%BB%A4)
 
 
-## 你的想法
+## 参与方法
 
 如果你对Kindo有好的想法和改进意见，欢迎ISSUES中提出。
 
@@ -108,7 +108,7 @@ kindo run kindo/demo:1.0 -h [账号@服务器IP:SSH端口号] -p [密码]
 
 ## License
 
-                    Copyright 2015 shenghe
+Copyright 2015 shenghe
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
