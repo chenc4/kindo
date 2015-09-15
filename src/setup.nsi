@@ -36,7 +36,7 @@ RequestExecutionLevel admin
 
 
 Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
-OutFile "..\dist\kindo_setup.exe"
+OutFile "..\bin\kindo_setup.exe"
 InstallDir "$PROGRAMFILES\kindo"
 InstallDirRegKey HKLM "${PRODUCT_UNINST_KEY}" "UninstallString"
 ShowInstDetails show
@@ -51,7 +51,7 @@ Section "Kindo" SEC01
   CreateShortCut "$DESKTOP\kindo.lnk" "$INSTDIR\${PRODUCT_VERSION}\kindo.exe"
 
 
-  File "..\dist\kindo.exe"
+  File "..\bin\kindo.exe"
   
   ReadRegStr $0 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "Path"
   WriteRegExpandStr HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "Path" "$0;$INSTDIR\${PRODUCT_VERSION}"
