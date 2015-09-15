@@ -1,0 +1,8 @@
+# Author: kindo
+# Name: kindo
+# Version: 1.0
+
+ADD https://github.com/shenghe/kindo/blob/master/bin/kindo?raw=true /usr/local/kindo/1.0/kindo
+
+RUN chmod +x /usr/local/kindo/1.0/kindo
+RUN ln -s /usr/local/kindo/1.0/kindo /usr/bin/kindo

@@ -13,6 +13,7 @@ import pickle
 import zipfile
 import simplejson
 from core.kindoCore import KindoCore
+from utils.kindoUtils import download_with_progressbar
 from commands.addCommand import AddCommand
 from commands.checkCommand import CheckCommand
 from commands.runCommand import RunCommand
@@ -167,10 +168,7 @@ class BuildModule(KindoCore):
 
             target = os.path.join(kic_build_folder, "files", filename)
             if f[:7].lower() == "http://" or f[:8].lower() == "https://":
-                r = requests.get(f)
-                if r.status_code == 200:
-                    with open(target, "wb") as fs:
-                        fs.write(r.content)
+                download_with_progressbar(f, target)
             else:
                 if not os.path.isfile(f):
                     if os.path.isfile(os.path.realpath(f)):
