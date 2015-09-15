@@ -115,7 +115,7 @@ script commands:
     ubuntu     Run an shell command on Ubuntu, others ignore
     workdir    set the work directory when the shell command is running
 """
-        self.logger.response(banner)
+        self.logger.info(banner)
 
 def run():
     startfolder = os.path.dirname(sys.executable)
