@@ -15,13 +15,13 @@ Kindo是采用Python开发，基于SSH协议的轻量级自动化部署工具，
 
 * Windows
 
-[Kindo Setup](https://github.com/shenghe/kindo/blob/master/dist/kindo_setup.exe?raw=true)
+[Kindo Setup](https://github.com/shenghe/kindo/blob/master/bin/kindo_setup.exe?raw=true)
 
 下载完成点击下一步即可，安装完成自动在环境变量中注册地址。
 
 * Linux
 
-[Kindo Setup](https://github.com/shenghe/kindo/blob/master/dist/kindo?raw=true)
+[Kindo Setup](https://github.com/shenghe/kindo/blob/master/bin/kindo?raw=true)
 
 下载完成后，复制二进制文件到服务器上，并赋予可执行权限即可，命令如下：
 
@@ -32,8 +32,8 @@ chmod +x kindo
 当然，如果你已经在windows中安装好了Kindo，Linux上的kindo可利用如下命令安装：
 
 ```shell
-kindo pull shenghe/kindo:1.0
-kindo run shenghe/kindo:1.0 -h [账号@服务器地址:端口号] -p [密码]
+kindo pull kindo/kindo:1.0
+kindo run kindo/kindo:1.0 -h [账号@服务器地址:端口号] -p [密码]
 ```
 
 
@@ -53,7 +53,7 @@ kindo search demo
 通过搜索下载好Kindo包后（如果知道仓库中的Kindo包全称，无需搜索下载），你可以直接指定部署包全称在服务器地址和密码运行，例如：
 
 ```shell
-kindo run shenghe/demo:1.0 -h [账号@服务器IP:SSH端口号] -p [密码]
+kindo run kindo/demo:1.0 -h [账号@服务器IP:SSH端口号] -p [密码]
 ```
 
 
@@ -64,7 +64,7 @@ kindo run shenghe/demo:1.0 -h [账号@服务器IP:SSH端口号] -p [密码]
 [Kindo脚本](https://github.com/shenghe/kindo/wiki/%E5%A6%82%E4%BD%95%E5%86%99%E8%87%AA%E5%8A%A8%E5%8C%96%E9%83%A8%E7%BD%B2%E8%84%9A%E6%9C%AC)是以**.kic**为后缀的普通文本文件，例如**demo.kic**：
 
 ```txt
-# Author: shenghe
+# Author: kindo
 # Name: demo
 # Version: 1.0
 
@@ -84,14 +84,14 @@ kindo build demo
 第一种，命令如下：
 
 ```shell
-kindo run ~/shenghe-demo-1.0.ki -h [账号@服务器IP:SSH端口号] -p [密码]
+kindo run ~/kindo-demo-1.0.ki -h [账号@服务器IP:SSH端口号] -p [密码]
 ```
 
 第二种，命令如下：
 
 ```shell
-kindo commit ~/shenghe-demo-1.0.ki
-kindo run shenghe/demo:1.0 -h [账号@服务器IP:SSH端口号] -p [密码]
+kindo commit ~/kindo-demo-1.0.ki
+kindo run kindo/demo:1.0 -h [账号@服务器IP:SSH端口号] -p [密码]
 ```
 
 更多的命令和用法，参考[Kindo 命令文档](https://github.com/shenghe/kindo/wiki/%E5%A6%82%E4%BD%95%E6%89%A7%E8%A1%8CKINDO%E5%91%BD%E4%BB%A4)
