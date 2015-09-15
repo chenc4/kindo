@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
 
+from __future__ import division
 import urllib2
 from progressbar import *
 
@@ -22,5 +23,5 @@ def download_with_progressbar(url, target):
             file_size_dl += len(block_buffer)
             fs.write(block_buffer)
 
-            pbar.update(int((file_size_dl /total) * 100))
+            pbar.update(int((file_size_dl / total) * 100))
     pbar.finish()
