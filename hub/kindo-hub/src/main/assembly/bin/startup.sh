@@ -32,7 +32,7 @@ else
 fi
 
 echo -e "Starting ...\c"
-nohup java $JAVA_OPTS $JAVA_MEM_OPTS  -jar $LIB_DIR/kindo-hub-${project.version}.jar -classpath $CONF_DIR > $STDOUT_FILE 2>&1 &
+nohup java $JAVA_OPTS $JAVA_MEM_OPTS  -jar $LIB_DIR/kindo-hub-${project.version}.jar --spring.config.location=file:$CONF_DIR/application.properties > $STDOUT_FILE 2>&1 &
 
 COUNT=0
 while [ $COUNT -lt 1 ]; do
