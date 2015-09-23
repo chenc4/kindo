@@ -36,10 +36,18 @@ class Command(KindoCore):
             self.logger.debug("no found: %s" % filepath)
             return False
 
+        _filepathname, _filepathext = os.path.splitext(filepath)
+        _targetname, _targetext = os.path.splitext(target)
+
         if target_is_dir is None:
             if os.path.isdir(filepath):
                 if not exists(target, use_sudo=self.has_sudo()):
                     self.execute("mkdir -p %s" % target)
+            elif _filepathext == _targetext:
+                dirpath = os.path.dirname(target)
+                self.logger.debug("mkdir %s" % dirpath)
+                if not exists(dirpath, use_sudo=self.has_sudo()):
+                    self.execute("mkdir -p %s" % dirpath)
             elif os.path.isfile(filepath):
                 if target[-1] == "/" and not exists(target, use_sudo=self.has_sudo()):
                     self.execute("mkdir -p %s" % target)
@@ -48,9 +56,9 @@ class Command(KindoCore):
                 self.execute("mkdir -p %s" % target)
 
         with settings(hide('stderr', 'warnings'), warn_only=True):
-            self.logger.debug("putting %s" % filepath)
+            self.logger.debug("putting %s  => %s" % (filepath, target))
             put(filepath, target, use_sudo=self.has_sudo())
-            self.logger.debug("putted %s" % filepath)
+            self.logger.debug("putted %s  => %s" % (filepath, target))
             return True
         return False
 
