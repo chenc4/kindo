@@ -90,7 +90,7 @@ class Command(KindoCore):
 
     def get_system_info(self):
         if self._system_info is None:
-            with settings(hide('stderr', 'warnings'), warn_only=True):
+            with settings(hide('stderr', 'warnings', 'stdout'), warn_only=True):
                 memery_stdouts = [v for v in self.execute("free -l|sed -n '2,2p' |awk '{print $0}'").split(" ") if v != ""]
                 disk_stdouts = [v for v in self.execute("df -hl|sed -n '2,2p' |awk '{print $0}'").split(" ") if v != ""]
 
