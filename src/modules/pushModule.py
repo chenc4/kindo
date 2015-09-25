@@ -8,7 +8,7 @@ import hashlib
 import zipfile
 import simplejson
 from core.kindoCore import KindoCore
-from utils.configParse import ConfigParser
+from utils.configParser import ConfigParser
 
 
 class PushModule(KindoCore):
@@ -62,6 +62,7 @@ class PushModule(KindoCore):
 
                 self.logger.debug("connecting %s" % push_engine_url)
                 self.logger.debug(data)
+                self.logger.debug(package_path)
                 r = requests.post(push_engine_url, data=data, files={"file": open(package_path, "rb")})
                 if r.status_code != 200:
                     raise Exception("\"%s\" can't connect" % push_engine_url)

@@ -147,7 +147,7 @@ class RunModule(KindoCore):
         self.logger.debug(self.options)
 
         ki_path = ""
-        for option in self.options[1:]:
+        for option in self.options[2:]:
             ki_path = option
             if ki_path[-3:] != ".ki":
                 ki_path = "%s.ki" % ki_path
@@ -159,6 +159,8 @@ class RunModule(KindoCore):
                     path = os.path.join(self.startfolder, ki_path)
                     if not os.path.isfile(path):
                         path = self.get_image_path(option)
+                        self.logger.debug("get_image_path: %s" % path)
+                        self.logger.debug("option: %s" % option)
                         if not path and "/" in option and ":" in option:
                             path = self.pull_image_path(option)
 
@@ -177,6 +179,7 @@ class RunModule(KindoCore):
         try:
             response = self.pull_image_info(pull_engine_url, imagename)
             if response is None:
+                self.logger.debug(response)
                 return
 
             if "code" in response:
