@@ -62,6 +62,13 @@ class RunModule(KindoCore):
             for k, v in hosts["default"].items():
                 env.passwords[k] = v
 
+        if "ssh" in self.configs:
+            if not os.path.isfile(self.configs["ssh"]):
+                logger.warn("ssh config not found: %s" % self.configs["ssh"])
+            else:
+                env.use_ssh_config = True
+                env.ssh_config_path = self.configs["ssh"]
+
         self.ki_path = self.get_ki_path()
 
         self.handlers = {
@@ -132,7 +139,7 @@ class RunModule(KindoCore):
 
     def execute_script_commands(self, commands, depsdir):
         position = "~"
-        envs = {}
+        envs = self.configs if self.configs is not None else {}
 
         for command in commands:
             if "action" not in command:
@@ -142,12 +149,13 @@ class RunModule(KindoCore):
             if action not in self.handlers:
                 raise Exception("%s not supported" % action)
 
-            status, position, errormsg, envs = self.handlers[action].run(
+            status, position, errormsg, _envs = self.handlers[action].run(
                 command=command,
                 depsdir=depsdir,
                 position=position,
                 envs=envs
             )
+            envs = dict(_envs, **envs)
             # if the command is executed(success or fail), not continue
             if status == 0:
                 self.logger.debug(errormsg)
