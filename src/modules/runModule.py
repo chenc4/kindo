@@ -64,7 +64,7 @@ class RunModule(KindoCore):
 
         if "ssh" in self.configs:
             env.use_ssh_config = True
-            env.ssh_config_path = self.configs["ssh"]
+            env.ssh_config_path = os.path.realpath(self.configs["ssh"])
 
         self.ki_path = self.get_ki_path()
 
