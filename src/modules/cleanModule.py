@@ -12,5 +12,3 @@ class CleanModule(KindoCore):
 
     def start(self):
         shutil.rmtree(self.kindo_caches_path)
-
-        self.logger.response("clean ok")

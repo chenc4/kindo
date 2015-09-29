@@ -4,6 +4,7 @@ import re
 import os
 from fabric.api import cd
 from fabric.contrib.files import exists
+from fabric.context_managers import shell_env
 from commands.command import Command
 
 
@@ -32,22 +33,17 @@ class CheckCommand(Command):
             }
         return {}
 
-    def run(self, command, deps_folder, position=None):
-        if "action" not in command:
-            return -1, position, ""
-
-        if command["action"] != "CHECK":
-            return -1, position, ""
-
+    def run(self, command, depsdir, position, envs):
         with cd(position):
-            for port in command["args"]["ports"]:
-                stdout = self.execute("netstat –apn | grep %s" % port)
-                if not stdout.strip():
-                    return 0, position, "CHECK ERROR: %s not found" % port
+            with shell_env(**envs):
+                for port in command["args"]["ports"]:
+                    stdout = self.execute("netstat –apn | grep %s" % port)
+                    if not stdout.strip():
+                        return 0, position, "CHECK ERROR: %s not found" % port, envs
 
-            for f in command["args"]["files"]:
-                if not exists(f):
-                    return 0, position, "CHECK ERROR: %s not found" % f
+                for f in command["args"]["files"]:
+                    if not exists(f):
+                        return 0, position, "CHECK ERROR: %s not found" % f, envs
 
-            return 1, position, ""
-        return 1, position, ""
+                return 1, position, "", envs
+        return 1, position, "", envs

@@ -4,6 +4,7 @@ import re
 import os
 from fabric.api import cd
 from commands.command import Command
+from fabric.context_managers import shell_env
 
 
 class AddCommand(Command):
@@ -29,19 +30,14 @@ class AddCommand(Command):
                 }
         return {}
 
-    def run(self, command, deps_folder, position=None):
-        if "action" not in command:
-            return -1, position, ""
-
-        if command["action"] != "ADD":
-            return -1, position, ""
-
-        src = os.path.join(deps_folder, command["args"]["from"])
+    def run(self, command, depsdir, position, envs):
+        src = os.path.join(depsdir, command["args"]["from"])
         if not os.path.isfile(src):
-            return 0, position, "ADD ERROR: %s not found" % src
+            return 0, position, "ADD ERROR: %s not found" % src, envs
 
         with cd(position):
-            if not self.upload(src, command["args"]["to"]):
-                return 0, position, "ADD ERROR: %s upload failed" % src
-            return 1, position, ""
-        return -1, position, ""
+            with shell_env(**envs):
+                if not self.upload(src, command["args"]["to"]):
+                    return 0, position, "ADD ERROR: %s upload failed" % src, envs
+                return 1, position, "", envs
+        return -1, position, "", envs

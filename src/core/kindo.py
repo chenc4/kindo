@@ -69,6 +69,7 @@ class Kindo:
                 self.show_help()
                 return
             command = "build" if ext == ".kic" else "run"
+            self.options.insert(1, command)
 
         try:
             core_command_cls = self.core_commands[command](

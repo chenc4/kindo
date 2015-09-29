@@ -4,6 +4,7 @@ import re
 import os
 from fabric.api import cd
 from fabric.api import env
+from fabric.context_managers import shell_env
 from commands.command import Command
 
 
@@ -21,13 +22,8 @@ class RunCommand(Command):
             }
         return {}
 
-    def run(self, command, deps_folder, position):
-        if "action" not in command:
-            return -1, position, ""
-
-        if command["action"] != "RUN":
-            return -1, position, ""
-
+    def run(self, command, depsdir, position, envs):
         with cd(position):
-            self.execute(command["args"]["command"])
-        return 1, position, ""
+            with shell_env(**envs):
+                self.execute(command["args"]["command"])
+        return 1, position, "", envs

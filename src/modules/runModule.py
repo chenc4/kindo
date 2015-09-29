@@ -22,6 +22,7 @@ from commands.downloadCommand import DownloadCommand
 from commands.ubuntuCommand import UbuntuCommand
 from commands.centosCommand import CentOSCommand
 from commands.addOnRunCommand import AddOnRunCommand
+from commands.envCommand import EnvCommand
 
 
 class RunModule(KindoCore):
@@ -71,7 +72,8 @@ class RunModule(KindoCore):
             "download": DownloadCommand(startfolder, configs, options, logger),
             "ubuntu": UbuntuCommand(startfolder, configs, options, logger),
             "centos": CentOSCommand(startfolder, configs, options, logger),
-            "addonrun": AddOnRunCommand(startfolder, configs, options, logger)
+            "addonrun": AddOnRunCommand(startfolder, configs, options, logger),
+            "env": EnvCommand(startfolder, configs, options, logger)
         }
 
     def start(self):
@@ -120,7 +122,7 @@ class RunModule(KindoCore):
                     execute(
                         self.execute_script_commands,
                         commands=script_commands,
-                        files_folder=ki_files_path,
+                        depsdir=ki_files_path,
                         hosts=env.passwords.keys()
                     )
             self.logger.response("run ok")
@@ -128,8 +130,10 @@ class RunModule(KindoCore):
             self.logger.debug(traceback.format_exc())
             self.logger.response(e, False)
 
-    def execute_script_commands(self, commands, files_folder):
+    def execute_script_commands(self, commands, depsdir):
         position = "~"
+        envs = {}
+
         for command in commands:
             if "action" not in command:
                 raise Exception("command invalid")
@@ -138,7 +142,12 @@ class RunModule(KindoCore):
             if action not in self.handlers:
                 raise Exception("%s not supported" % action)
 
-            status, position, errormsg = self.handlers[action].run(command, files_folder, position)
+            status, position, errormsg, envs = self.handlers[action].run(
+                command=command,
+                depsdir=depsdir,
+                position=position,
+                envs=envs
+            )
             # if the command is executed(success or fail), not continue
             if status == 0:
                 self.logger.debug(errormsg)

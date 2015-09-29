@@ -3,6 +3,7 @@
 import re
 import os
 from fabric.api import cd
+from fabric.context_managers import shell_env
 from commands.command import Command
 from utils.configParser import ConfigParser
 
@@ -28,13 +29,7 @@ class AddOnRunCommand(Command):
                 }
         return {}
 
-    def run(self, command, deps_folder, position=None):
-        if "action" not in command:
-            return -1, position, ""
-
-        if command["action"] != "ADDONRUN":
-            return -1, position, ""
-
+    def run(self, command, depsdir, position, envs):
         src = self.get_file_path(command["args"]["from"])
         if not os.path.isfile(src):
             src = self.get_dir_path(command["args"]["from"])
@@ -42,8 +37,8 @@ class AddOnRunCommand(Command):
         ignore = True if self.configs.get("ignore", 1) == 1 else False
         if not os.path.isfile(src) and not os.path.isdir(src):
             if ignore:
-                return 1, position, ""
-            return 0, position, "ADDONRUN ERROR: %s not found" % src
+                return 1, position, "", envs
+            return 0, position, "ADDONRUN ERROR: %s not found" % src, envs
 
         files = []
         if os.path.isfile(src):
@@ -58,12 +53,13 @@ class AddOnRunCommand(Command):
                 is_dir = True
 
             self.logger.debug(files)
-            for f in files:
-                self.logger.debug("uploading %s" % f)
-                if not self.upload(f, command["args"]["to"], is_dir) and not ignore:
-                    return 0, position, "ADDONRUN ERROR: %s upload failed" % f
-            return 1, position, ""
-        return -1, position, ""
+            with shell_env(**envs):
+                for f in files:
+                    self.logger.debug("uploading %s" % f)
+                    if not self.upload(f, command["args"]["to"], is_dir) and not ignore:
+                        return 0, position, "ADDONRUN ERROR: %s upload failed" % f, envs
+            return 1, position, "", envs
+        return -1, position, "", envs
 
     def get_file_path(self, path):
         if not os.path.isfile(path):

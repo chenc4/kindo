@@ -22,6 +22,7 @@ from commands.downloadCommand import DownloadCommand
 from commands.ubuntuCommand import UbuntuCommand
 from commands.centosCommand import CentOSCommand
 from commands.addOnRunCommand import AddOnRunCommand
+from commands.envCommand import EnvCommand
 
 
 class BuildModule(KindoCore):
@@ -58,7 +59,8 @@ class BuildModule(KindoCore):
             "download": DownloadCommand(startfolder, configs, options, logger),
             "ubuntu": UbuntuCommand(startfolder, configs, options, logger),
             "centos": CentOSCommand(startfolder, configs, options, logger),
-            "addonrun": AddOnRunCommand(startfolder, configs, options, logger)
+            "addonrun": AddOnRunCommand(startfolder, configs, options, logger),
+            "env": EnvCommand(startfolder, configs, options, logger)
         }
 
         self.re_pattern =  "^\s*(%s)\s+" % "|".join(self.handlers.keys())

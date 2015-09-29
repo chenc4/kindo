@@ -3,6 +3,7 @@
 import re
 import os
 from commands.command import Command
+from fabric.context_managers import shell_env
 
 
 class WorkdirCommand(Command):
@@ -19,11 +20,5 @@ class WorkdirCommand(Command):
             }
         return {}
 
-    def run(self, command, deps_folder, position):
-        if "action" not in command:
-            return -1, position, ""
-
-        if command["action"] != "WORKDIR":
-            return -1, position, ""
-
-        return 1, command["args"]["dir"], ""
+    def run(self, command, depsdir, position, envs):
+        return 1, command["args"]["dir"], "", envs

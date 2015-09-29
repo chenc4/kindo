@@ -5,6 +5,7 @@ import os
 import time
 from fabric.api import cd
 from fabric.api import env
+from fabric.context_managers import shell_env
 from commands.command import Command
 
 
@@ -23,16 +24,11 @@ class UbuntuCommand(Command):
             }
         return {}
 
-    def run(self, command, deps_folder, position):
-        if "action" not in command:
-            return -1, position, ""
-
-        if command["action"] != "UBUNTU":
-            return -1, position, ""
-
+    def run(self, command, depsdir, position, envs):
         if "Ubuntu" in self.get_system_info()["system"]:
             with cd(position):
-                self.execute(command["args"]["command"])
+                with shell_env(**envs):
+                    self.execute(command["args"]["command"])
 
-            return 1, position, ""
-        return -1, position, ""
+            return 1, position, "", envs
+        return -1, position, "", envs

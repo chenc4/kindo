@@ -22,10 +22,10 @@ SERVICE_HOME="/usr/local/kindo-hub/${project.version}"
 
 case "$1" in
 start)
-        if [ -f $SERVICE_HOME/bin/startup.sh ];
+        if [ -f $SERVICE_HOME/bin/start.sh ];
           then
             echo $"Starting kindo-hub"
-            $SERVICE_HOME/bin/startup.sh
+            $SERVICE_HOME/bin/start.sh
         fi
         ;;
 stop)
@@ -33,6 +33,19 @@ stop)
           then
             echo $"Stopping kindo-hub"
             $SERVICE_HOME/bin/stop.sh
+        fi
+        ;;
+restart)
+        if [ -f $SERVICE_HOME/bin/stop.sh ];
+          then
+            echo $"Stopping kindo-hub"
+            $SERVICE_HOME/bin/stop.sh
+        fi
+
+        if [ -f $SERVICE_HOME/bin/start.sh ];
+          then
+            echo $"Starting kindo-hub"
+            $SERVICE_HOME/bin/start.sh
         fi
         ;;
 *)

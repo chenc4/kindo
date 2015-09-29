@@ -9,7 +9,7 @@ ADD kindo-hub/kindo-hub-${project.version}-application.tar.gz /var/tmp/kindo/kin
 RUN if [ -f "/usr/local/kindo-hub/${project.version}/bin/stop.sh" ]; then /usr/local/kindo-hub/${project.version}/bin/stop.sh;fi
 RUN rm -rf /var/log/kindo-hub/${project.version}
 RUN rm -f /etc/rc.d/init.d/kindo-hub
-RUN if [ -f "/etc/init.d/kindo-hub" ]; then rm -f /etc/init.d/kindo-hub && chkconfig --del kindo-hub;fi
+RUN rm -f /etc/init.d/kindo-hub
 RUN rm -rf /usr/local/kindo-hub/${project.version}
 
 # 初始化文件夹
@@ -19,13 +19,13 @@ RUN mkdir -p /var/log/kindo-hub/${project.version}
 # 安装新文件
 RUN tar -xzvf /var/tmp/kindo/kindo-hub-${project.version}-application.tar.gz -C /usr/local
 RUN mv /usr/local/kindo-hub-${project.version} /usr/local/kindo-hub/${project.version}
-RUN chmod +x /usr/local/kindo-hub/${project.version}/bin/startup.sh && chmod +x /usr/local/kindo-hub/${project.version}/bin/stop.sh
-RUN cp /usr/local/kindo-hub/${project.version}/kindo-hub /etc/init.d/kindo-hub
-RUN cp /usr/local/kindo-hub/${project.version}/kindo-hub /etc/rc.d/init.d/kindo-hub
-RUN chmod +x /etc/init.d/kindo-hub && chmod +x /etc/rc.d/init.d/kindo-hub
-RUN chkconfig --add kindo-hub && chkconfig kindo-hub on
+RUN chmod +x /usr/local/kindo-hub/${project.version}/bin/start.sh && chmod +x /usr/local/kindo-hub/${project.version}/bin/stop.sh
+CENTOS cp /usr/local/kindo-hub/${project.version}/kindo-hub /etc/init.d/kindo-hub
+CENTOS cp /usr/local/kindo-hub/${project.version}/kindo-hub /etc/rc.d/init.d/kindo-hub
+CENTOS chmod +x /etc/init.d/kindo-hub && chmod +x /etc/rc.d/init.d/kindo-hub
+CENTOS chkconfig --add kindo-hub && chkconfig kindo-hub on
 RUN rm -f /var/tmp/kindo/kindo-hub-${project.version}-application.tar.gz
-RUN service kindo-hub start
+RUN /usr/local/kindo-hub/${project.version}/bin/start.sh
 
 # custom config on run
-ADDONRUN conf /usr/local/kindo-hub/${project.version}
+ADDONRUN kindo-hub/conf /usr/local/kindo-hub/${project.version}
