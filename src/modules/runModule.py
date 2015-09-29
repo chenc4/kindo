@@ -63,11 +63,8 @@ class RunModule(KindoCore):
                 env.passwords[k] = v
 
         if "ssh" in self.configs:
-            if not os.path.isfile(self.configs["ssh"]):
-                logger.warn("ssh config not found: %s" % self.configs["ssh"])
-            else:
-                env.use_ssh_config = True
-                env.ssh_config_path = self.configs["ssh"]
+            env.use_ssh_config = True
+            env.ssh_config_path = self.configs["ssh"]
 
         self.ki_path = self.get_ki_path()
 
