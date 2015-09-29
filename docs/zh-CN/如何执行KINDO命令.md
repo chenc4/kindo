@@ -186,6 +186,7 @@ kindo text.ki
     -p          服务器登录密码
     -g          服务器组名
     --kipwd     设置安装包运行密码 （后期支持）
+    --ssh       设置SSH config文件的位置
 
 运行安装包
 
