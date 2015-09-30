@@ -1,0 +1,30 @@
+# Author: cycore
+# Name: python
+# Version: 2.7.3
+
+ADD files/Python-2.7.3.tar.gz ~/tmp/Python-2.7.3.tar.gz
+ADD files/pip-1.5.4.tar.gz ~/tmp/pip-1.5.4.tar.gz
+ADD files/setuptools-18.0.1.tar.gz ~/tmp/setuptools-18.0.1.tar.gz
+
+RUN tar -xzvf ~/tmp/Python-2.7.3.tar.gz -C ~/tmp
+RUN tar -xzvf ~/tmp/pip-1.5.4.tar.gz -C ~/tmp
+RUN tar -xzvf ~/tmp/setuptools-18.0.1.tar.gz -C ~/tmp
+
+CENTOS yum groupinstall "Development Tools" -y
+
+RUN sed -i '1d' /usr/bin/yum
+RUN sed -i '1i\#\!/usr/bin/python`python -c "import platform;print platform.python_version()"`' /usr/bin/yum
+RUN mv -f /usr/bin/python /usr/bin/python`python -c "import platform;print platform.python_version()"`
+RUN cd ~/tmp/Python-2.7.3 && ./configure --enable-shared && make all && make install && make clean && make distclean
+RUN ln -s /usr/local/bin/python2.7 /usr/bin/python
+RUN if [ ! -f "/usr/lib/libpython2.7.so" ]; then ln -s /usr/local/lib/libpython2.7.so /usr/lib/libpython2.7.so; fi
+RUN if [ ! -f "/usr/lib/libpython2.7.so.1.0" ]; then ln -s /usr/local/lib/libpython2.7.so.1.0 /usr/lib/libpython2.7.so.1.0; fi
+RUN /sbin/ldconfig -v
+RUN if [ ! -d "~/.pip" ]; then mkdir -p ~/.pip; fi
+RUN echo '[global]' > ~/.pip/pip.conf
+RUN echo 'index-url = http://pypi.mirrors.ustc.edu.cn/simple' >> ~/.pip/pip.conf
+RUN cd ~/tmp/pip-1.5.4 && python setup.py install
+RUN cd ~/tmp/setuptools-18.0.1 && python setup.py install
+
+RUN rm -rf ~/tmp
+RUN python -V
