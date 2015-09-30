@@ -1,0 +1,23 @@
+# Author: cycore
+# Name: redis
+# Version: 2.6.16
+
+ADD files/redis-2.6.16.tar.gz ~/tmp/redis-2.6.16.tar.gz
+ADD files/redis ~/tmp/redis
+
+RUN if [ -f "/etc/redis.conf" ]; then mv /etc/redis.conf "/etc/redis.conf.bak.`date -u +%y%m%d`"; fi
+RUN rm -f /usr/bin/redis-cli
+
+RUN tar -xzvf ~/tmp/redis-2.6.16.tar.gz -C ~/tmp
+
+CENTOS yum groupinstall "Development Tools" -y
+
+RUN cd ~/tmp/redis-2.6.16 && make && make install
+RUN cp ~/tmp/redis-2.6.16/redis.conf /etc/
+RUN cp ~/tmp/redis /etc/init.d/ && chmod +x /etc/init.d/redis
+CENTOS chkconfig --add redis && chkconfig redis on
+RUN ln -s /usr/local/bin/redis-cli /usr/bin/redis-cli
+RUN nohup /usr/local/bin/redis-server /etc/redis.conf > /var/log/redis.log 2>&1 &
+RUN /usr/local/bin/redis-server --version
+
+RUN rm -rf ~/tmp
