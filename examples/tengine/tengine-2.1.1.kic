@@ -1,0 +1,42 @@
+# Author: cycore
+# Name: tengine
+# Version: 2.1.1
+
+ADD files/tengine-2.1.1.tar.gz ~/tmp/tengine-2.1.1.tar.gz
+ADD files/jemalloc-3.4.1.tar.gz ~/tmp/jemalloc-3.4.1.tar.gz
+ADD files/tengine-conf.tar.gz ~/tmp/tengine-conf.tar.gz
+ADD files/nginx ~/tmp/nginx
+
+RUN rm -f /etc/init.d/nginx
+RUN rm -f /usr/bin/nginx
+RUN rm -f /usr/local/bin/nginx
+
+RUN tar -xzvf ~/tmp/tengine-2.1.1.tar.gz -C ~/tmp
+RUN tar -xzvf ~/tmp/jemalloc-3.4.1.tar.gz -C ~/tmp
+RUN tar -xzvf ~/tmp/tengine-conf.tar.gz -C ~/tmp
+
+CENTOS yum groupinstall "Development Tools" -y
+
+WORKDIR ~/tmp/tengine-2.1.1
+RUN mkdir -p /var/tmp/tengine
+RUN mkdir -p /var/log/tengine/2.1.1
+RUN export LD_LIBRARY_PATH=/usr/local/lib/:$LD_LIBRARY_PATH && ./configure --with-jemalloc --with-jemalloc=~/tmp/jemalloc-3.4.1 --with-http_stub_status_module --http-proxy-temp-path=/var/tmp/tengine/proxy_temp --http-fastcgi-temp-path=/var/tmp/tengine/fastcgi_temp --http-uwsgi-temp-path=/var/tmp/tengine/uwsgi_temp --http-scgi-temp-path=/var/tmp/tengine/scgi_temp --error-log-path=/var/log/tengine/2.1.1/error.log --http-log-path=/var/log/tengine/2.1.1/access.log && make && make install
+
+RUN if [ ! -d "/usr/local/nginx/conf/sites" ]; then mv /usr/local/nginx/html "/usr/local/nginx/html-bak-`date -u +%y%m%d`"; fi
+RUN if [ ! -d "/usr/local/nginx/conf/sites" ]; then mv /usr/local/nginx/conf "/usr/local/nginx/conf-bak-`date -u +%y%m%d`"; fi
+RUN if [ ! -d "/usr/local/nginx/conf/sites" ]; then mv ~/tmp/tengine-conf/html /usr/local/nginx/html; fi
+RUN if [ ! -d "/usr/local/nginx/conf/sites" ]; then mv ~/tmp/tengine-conf/conf /usr/local/nginx/conf; fi
+
+RUN chown nobody.nobody -R /usr/local/nginx/html
+RUN chmod 700 -R /usr/local/nginx/html
+
+RUN ln -s /usr/local/nginx/sbin/nginx /usr/bin/nginx
+RUN mv ~/tmp/nginx /etc/init.d/nginx && chmod +x /etc/init.d/nginx
+CENTOS chkconfig --add redis && chkconfig redis on
+
+ADDONRUN cycore-tengine-2.1.1/conf /usr/local/nginx/conf
+
+RUN if [ -f "/usr/local/nginx/conf/nginx.pid" ]; then /usr/local/nginx/sbin/nginx -s reload; fi
+RUN if [ ! -f "/usr/local/nginx/conf/nginx.pid" ]; then /usr/local/nginx/sbin/nginx; fi
+RUN /usr/local/nginx/sbin/nginx -v
+
