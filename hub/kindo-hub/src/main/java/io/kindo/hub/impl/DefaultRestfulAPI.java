@@ -13,6 +13,11 @@ import io.kindo.hub.infrastructure.po.Account;
 import io.kindo.hub.infrastructure.po.Image;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -39,16 +44,45 @@ public class DefaultRestfulAPI implements RestfulAPI {
     private String folder;
 
     @Override
-    public List<ImageInfo> search( @RequestParam(value = "q", required = true) String q) {
-        if (q.isEmpty()) {
-            throw new KindoException(ErrorCode.PARAMETER_EMPTY);
+    public List<ImageInfo> search(
+            @RequestParam(value="q", required = false, defaultValue = "") String q,
+            @RequestParam(value="page", required = false, defaultValue = "0") String page,
+            @RequestParam(value="limit", required = false, defaultValue = "10") String limit,
+            @CookieValue(value = "username", required = false) String username,
+            @CookieValue(value = "token", required = false) String token
+    ) {
+        // injection prevention
+        q = q.replaceAll(".*([';]+|(--)+).*", "");
+        q = q.isEmpty() ? "%%" : "%" + q + "%";
+
+        int i_page = 0;
+        int i_limit = 10;
+        if (!StringUtils.isEmpty(page)) {
+            i_page = Integer.parseInt(page) - 1;
+            if (i_page < 0) {
+                i_page = 0;
+            }
         }
 
-        q = q.replace("%", "").replace("[", "").replace("]", "");
-        q = "%" + q + "%";
+        if (!StringUtils.isEmpty(limit)) {
+            i_limit = Integer.parseInt(limit);
+            if (i_limit < 0) {
+                i_limit = 10;
+            }
+        }
+
+        long isPrivate = 0;
+        if (!StringUtils.isEmpty(username) && !StringUtils.isEmpty(token)) {
+            Account account = accountRepository.findOneByUsername(username);
+            if (account != null && account.getPassword().equals(token)){
+                isPrivate = account.getId();
+            }
+        }
 
         List<ImageInfo> imageInfos = new ArrayList<>();
-        List<Image> images = imageRepository.findByUniqueNameLike(q);
+
+        Pageable pageable = new PageRequest(i_page, i_limit);
+        Page<Image> images = imageRepository.findByUniqueName(isPrivate, q, pageable);
         for (Image image : images) {
             ImageInfo imageInfo = new ImageInfo();
             imageInfo.setPusher(image.getPusher());
@@ -204,6 +238,9 @@ public class DefaultRestfulAPI implements RestfulAPI {
         image.setWebsite(website);
         image.setUniqueName(uniqueName);
 
+        if (!StringUtils.isEmpty(code)) {
+           image.setIsprivate(account.getId());
+        }
         image = imageRepository.save(image);
         if (image == null) {
             throw new KindoException(ErrorCode.SYSTEM_ERROR);

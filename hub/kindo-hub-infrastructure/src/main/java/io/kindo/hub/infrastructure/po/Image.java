@@ -17,10 +17,12 @@ public class Image {
     private String website;
     private String summary;
     private String license;
+    private String platform;
     private String path;
     private long size;
     private String code;
     private String uniqueName;
+    private long isprivate = 0;
     private int buildversion = 1;
     private Date buildtime;
     private Date createtime;
@@ -90,6 +92,14 @@ public class Image {
         this.license = license;
     }
 
+    public String getPlatform() {
+        return platform;
+    }
+
+    public void setPlatform(String platform) {
+        this.platform = platform;
+    }
+
     public String getPath() {
         return path;
     }
@@ -120,6 +130,14 @@ public class Image {
 
     public void setUniqueName(String uniqueName) {
         this.uniqueName = uniqueName;
+    }
+
+    public long getIsprivate() {
+        return isprivate;
+    }
+
+    public void setIsprivate(long isprivate) {
+        this.isprivate = isprivate;
     }
 
     public int getBuildversion() {
@@ -161,6 +179,7 @@ public class Image {
                 ", size=" + size +
                 ", code='" + code + '\'' +
                 ", uniqueName='" + uniqueName + '\'' +
+                ", isprivate=" + isprivate +
                 ", buildversion=" + buildversion +
                 ", buildtime=" + buildtime +
                 ", createtime=" + createtime +

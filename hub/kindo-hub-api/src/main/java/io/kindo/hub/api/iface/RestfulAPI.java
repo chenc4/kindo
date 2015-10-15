@@ -4,10 +4,7 @@ package io.kindo.hub.api.iface;
 import io.kindo.hub.api.vo.AccountInfo;
 import io.kindo.hub.api.vo.ImageInfo;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -20,7 +17,11 @@ public interface RestfulAPI {
     @RequestMapping(value="/search", method = RequestMethod.GET)
     @ResponseBody
     List<ImageInfo> search(
-            @RequestParam(value="q", required = true) String q
+            @RequestParam(value="q", required = false, defaultValue = "") String q,
+            @RequestParam(value="page", required = false, defaultValue = "0") String page,
+            @RequestParam(value="limit", required = false, defaultValue = "10") String limit,
+            @CookieValue(value = "username", required = false) String username,
+            @CookieValue(value = "token", required = false) String token
     );
 
     @RequestMapping(value="/pull", method = RequestMethod.GET)
