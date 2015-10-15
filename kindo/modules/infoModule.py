@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
 
-from core.kindoCore import KindoCore
+from ..core.kindoCore import KindoCore
 
 
 class InfoModule(KindoCore):

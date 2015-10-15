@@ -2,8 +2,8 @@
 #-*- coding: utf-8 -*-
 
 import os
-from utils.configParser import ConfigParser
 import tempfile
+from ..utils.configParser import ConfigParser
 
 
 class KindoCore():

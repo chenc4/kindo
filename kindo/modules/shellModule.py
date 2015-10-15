@@ -5,9 +5,9 @@ import os
 from fabric.state import output
 from fabric.tasks import execute
 from fabric.api import env
-from utils.configParser import ConfigParser
-from core.kindoCore import KindoCore
-from commands.runCommand import RunCommand
+from ..utils.configParser import ConfigParser
+from ..core.kindoCore import KindoCore
+from ..commands.runCommand import RunCommand
 
 
 class ShellModule(KindoCore):

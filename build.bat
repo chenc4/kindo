@@ -1,1 +1,1 @@
-pyinstaller -F src/kindo.py --upx-dir=src --clean -i src/app.ico --distpath=bin && rd /s /q build && del /q /s kindo.spec
+pyinstaller -F kindo/kindo.py --upx-dir=kindo --clean -i kindo/app.ico --distpath=bin && rd /s /q build && del /q /s kindo.spec

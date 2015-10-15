@@ -12,17 +12,17 @@ import shutil
 import pickle
 import zipfile
 import simplejson
-from core.kindoCore import KindoCore
-from utils.kindoUtils import download_with_progressbar
-from commands.addCommand import AddCommand
-from commands.checkCommand import CheckCommand
-from commands.runCommand import RunCommand
-from commands.workdirCommand import WorkdirCommand
-from commands.downloadCommand import DownloadCommand
-from commands.ubuntuCommand import UbuntuCommand
-from commands.centosCommand import CentOSCommand
-from commands.addOnRunCommand import AddOnRunCommand
-from commands.envCommand import EnvCommand
+from ..core.kindoCore import KindoCore
+from ..utils.kindoUtils import download_with_progressbar
+from ..commands.addCommand import AddCommand
+from ..commands.checkCommand import CheckCommand
+from ..commands.runCommand import RunCommand
+from ..commands.workdirCommand import WorkdirCommand
+from ..commands.downloadCommand import DownloadCommand
+from ..commands.ubuntuCommand import UbuntuCommand
+from ..commands.centosCommand import CentOSCommand
+from ..commands.addOnRunCommand import AddOnRunCommand
+from ..commands.envCommand import EnvCommand
 
 
 class BuildModule(KindoCore):

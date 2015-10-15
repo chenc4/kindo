@@ -9,9 +9,9 @@ import zipfile
 import hashlib
 from prettytable import PrettyTable
 from fabric.operations import prompt
-from utils.configParser import ConfigParser
-from utils.kindoUtils import download_with_progressbar
-from core.kindoCore import KindoCore
+from ..utils.configParser import ConfigParser
+from ..utils.kindoUtils import download_with_progressbar
+from ..core.kindoCore import KindoCore
 
 
 class SearchModule(KindoCore):

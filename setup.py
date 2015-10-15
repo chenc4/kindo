@@ -25,6 +25,6 @@ setup(
 
     entry_points="""
     [console_scripts]
-    kindo=core.kindo:run
+    kindo=kindo.kindo:run
     """
 )
