@@ -16,6 +16,11 @@
     <name>${project.artifactId}</name>
     <description>A simple tool for packaging and deploying your codes</description>
 
+    <properties>
+        <main.basedir>${basedir}/../..</main.basedir>
+        <m2eclipse.wtp.contextRoot>/</m2eclipse.wtp.contextRoot>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
@@ -25,11 +30,9 @@
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
+                <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <excludes>
-                        <exclude>kindo-hub</exclude>
-                    </excludes>
+                    <useSystemClassLoader>false</useSystemClassLoader>
                 </configuration>
             </plugin>
 
@@ -73,6 +76,11 @@
                     <exclude>**/*.xml</exclude>
                 </excludes>
             </resource>
+
+            <resource>
+                <directory>src/main/public</directory>
+                <targetPath>public</targetPath>
+            </resource>
         </resources>
     </build>
 
@@ -90,8 +98,24 @@
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-jasper</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>jstl</artifactId>
         </dependency>
 
         <dependency>
