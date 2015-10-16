@@ -154,7 +154,7 @@ $(function(){
     }
 
     function bind_download_click_event() {
-        $(".kindo-download-cls").on("click", function() {
+        $(".kindo-download-cls").click(function() {
             var name = $(this).attr("data-name");
             $.ajax({
                 dataType: "json",
@@ -168,7 +168,11 @@ $(function(){
                     }
 
                     if ("url" in data) {
-                        window.open(data["url"]);
+                        window.open(
+                            data["url"],
+                            "_blank",
+                            "height=0,width=0,toolbar=no,menubar=no,scrollbars=no,resizable=on,location=no,status=no"
+                        );
                     }
                 }
             }); 
