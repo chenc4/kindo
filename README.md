@@ -113,6 +113,17 @@ RUN echo "hello kindo"
 kindo build demo.kic
 ```
 
+### 运行命令
+
+如果不想编写部署脚本，Kindo支持直接执行Shell命令：
+
+```shell
+kindo shell "echo hello world" -h [账号@服务器IP:SSH端口号] -p [密码]
+```
+
+如果你在配置文件中配置了服务器信息，可以省略相应参数。
+
+
 更多的命令和用法，参考[Kindo 命令文档](https://github.com/shenghe/kindo/wiki/%E5%A6%82%E4%BD%95%E6%89%A7%E8%A1%8CKINDO%E5%91%BD%E4%BB%A4)
 
 
