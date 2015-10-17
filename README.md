@@ -1,4 +1,4 @@
-# Kindo
+# Kindo :en:  :cn:
 
 Kindo is a lightweight automated deployment tool developed with python that can be cross-platform and easier to bulk deployment.Just with one command, you can manager a lot of servers and update applications with no agents on systems, and writing scripts like dockerfile can be used to solve complex operations.
 
