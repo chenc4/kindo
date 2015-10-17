@@ -6,9 +6,6 @@ import org.springframework.boot.autoconfigure.web.ErrorController;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * Created by shenghe on 2015/10/16.
- */
 @Controller
 public class GlobalExceptionHandlingController implements ErrorController{
     @RequestMapping(value="/error", method = RequestMethod.GET)

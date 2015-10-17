@@ -10,18 +10,19 @@
  </head>
 
  <body>
+ <form action="/" style="display: none" id="kindo-form-id"> </form>
+
   <div id="app">
    <main class="application-wrapper">
     <div class="contain-to-grid">
      <nav class="top-bar" data-topbar="true" role="navigation">
       <section class="top-bar-section">
        <ul class="title-area">
-        <li><a class="" href="/"><img src="images/mini-logo.png" alt="docker logo" class="Nav__logo___2UpdK"></a></li>
+        <li><span style="margin-top: 10px;font-size: 24px;color:white;">Kindo</span></li>
        </ul>
        <ul class="right">
         <li>
          <div class="row">
-          <form class="large-12 columns">
            <div class="searchbar">
             <input type="text" placeholder="Search" class="SearchBar__searchInput___85v1k" id="kindo-search-id">
             <input type="hidden" value="1" name="page" id="kindo-page-id">
@@ -29,7 +30,6 @@
              <i class="fa fa-search"></i>
             </div>
            </div>
-          </form>
          </div></li>
        </ul>
       </section>
@@ -131,6 +131,8 @@ Date.prototype.format = function(format) {
 
 
 $(function(){
+    var kindo_hub_host = "http://kindo.cycore.cn/";
+
     function formatDate(now) {     
         return now.format('yyyy-MM-dd h:m:s');
     }
@@ -158,21 +160,17 @@ $(function(){
             var name = $(this).attr("data-name");
             $.ajax({
                 dataType: "json",
-                url: "v1/pull",
+                url: kindo_hub_host + "v1/pull",
                 data: {
                     uniqueName: name
                 },
                 success: function(data) {
-                    if (data == undefined || "code" in data) {
+                    if (data == undefined) {
                         return;
                     }
 
                     if ("url" in data) {
-                        window.open(
-                            data["url"],
-                            "_blank",
-                            "height=0,width=0,toolbar=no,menubar=no,scrollbars=no,resizable=on,location=no,status=no"
-                        );
+                        $("#kindo-form-id").attr("action", data["url"]).submit();
                     }
                 }
             }); 
@@ -186,7 +184,7 @@ $(function(){
 
         $.ajax({
             dataType: "json",
-            url: "v1/search",
+            url: kindo_hub_host + "v1/search",
             data: {
                 page: page,
                 q: $("#kindo-search-id").val()
@@ -212,13 +210,20 @@ $(function(){
                 $("#kindo-pages-id").empty();            
                 $("#kindo-pages-tpl-id").tmpl({"page": page, "prevpage": page - 1, "nextpage": page + 1}).appendTo("#kindo-pages-id");
 
-                $("#kindo-page-id").val(page + 1);
+                $("#kindo-page-id").val(page);
 
                 bind_page_click_event();
                 bind_download_click_event();
             }
         }); 
     }
+
+    $('#kindo-search-id').bind('keypress', function(event){
+        if(event.keyCode == "13")    
+        {
+            get_contents_by_page($("#kindo-page-id").val());
+        }
+    });
 
     get_contents_by_page(1);
 });

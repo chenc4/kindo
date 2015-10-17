@@ -5704,7 +5704,7 @@ meta.foundation-mq-topbar {
 }
 
 .top-bar .title-area {
-    margin: 0;
+    margin-top: 10px;
     position: relative
 }
 
