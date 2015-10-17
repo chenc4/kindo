@@ -53,10 +53,14 @@ kindo配置文件，都存放在*KINDO_SETTINGS_PATH*环境变量设置的目录
 
 用于设置kindo的基础配置，所写配置可以被命令行参数覆盖。
 
-**index**: 设置kindo hub域名，默认为：kindo.cycore.cn
+**index**: 设置kindo hub域名
+
 **timeout**: 设置运行部署包时，命令超时时间，默认为：60 * 30
+
 **ignore**: 设置`ADDONRUN`在文件不存在时是否抛出异常，默认忽略
+
 **username**: 设置登录kindo hub的帐号
+
 **password**: 设置登录kindo hub的密码
 
 ### hosts.ini
