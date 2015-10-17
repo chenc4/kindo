@@ -27,7 +27,7 @@ cd /usr/local/kindo
 chmod +x kindo
 
 # vi /etc/profile
-export PATH=$PATH;/usr/local/kindo
+export PATH="$PATH:/usr/local/kindo"
 source /etc/profile
 ```
 
