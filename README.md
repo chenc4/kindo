@@ -13,11 +13,11 @@ Kindo是采用Python开发，基于SSH协议的轻量级自动化部署工具，
 
 你可以从[Releases](https://github.com/shenghe/kindo/releases)下载二进制文件或安装包，Kindo目前支持在Windows和Linux上通过二进制安装。
 
-* Windows
+### Windows
 
 下载Setup安装包，点击下一步即可。安装完成，自动注册kindo命令到环境变量。
 
-* Linux
+### Linux
 
 下载kindo二进制文件，赋予可执行命令，然后直接运行即可。建议手工把kindo所在路径写入环境变量，命令如下。
 
@@ -41,7 +41,7 @@ cd master/kindo && python setup.py install
 
 ## 常用名词
 
-* 部署脚本
+### 部署脚本
 
 Kindo部署脚本是以*kic*为后缀的文本文件，采用类似Dockerfile的语法，支持注释，并以shell命令执行。
 
@@ -49,7 +49,7 @@ Kindo部署脚本是以*kic*为后缀的文本文件，采用类似Dockerfile的
 
 脚本范例：[the examples of Kindo deploy scripts](https://github.com/shenghe/kindo/tree/master/examples)
 
-* 部署包
+### 部署包
 
 Kindo部署包是以*ki*为后缀的压缩文件，可用任意支持zip解压的软件解压，其是通过部署脚本编译后的产物。
 
@@ -57,19 +57,19 @@ Kindo部署包是以*ki*为后缀的压缩文件，可用任意支持zip解压�
 
 搜索部署包：[Explore](https://shenghe.github.io/kindo)
 
-* 远程仓库
+### 远程仓库
 
 在服务器上部署好Kindo Hub后，即可以提供上传、存储、搜索、下载部署包的功能，默认仅支持本地文件系统作为存储引擎。
 
 通过[配置kindo](https://github.com/shenghe/kindo/wiki/%E5%A6%82%E4%BD%95%E4%BF%AE%E6%94%B9KINDO%E9%85%8D%E7%BD%AE)，即可与Kindo Hub服务交互，因此我们称Kindo Hub服务为远程仓库。
 
-* 本地仓库
+### 本地仓库
 
 Kindo搜索下载部署包后，都会默认存放在本地指定文件夹作为缓存，因此我们称缓存部署包的文件夹为本地仓库。
 
 ## 常用操作
 
-* 搜索部署包
+### 搜索部署包
 
 除了通过[网站](https://shenghe.github.io/kindo)搜索部署包外，还可以通过命令直接搜索并下载：
 
@@ -79,7 +79,7 @@ kindo search kindo/demo:1.0
 
 当然，你也可以只写部分单词完成搜索，通常得到较多结果，按照提示输入相应序号选择想要的部署包，即可直接下载到本地仓库。
 
-* 运行部署包
+### 运行部署包
 
 你可以通过部署包全名，直接运行。如果远程仓库存在指定的部署包，且没有下载到本地仓库，此命令会自动下载并运行。
 
@@ -93,7 +93,7 @@ kindo run kindo/demo:1.0 -h [账号@服务器IP:SSH端口号] -p [密码]
 kindo run ~/kindo-demo-1.0.ki -h [账号@服务器IP:SSH端口号] -p [密码]
 ```
 
-* 编译部署脚本
+### 编译部署脚本
 
 如果在远程仓库搜索不到想要的部署包，可以通过自己写脚本编译得到部署包，以如下部署脚本(demo.kic)为例：
 
