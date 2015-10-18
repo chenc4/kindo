@@ -80,7 +80,7 @@ the kindo can connect to the hub after [configured](https://github.com/shenghe/k
 
 you can specify the local folder to storage packages as caches after downloaded. the folder called local repository.
 
-## Common Commands
+## Usage
 
 ### Search Package
 
