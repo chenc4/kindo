@@ -1,4 +1,4 @@
-# Kindo [:uk:](https://github.com/shenghe/kindo/blob/master/README.md)  :cn:
+# Kindo :cn: [:uk:](https://github.com/shenghe/kindo/blob/master/README.md)
 
 Kindo是采用Python开发，基于SSH协议的轻量级自动化部署工具，具有跨平台运行、依赖打包、批量部署、代码包仓库管理且等功能。是目前最为轻量级的开源自动化部署工具，实现一行命令即可批量化部署软件、运行命令，而复杂操作可采用类似dockerfile语法的脚本实现。
 
