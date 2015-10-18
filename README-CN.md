@@ -9,6 +9,13 @@ Kindo是采用Python开发，基于SSH协议的轻量级自动化部署工具，
 * 开源免费：客户端及Kindo hub均开源，可方便的基于现有代码做二次开发
 * 无需代理：基于SSH协议，无需在服务器安装Agent即可运行
 
+## 关联项目
+
+[Kindo Hub](https://github.com/shenghe/kindo-hub): 采用JAVA开发的开源Kindo仓库
+
+[Kindo Explore](https://shenghe.github.io/kindo): 采用Kindo Hub搭建的Kindo包搜索网站
+
+
 ## 安装
 
 你可以从[Releases](https://github.com/shenghe/kindo/releases)下载二进制文件或安装包，Kindo目前支持在Windows和Linux上通过二进制安装。

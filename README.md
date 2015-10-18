@@ -9,7 +9,13 @@ Kindo is a lightweight automated deployment tool developed with python that can 
 * free and open-source：the client and server are free and open-source that can be easy to develop again.
 * no agents：using ssh protocol, with no agents to install on remote systems.
 
-## Install
+## Related
+
+[Kindo Hub](https://github.com/shenghe/kindo-hub): Open Source Kindo Index (aka Kindo Hub) written in Java
+
+[Kindo Explore](https://shenghe.github.io/kindo): Search Kindo Packages  
+
+## Installation
 
 you can download the binary file or installation package that can be runned on windows and linux from [Releases](https://github.com/shenghe/kindo/releases).
 
