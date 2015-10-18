@@ -90,7 +90,11 @@ In addition to the [website](https://shenghe.github.io/kindo), but also through 
 kindo search kindo/demo:1.0
 ```
 
-Surely, you can only write some words to complete the search, but usually get more results. and then input the package number to download the specified package.
+Surely, you can only write some words to complete the search, but usually get more results. and then input the package number to download the specified package:
+
+```shell
+kindo search demo
+```
 
 ### Run Package
 
