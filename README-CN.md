@@ -46,6 +46,13 @@ tar -xzvf master.tar.gz
 cd master/kindo && python setup.py install
 ```
 
+或者，直接从pypi仓库下载安装：
+
+```shell
+pip install kindo
+```
+
+
 ## 常用名词
 
 ### 部署脚本

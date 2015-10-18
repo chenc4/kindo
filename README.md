@@ -45,6 +45,12 @@ tar -xzvf master.tar.gz
 cd master/kindo && python setup.py install
 ```
 
+or, download and install from pypi:
+
+```shell
+pip install kindo
+```
+
 
 ## Common Concepts
 
