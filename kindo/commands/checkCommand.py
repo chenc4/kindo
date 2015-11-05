@@ -5,7 +5,7 @@ import os
 from fabric.api import cd
 from fabric.contrib.files import exists
 from fabric.context_managers import shell_env
-from commands.command import Command
+from kindo.commands.command import Command
 
 
 class CheckCommand(Command):

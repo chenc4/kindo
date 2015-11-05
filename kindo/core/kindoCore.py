@@ -3,7 +3,7 @@
 
 import os
 import tempfile
-from utils.configParser import ConfigParser
+from kindo.utils.configParser import ConfigParser
 
 
 class KindoCore():

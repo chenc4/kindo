@@ -6,8 +6,8 @@ import shutil
 import traceback
 import zipfile
 import simplejson
-from utils.configParser import ConfigParser
-from core.kindoCore import KindoCore
+from kindo.utils.configParser import ConfigParser
+from kindo.core.kindoCore import KindoCore
 
 
 class CommitModule(KindoCore):

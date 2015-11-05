@@ -11,18 +11,18 @@ import simplejson
 from fabric.state import output
 from fabric.tasks import execute
 from fabric.api import env
-from core.kindoCore import KindoCore
-from utils.configParser import ConfigParser
-from utils.kindoUtils import download_with_progressbar
-from commands.addCommand import AddCommand
-from commands.checkCommand import CheckCommand
-from commands.runCommand import RunCommand
-from commands.workdirCommand import WorkdirCommand
-from commands.downloadCommand import DownloadCommand
-from commands.ubuntuCommand import UbuntuCommand
-from commands.centosCommand import CentOSCommand
-from commands.addOnRunCommand import AddOnRunCommand
-from commands.envCommand import EnvCommand
+from kindo.core.kindoCore import KindoCore
+from kindo.utils.configParser import ConfigParser
+from kindo.utils.kindoUtils import download_with_progressbar
+from kindo.commands.addCommand import AddCommand
+from kindo.commands.checkCommand import CheckCommand
+from kindo.commands.runCommand import RunCommand
+from kindo.commands.workdirCommand import WorkdirCommand
+from kindo.commands.downloadCommand import DownloadCommand
+from kindo.commands.ubuntuCommand import UbuntuCommand
+from kindo.commands.centosCommand import CentOSCommand
+from kindo.commands.addOnRunCommand import AddOnRunCommand
+from kindo.commands.envCommand import EnvCommand
 
 
 class RunModule(KindoCore):

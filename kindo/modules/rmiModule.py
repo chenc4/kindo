@@ -2,8 +2,8 @@
 #-*- coding: utf-8 -*-
 import os
 import traceback
-from core.kindoCore import KindoCore
-from utils.configParser import ConfigParser
+from kindo.core.kindoCore import KindoCore
+from kindo.utils.configParser import ConfigParser
 
 
 class RmiModule(KindoCore):

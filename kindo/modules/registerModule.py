@@ -6,7 +6,7 @@ import re
 import requests
 import traceback
 from fabric.operations import prompt
-from core.kindoCore import KindoCore
+from kindo.core.kindoCore import KindoCore
 
 
 class RegisterModule(KindoCore):

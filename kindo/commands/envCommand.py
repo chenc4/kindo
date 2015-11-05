@@ -3,7 +3,7 @@
 import re
 import os
 from fabric.api import cd
-from commands.command import Command
+from kindo.commands.command import Command
 
 
 class EnvCommand(Command):

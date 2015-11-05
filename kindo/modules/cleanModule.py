@@ -3,7 +3,7 @@
 
 import os
 import shutil
-from core.kindoCore import KindoCore
+from kindo.core.kindoCore import KindoCore
 
 
 class CleanModule(KindoCore):

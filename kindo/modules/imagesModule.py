@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
 import os
-from core.kindoCore import KindoCore
-from utils.prettytable import PrettyTable
-from utils.configParser import ConfigParser
+from kindo.core.kindoCore import KindoCore
+from kindo.utils.prettytable import PrettyTable
+from kindo.utils.configParser import ConfigParser
 
 
 class ImagesModule(KindoCore):

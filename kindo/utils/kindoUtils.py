@@ -3,8 +3,8 @@
 
 from __future__ import division
 import os
-from utils.urllib import urlretrieve
-from utils.progressbar import *
+from kindo.utils.urllib import urlretrieve
+from kindo.utils.progressbar import *
 
 def download_with_progressbar(url, target):
     target_dir = os.path.dirname(target)

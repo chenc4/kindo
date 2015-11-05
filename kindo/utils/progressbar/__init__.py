@@ -55,8 +55,8 @@ try:
 except ImportError:
     pass
 
-from utils.progressbar.compat import *
-from utils.progressbar.widgets import *
+from kindo.utils.progressbar.compat import *
+from kindo.utils.progressbar.widgets import *
 
 
 __author__ = 'Nilton Volpato'
