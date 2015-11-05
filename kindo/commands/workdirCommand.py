@@ -3,7 +3,7 @@
 import re
 import os
 from fabric.context_managers import shell_env
-from ..commands.command import Command
+from commands.command import Command
 
 
 

@@ -2,14 +2,23 @@
 #-*- coding: utf-8 -*-
 
 from __future__ import division
-import urllib
-from progressbar import *
+import os
+from utils.urllib import urlretrieve
+from utils.progressbar import *
 
 def download_with_progressbar(url, target):
+    target_dir = os.path.dirname(target)
+    if not os.path.isdir(target_dir):
+        os.makedirs(target_dir)
+
     pbar = ProgressBar().start()
 
     def progress_reporthook(block_count, block_size, total_size):
-        pbar.update(int((block_count * block_size / total_size) * 100))
+        progress = int((block_count * block_size / total_size) * 100)
+        if progress > 100:
+            return
+        pbar.update(progress)
 
-    urllib.urlretrieve(url, target, reporthook=progress_reporthook)
+    urlretrieve(url, target, reporthook=progress_reporthook)
+
     pbar.finish()

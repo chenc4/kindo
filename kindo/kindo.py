@@ -5,25 +5,25 @@ import sys
 import tempfile
 import traceback
 import tarfile
-from .utils.argsParser import ArgsParser
-from .utils.logger import Logger
-from .modules.runModule import RunModule
-from .modules.buildModule import BuildModule
-from .modules.searchModule import SearchModule
-from .modules.shellModule import ShellModule
-from .modules.cleanModule import CleanModule
-from .modules.registerModule import RegisterModule
-from .modules.pushModule import PushModule
-from .modules.imagesModule import ImagesModule
-from .modules.rmiModule import RmiModule
-from .modules.infoModule import InfoModule
-from .modules.versionModule import VersionModule
-from .modules.helpModule import HelpModule
-from .modules.pullModule import PullModule
-from .modules.commitModule import CommitModule
-from .modules.logoutModule import LogoutModule
-from .modules.loginModule import LoginModule
-from .modules.rmModule import RmModule
+from utils.argsParser import ArgsParser
+from utils.logger import Logger
+from modules.runModule import RunModule
+from modules.buildModule import BuildModule
+from modules.searchModule import SearchModule
+from modules.shellModule import ShellModule
+from modules.cleanModule import CleanModule
+from modules.registerModule import RegisterModule
+from modules.pushModule import PushModule
+from modules.imagesModule import ImagesModule
+from modules.rmiModule import RmiModule
+from modules.infoModule import InfoModule
+from modules.versionModule import VersionModule
+from modules.helpModule import HelpModule
+from modules.pullModule import PullModule
+from modules.commitModule import CommitModule
+from modules.logoutModule import LogoutModule
+from modules.loginModule import LoginModule
+from modules.rmModule import RmModule
 
 
 class Kindo:

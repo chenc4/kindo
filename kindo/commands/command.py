@@ -4,8 +4,8 @@ import os
 import requests
 from fabric.contrib.files import exists
 from fabric.api import env, sudo, settings, run, hide, put, get
-from ..utils.configParser import ConfigParser
-from ..core.kindoCore import KindoCore
+from core.kindoCore import KindoCore
+from utils.configParser import ConfigParser
 
 
 class Command(KindoCore):

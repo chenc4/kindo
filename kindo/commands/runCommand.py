@@ -5,7 +5,7 @@ import os
 from fabric.api import cd
 from fabric.api import env
 from fabric.context_managers import shell_env
-from ..commands.command import Command
+from commands.command import Command
 
 
 class RunCommand(Command):

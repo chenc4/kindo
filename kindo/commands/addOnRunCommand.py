@@ -4,8 +4,8 @@ import re
 import os
 from fabric.api import cd
 from fabric.context_managers import shell_env
-from ..commands.command import Command
-from ..utils.configParser import ConfigParser
+from commands.command import Command
+from utils.configParser import ConfigParser
 
 
 class AddOnRunCommand(Command):

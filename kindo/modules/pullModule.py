@@ -5,10 +5,10 @@ import requests
 import hashlib
 import traceback
 from fabric.operations import prompt
-from ..core.errors import ERRORS
-from ..core.kindoCore import KindoCore
-from ..utils.configParser import ConfigParser
-from ..utils.kindoUtils import download_with_progressbar
+from core.errors import ERRORS
+from core.kindoCore import KindoCore
+from utils.configParser import ConfigParser
+from utils.kindoUtils import download_with_progressbar
 
 
 

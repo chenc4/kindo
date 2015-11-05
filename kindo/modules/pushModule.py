@@ -7,8 +7,8 @@ import requests
 import hashlib
 import zipfile
 import simplejson
-from ..core.kindoCore import KindoCore
-from ..utils.configParser import ConfigParser
+from core.kindoCore import KindoCore
+from utils.configParser import ConfigParser
 
 
 class PushModule(KindoCore):

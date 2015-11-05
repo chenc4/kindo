@@ -2,8 +2,9 @@
 #-*- coding: utf-8 -*-
 import os
 import traceback
-from ..utils.configParser import ConfigParser
-from ..core.kindoCore import KindoCore
+from core.kindoCore import KindoCore
+from utils.configParser import ConfigParser
+
 
 class RmiModule(KindoCore):
     def __init__(self, startfolder, configs, options, logger):

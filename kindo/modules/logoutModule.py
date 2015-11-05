@@ -3,8 +3,8 @@
 
 import os
 import traceback
-from ..utils.configParser import ConfigParser
-from ..core.kindoCore import KindoCore
+from core.kindoCore import KindoCore
+from utils.configParser import ConfigParser
 
 
 class LogoutModule(KindoCore):

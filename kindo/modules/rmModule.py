@@ -5,8 +5,8 @@ import os
 import hashlib
 import traceback
 import requests
-from ..utils.configParser import ConfigParser
-from ..core.kindoCore import KindoCore
+from core.kindoCore import KindoCore
+from utils.configParser import ConfigParser
 
 
 class RmModule(KindoCore):

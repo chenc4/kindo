@@ -7,8 +7,8 @@ import requests
 import hashlib
 import traceback
 from fabric.operations import prompt
-from ..utils.configParser import ConfigParser
-from ..core.kindoCore import KindoCore
+from core.kindoCore import KindoCore
+from utils.configParser import ConfigParser
 
 
 class LoginModule(KindoCore):
