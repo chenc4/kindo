@@ -8,6 +8,7 @@ import uuid
 import tempfile
 import traceback
 import requests
+import urlparse
 import shutil
 import pickle
 import zipfile
@@ -30,7 +31,8 @@ class BuildModule(KindoCore):
         KindoCore.__init__(self, startfolder, configs, options, logger)
 
         self.kic_path_infos = []
-        for option in options:
+
+        for option in options[2:]:
             filename, ext = os.path.splitext(option)
             if "." not in ext:
                 ext = ".kic"
@@ -66,15 +68,12 @@ class BuildModule(KindoCore):
         self.re_pattern =  "^\s*(%s)\s+" % "|".join(self.handlers.keys())
 
     def start(self):
-        kic_build_number = 0
         try:
             if not self.kic_path_infos:
-                self.logger.response("no kics", False)
+                self.logger.error("no kics")
                 return
 
             for kic_path_info in self.kic_path_infos:
-                kic_build_number += 1
-
                 if not os.path.isdir(kic_path_info["outfolder"]):
                     os.makedirs(kic_path_info["outfolder"])
 
@@ -82,8 +81,8 @@ class BuildModule(KindoCore):
                 if not os.path.isdir(kic_build_folder):
                     kic_build_sub_folders = [
                         os.path.join(kic_build_folder, "kics"),
-                        os.path.join(kic_build_folder, "kibcs"),
-                        os.path.join(kic_build_folder, "files")
+                        os.path.join(kic_build_folder, "files"),
+                        os.path.join(kic_build_folder, "deps")
                     ]
                     for kic_build_sub_folder in kic_build_sub_folders:
                         os.makedirs(kic_build_sub_folder)
@@ -91,7 +90,7 @@ class BuildModule(KindoCore):
                 try:
                     filedir, filename = os.path.split(kic_path_info["path"])
 
-                    commands, author, version, website, name, summary, license = self.build_kic(
+                    commands, author, version, website, name, summary, license, platform = self.build_kic(
                         kic_path_info["path"], kic_build_folder
                     )
 
@@ -103,6 +102,10 @@ class BuildModule(KindoCore):
 
                     if len(re.findall("[^a-zA-Z0-9\.-]", version)) > 0:
                         raise Exception("invalid version, just allow 'a-zA-Z0-9\.-'")
+
+                    # TODO:
+                    if len(re.findall("^[a-zA-Z]+/?x86$", platform)) > 0:
+                        raise Exception("invalid platform, just allow 'a-zA-Z0-9\.-'")
 
                     shutil.copy(kic_path_info["path"],  os.path.join(kic_build_folder, "kics", filename))
 
@@ -122,16 +125,14 @@ class BuildModule(KindoCore):
                         "website": website,
                         "summary": summary,
                         "license": license,
+                        "platform": platform,
                         "buildtime": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
                         "buildversion": 2,
                         "filename": filename,
                         "files": files
                     }
 
-                    if len(self.kic_path_infos) == 1:
-                        manifest = os.path.join(kic_build_folder, "manifest.json")
-                    else:
-                        manifest = os.path.join(kic_build_folder, "manifest-%s.json" % kic_build_number)
+                    manifest = os.path.join(kic_build_folder, "manifest.json")
                     with open(manifest, 'wb') as fs:
                         simplejson.dump(manifest_json, fs)
 
@@ -152,14 +153,13 @@ class BuildModule(KindoCore):
                     self.logger.debug("packaged %s" % output_ki_path)
                 except Exception as e:
                     self.logger.debug(traceback.format_exc())
-                    self.logger.response(e, False)
                     return
                 finally:
                     shutil.rmtree(kic_build_folder)
                 self.logger.response("build ok: %s" % kic_path_info["path"])
         except Exception as e:
             self.logger.debug(traceback.format_exc())
-            self.logger.response(e, False)
+            self.logger.error(e)
 
 
     def put_files_to_build_path(self, files, kic_build_folder, kic_path):
@@ -187,68 +187,57 @@ class BuildModule(KindoCore):
 
     def build_kic(self, kic_path, kic_build_folder):
         commands = []
-        deps = []
         author = self.configs.get("username", "anonymous")
         version = "1.0"
         website = ""
         summary = ""
         license = ""
+        platform = "linux"
 
-        filedir, filename = os.path.split(kic_path)
-        name, ext = os.path.splitext(filename)
+        name, ext = os.path.splitext(os.path.split(kic_path)[1])
 
         self.logger.debug("parsing %s" % kic_path)
-        with open(kic_path, "r") as fs:
-            line = 0
-            for content in fs:
-                line += 1
 
-                content = content.strip()
-                if content and content[0] == "#":
-                    patterns = re.search(
-                        '#\s*(AUTHOR|VERSION|WEBSITE|NAME|SUMMARY|LICENSE)[:|\s]\s*(.+)',
-                        content,
-                        re.IGNORECASE
-                    )
-                    if patterns is not None:
-                        groups = patterns.groups()
-                        if groups[0].lower() == "author":
-                            author = groups[1]
-                            self.logger.debug("parsed author: %s" % author)
-                        elif groups[0].lower() == "version":
-                            version = groups[1]
-                            self.logger.debug("parsed version: %s" % version)
-                        elif groups[0].lower() == "website":
-                            website = groups[1]
-                            self.logger.debug("parsed website: %s" % website)
-                        elif groups[0].lower() == "name":
-                            name = groups[1]
-                            self.logger.debug("parsed name: %s" % name)
-                        elif groups[0].lower() == "summary":
-                            summary = groups[1]
-                        elif groups[0].lower() == "license":
-                            license = groups[1]
-                            self.logger.debug("parsed license: %s" % license)
-                    continue
+        kic_content_list = self.get_kic_content(kic_path)
 
-                if not content:
-                    continue
+        for content in kic_content_list:
+            if content and content[0] == "#":
+                note_patterns = re.search(
+                    '#\s*(AUTHOR|VERSION|WEBSITE|NAME|SUMMARY|LICENSE|PLATFORM)[:|\s]\s*(.+)',
+                    content,
+                    re.IGNORECASE
+                )
+                if note_patterns is not None:
+                    group = note_patterns.groups()[0].lower()
+                    if group == "author":
+                        author = groups[1]
+                    elif group == "version":
+                        version = groups[1]
+                    elif group == "website":
+                        website = groups[1]
+                    elif group == "name":
+                        name = groups[1]
+                    elif group == "summary":
+                        summary = groups[1]
+                    elif group == "license":
+                        license = groups[1]
+                    elif group == "platform":
+                        platform = groups[1]
 
-                patterns = re.search(self.re_pattern, content, re.IGNORECASE)
-                if patterns is None:
-                    self.logger.error("BUILD FAILED (LINE: %s): invalid content" % line)
-                    return None, None, None, None, None, None, None
+                continue
 
-                key = patterns.groups()[0].lower()
+            patterns = re.search(self.re_pattern, content, re.IGNORECASE)
+            if patterns is None:
+                self.logger.response_error("build failed", "invalid content", content)
+                return None
 
-                command = self.handlers[key].parse(content)
-                if command:
-                    command["line"] = line
-                    command["content"] = content
-                    commands.append(command)
+            key = patterns.groups()[0].lower()
 
-        with open(os.path.join(kic_build_folder, "kibcs", "%s.kibc" % name), 'wb') as fs:
-            pickle.dump(commands, fs)
+            commands.append(self.handlers[key].parse(content))
+
+        with open(os.path.join(kic_build_folder, "kics", "%s.kijc" % name), 'wb') as fs:
+            simplejson.dump(commands, fs)
+
         self.logger.debug("parsed %s" % kic_path)
 
         if "t" in self.configs:
@@ -256,22 +245,43 @@ class BuildModule(KindoCore):
             name, version = tag.split(":") if ":"in tag else (tag, version)
             author, name = name.split("/") if "/" in name else (author, name)
 
-        return commands, author, version, website, name, summary, license
+        return commands, author, version, website, name, summary, license, platform
+
+    def get_kic_content(self, kic_path):
+        contents = []
+        with open(kic_path, "r") as fs:
+            last_content = ""
+            for content in fs:
+                content = content.strip()
+                if not content:
+                    continue
+
+                if content[-1] == "\\":
+                    if not last_content:
+                        last_content = content[:-1]
+                    else:
+                        last_content = "%s %s" % (last_content, content[:-1])
+                    continue
+
+                if last_content:
+                    content = "%s %s" % (last_content, content)
+                    last_content = ""
+                contents.append(content)
+        return contents
 
     def get_kic_info(self, option):
         if option[:7].lower() == "http://" or option[:8].lower() == "https://":
-            filename = re.sub("[\?|\+|\*|\<|\>|:| ]", "", os.path.split(option)[1])
+            urlinfo = urlparse.urlparse(option)
+            filename = os.path.split(urlinfo["path"])[1]
             target = os.path.join(self.kindo_tmps_path, filename)
-            r = requests.get(option)
-            if r.status_code == 200:
-                with open(target, "wb") as fs:
-                    fs.write(r.content)
 
+            download_with_progressbar(option, target)
+            if os.path.isfile(target):
                 return target, os.path.realpath(configs.get("o", self.startfolder))
+            return None, None
 
         kic_maybe_paths = [
             option,
-            os.path.join(self.startfolder, "kics", option),
             os.path.join(self.startfolder, option),
             os.path.join(self.kindo_kics_path, option)
         ]

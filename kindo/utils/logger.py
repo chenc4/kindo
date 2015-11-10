@@ -88,3 +88,12 @@ class Logger:
             self.info(msg)
         else:
             self.error(msg)
+
+    def response_error(self, message, short_msg, long_msg):
+        msg = """
+[%s] %s  >>
+
+%s
+""" % (message, short_msg, long_msg)
+
+        self.error(msg)
