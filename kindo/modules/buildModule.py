@@ -13,8 +13,9 @@ import shutil
 import pickle
 import zipfile
 import simplejson
-from kindo.core.kindoCore import KindoCore
-from kindo.utils.kindoUtils import download_with_progressbar
+
+from kindo.kindoCore import KindoCore
+from kindo.utils.functions import download_with_progressbar
 from kindo.commands.addCommand import AddCommand
 from kindo.commands.checkCommand import CheckCommand
 from kindo.commands.runCommand import RunCommand
@@ -88,8 +89,6 @@ class BuildModule(KindoCore):
                         os.makedirs(kic_build_sub_folder)
 
                 try:
-                    filedir, filename = os.path.split(kic_path_info["path"])
-
                     commands, author, version, website, name, summary, license, platform = self.build_kic(
                         kic_path_info["path"], kic_build_folder
                     )
@@ -103,19 +102,35 @@ class BuildModule(KindoCore):
                     if len(re.findall("[^a-zA-Z0-9\.-]", version)) > 0:
                         raise Exception("invalid version, just allow 'a-zA-Z0-9\.-'")
 
-                    # TODO:
-                    if len(re.findall("^[a-zA-Z]+/?x86$", platform)) > 0:
-                        raise Exception("invalid platform, just allow 'a-zA-Z0-9\.-'")
+                    if (
+                        len(re.findall("^[a-zA-Z]+(/x86)?$", platform)) <= 0 and
+                        len(re.findall("^[a-zA-Z]+(/x64)?$", platform)) <= 0
+                    ):
+                        raise Exception("invalid platform, just allow '[os]/x86 or [os]/x64'")
 
-                    shutil.copy(kic_path_info["path"],  os.path.join(kic_build_folder, "kics", filename))
+                    shutil.copy(
+                        kic_path_info["path"],
+                        os.path.join(
+                            kic_build_folder,
+                            "kics",
+                            "%s-%s-%s.kic" % (author, name, version)
+                        )
+                    )
 
                     files = []
+                    deps = []
                     for c in commands:
                         if "files" in c:
                             files += self.put_files_to_build_path(
                                 c["files"],
                                 kic_build_folder,
                                 kic_path_info["path"]
+                            )
+
+                        if "deps" in c:
+                            deps += self.put_deps_to_build_path(
+                                c["deps"],
+                                kic_build_folder
                             )
 
                     manifest_json = {
@@ -126,10 +141,12 @@ class BuildModule(KindoCore):
                         "summary": summary,
                         "license": license,
                         "platform": platform,
-                        "buildtime": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-                        "buildversion": 2,
-                        "filename": filename,
-                        "files": files
+                        "build_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+                        "build_version": 3,
+                        "build_os": "",
+                        "run_min_version": 1,
+                        "files": files,
+                        "deps": deps
                     }
 
                     manifest = os.path.join(kic_build_folder, "manifest.json")
@@ -184,6 +201,8 @@ class BuildModule(KindoCore):
 
         return filenames
 
+    def put_deps_to_build_path(self, deps, kic_build_folder):
+        return []
 
     def build_kic(self, kic_path, kic_build_folder):
         commands = []

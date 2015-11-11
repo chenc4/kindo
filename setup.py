@@ -40,7 +40,7 @@ Topic :: Utilities
 """.strip().splitlines()
 
 setup(
-    install_requires=["fabric", "requests", "pyinstaller", "simplejson", "progressbar"],
+    install_requires=["fabric", "requests", "pyinstaller", "simplejson"],
 
     name='kindo',
     version="1.0.0",
