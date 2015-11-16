@@ -8,24 +8,24 @@ import paramiko
 import tarfile
 
 from kindo.utils.logger import Logger
-from kindo.utils.argsParser import ArgsParser
-from kindo.modules.runModule import RunModule
-from kindo.modules.buildModule import BuildModule
-from kindo.modules.searchModule import SearchModule
-from kindo.modules.shellModule import ShellModule
-from kindo.modules.cleanModule import CleanModule
-from kindo.modules.registerModule import RegisterModule
-from kindo.modules.pushModule import PushModule
-from kindo.modules.imagesModule import ImagesModule
-from kindo.modules.rmiModule import RmiModule
-from kindo.modules.infoModule import InfoModule
-from kindo.modules.versionModule import VersionModule
-from kindo.modules.helpModule import HelpModule
-from kindo.modules.pullModule import PullModule
-from kindo.modules.commitModule import CommitModule
-from kindo.modules.logoutModule import LogoutModule
-from kindo.modules.loginModule import LoginModule
-from kindo.modules.rmModule import RmModule
+from kindo.utils.args_parser import ArgsParser
+from kindo.modules.run_module import RunModule
+from kindo.modules.build_module import BuildModule
+from kindo.modules.search_module import SearchModule
+from kindo.modules.shell_module import ShellModule
+from kindo.modules.clean_module import CleanModule
+from kindo.modules.register_module import RegisterModule
+from kindo.modules.push_module import PushModule
+from kindo.modules.images_module import ImagesModule
+from kindo.modules.rmi_module import RmiModule
+from kindo.modules.info_module import InfoModule
+from kindo.modules.version_module import VersionModule
+from kindo.modules.help_module import HelpModule
+from kindo.modules.pull_module import PullModule
+from kindo.modules.commit_module import CommitModule
+from kindo.modules.logout_module import LogoutModule
+from kindo.modules.login_module import LoginModule
+from kindo.modules.rm_module import RmModule
 
 
 class Kindo:
