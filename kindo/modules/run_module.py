@@ -7,22 +7,22 @@ import traceback
 import zipfile
 import pickle
 import requests
-import hashlib
 import simplejson
 
 from fabric.api import env, output, execute
 
 from kindo.kindo_core import KindoCore
 from kindo.utils.config_parser import ConfigParser
-from kindo.utils.functions import download_with_progressbar
+from kindo.utils.functions import download_with_progressbar, get_md5
 from kindo.commands.add_command import AddCommand
 from kindo.commands.check_command import CheckCommand
+from kindo.commands.from_command import FromCommand
 from kindo.commands.run_command import RunCommand
 from kindo.commands.workdir_command import WorkdirCommand
 from kindo.commands.download_command import DownloadCommand
 from kindo.commands.ubuntu_command import UbuntuCommand
 from kindo.commands.centos_command import CentOSCommand
-from kindo.commands.addOnRun_command import AddOnRunCommand
+from kindo.commands.addonrun_command import AddOnRunCommand
 from kindo.commands.env_command import EnvCommand
 
 
@@ -70,6 +70,7 @@ class RunModule(KindoCore):
         self.ki_path = self.get_ki_path()
 
         self.handlers = {
+            "from": FromCommand(startfolder, configs, options, logger),
             "add": AddCommand(startfolder, configs, options, logger),
             "check": CheckCommand(startfolder, configs, options, logger),
             "run": RunCommand(startfolder, configs, options, logger),
@@ -89,11 +90,11 @@ class RunModule(KindoCore):
         self.run_ki(self.ki_path)
 
     def run_ki(self, ki_path):
-        if not os.path.isfile(ki_path):
+        if ki_path is None or not os.path.isfile(ki_path):
             self.logger.error("{0} not found".format(ki_path))
             return
 
-        ki_unpackage_folder = self.get_ki_unpackage_folder()
+        ki_unpackage_folder = self.get_ki_unpackage_folder(ki_path)
 
         ki_confs_path = os.path.join(ki_unpackage_folder, "confs")
         ki_files_path = os.path.join(ki_unpackage_folder, "files")
@@ -113,15 +114,15 @@ class RunModule(KindoCore):
 
         manifest = {}
         try:
-            with open(ki_manifest_path, "wb") as fs:
-                manifest = simplejson.loads(fs)
+            with open(ki_manifest_path, "rb") as fs:
+                manifest = simplejson.load(fs)
                 self.test_whether_compatible(manifest)
 
                 if "images" in manifest:
                     for image_name in manifest["images"]:
                         image_path = os.path.join(ki_images_path, image_name)
-
                         self.run_ki(image_path)
+
 
             for f in os.listdir(ki_confs_path):
                 filename, ext = os.path.splitext(f)
@@ -130,11 +131,16 @@ class RunModule(KindoCore):
 
                 script = os.path.join(ki_confs_path, f)
                 with open(script, 'rb') as fs:
+                    script_commands = []
                     # 兼容早期配置文件
                     if ext == ".kibc":
                         script_commands = pickle.load(fs)
                     elif ext == ".kijc":
-                        script_commands = simplejson.loads(fs)
+                        script_commands = simplejson.load(fs)
+
+                    if not script_commands:
+                        self.logger.warn("empty commands: {0}".format(script))
+                        continue
 
                     execute(
                         self.execute_script_commands,
@@ -143,7 +149,6 @@ class RunModule(KindoCore):
                         imagesdir=ki_images_path,
                         hosts=env.passwords.keys()
                     )
-            self.logger.info("run ok")
         except Exception as e:
             self.logger.debug(traceback.format_exc())
             self.logger.error(e)
@@ -335,7 +340,7 @@ class RunModule(KindoCore):
         return True
 
     def get_ki_unpackage_folder(self, ki_path):
-        ki_path_md5 = hashlib.md5().update(self.ki_path).hexdigest()
+        ki_path_md5 = get_md5(ki_path)
 
         ki_unpackage_folder = os.path.join(self.kindo_caches_path, ki_path_md5)
         ki_length_cache_file = os.path.join(ki_unpackage_folder, "ki.cache")
@@ -343,18 +348,20 @@ class RunModule(KindoCore):
         length = -1
         if os.path.isfile(ki_length_cache_file):
             with open(ki_length_cache_file, "r") as fs:
-                length = int(fs.read())
+                ki_length_cache_file_content = fs.read()
+                if ki_length_cache_file_content:
+                    length = long(ki_length_cache_file_content)
 
         if not os.path.isdir(ki_unpackage_folder):
             os.makedirs(ki_unpackage_folder)
 
         ki_length = os.path.getsize(ki_path)
-        if length != ki_length:
+        if length == -1 or length != ki_length:
             if not self.unzip_file(ki_path, ki_unpackage_folder):
                 raise Exception("unpackage failed")
 
             with open(ki_length_cache_file, "wb") as fs:
-                fs.write(ki_length)
+                fs.write(str(ki_length))
         return ki_unpackage_folder
 
     def get_image_path(self, section):

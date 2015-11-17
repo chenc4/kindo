@@ -13,7 +13,6 @@ class AddOnRunCommand(Command):
         Command.__init__(self, startfolder, configs, options, logger)
 
     def parse(self, value):
-        value = value.strip()
         strs = re.split("\s+", value[9:])
 
         if len(strs) >= 2:

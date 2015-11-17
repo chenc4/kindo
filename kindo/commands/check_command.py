@@ -13,27 +13,27 @@ class CheckCommand(Command):
         Command.__init__(self, startfolder, configs, options, logger)
 
     def parse(self, value):
-        value = value.strip()
-        if len(value) > 6 and value[:6].lower() == "check ":
-            strs = re.split("\s+", value[6:])
+        if not value[6:]:
+            return {}
 
-            ports = []
-            files = []
+        strs = re.split("\s+", value[6:])
 
-            for s in strs:
-                if s.isdigit():
-                    ports.append(s)
-                else:
-                    files.append(s)
+        ports = []
+        files = []
 
-            return {
-                "action": "CHECK",
-                "args": {"ports": ports, "files": files},
-                "variables": []
-            }
-        return {}
+        for s in strs:
+            if s.isdigit():
+                ports.append(s)
+            else:
+                files.append(s)
 
-    def run(self, command, depsdir, position, envs):
+        return {
+            "action": "CHECK",
+            "args": {"ports": ports, "files": files},
+            "variables": []
+        }
+
+    def run(self, command, filesdir, imagesdir, position, envs):
         with cd(position):
             with shell_env(**envs):
                 for port in command["args"]["ports"]:
@@ -45,5 +45,5 @@ class CheckCommand(Command):
                     if not exists(f):
                         return 0, position, "CHECK ERROR: %s not found" % f, envs
 
-                return 1, position, "", envs
-        return 1, position, "", envs
+                return position, envs
+        return position, envs

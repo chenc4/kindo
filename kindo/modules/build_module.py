@@ -19,6 +19,7 @@ from kindo.kindo_core import KindoCore
 from kindo.utils.functions import download_with_progressbar
 from kindo.commands.add_command import AddCommand
 from kindo.commands.check_command import CheckCommand
+from kindo.commands.from_command import FromCommand
 from kindo.commands.run_command import RunCommand
 from kindo.commands.workdir_command import WorkdirCommand
 from kindo.commands.download_command import DownloadCommand
@@ -56,6 +57,7 @@ class BuildModule(KindoCore):
             )
 
         self.handlers = {
+            "from": FromCommand(startfolder, configs, options, logger),
             "add": AddCommand(startfolder, configs, options, logger),
             "check": CheckCommand(startfolder, configs, options, logger),
             "run": RunCommand(startfolder, configs, options, logger),
@@ -93,6 +95,9 @@ class BuildModule(KindoCore):
                     commands, author, version, homepage, name, summary, license, platform = self.build_kic(
                         kic_path_info["path"], kic_build_folder
                     )
+
+                    if commands is None:
+                        return
 
                     if len(re.findall("[^a-zA-Z0-9]", author)) > 0:
                         raise Exception("invalid author name, just allow 'a-zA-Z0-9-_'")
@@ -170,6 +175,7 @@ class BuildModule(KindoCore):
                     self.logger.debug("packaged %s" % output_ki_path)
                 except Exception as e:
                     self.logger.debug(traceback.format_exc())
+                    self.logger.error(e)
                     return
                 finally:
                     shutil.rmtree(kic_build_folder)
@@ -181,6 +187,7 @@ class BuildModule(KindoCore):
 
     def put_files_to_build_path(self, files, kic_build_folder, kic_path):
         file_names = []
+
         for f in files:
             if "name" not in f or "url" not in f:
                 continue
@@ -217,9 +224,9 @@ class BuildModule(KindoCore):
 
     def build_kic(self, kic_path, kic_build_folder):
         commands, author, version, homepage, summary, license, platform = [], self.configs.get(
-            "username", 
+            "username",
             "anonymous"
-        ), KINDO_VERSION, "", "", "", "linux"
+        ), "1.0", "", "", "", "linux"
 
         name, ext = os.path.splitext(os.path.split(kic_path)[1])
 
@@ -236,7 +243,11 @@ class BuildModule(KindoCore):
                     re.IGNORECASE
                 )
                 if note_patterns is not None:
-                    group = note_patterns.groups()[0].lower()
+                    groups = note_patterns.groups()
+                    group = groups[0].lower()
+
+                    self.logger.debug(group)
+
                     if group == "author":
                         author = groups[1]
                     elif group == "version":
@@ -257,13 +268,17 @@ class BuildModule(KindoCore):
             patterns = re.search(self.re_pattern, content, re.IGNORECASE)
             if patterns is None:
                 self.logger.response_error("line {0}".format(kic_content["line"]), "invalid content", content)
-                return None
+                return (None, None, None, None, None, None, None, None)
 
             key = patterns.groups()[0].lower()
+            parsed_info = self.handlers[key].parse(content)
 
-            commands.append(self.handlers[key].parse(content))
+            if not parsed_info:
+                self.logger.response_error("line {0}".format(kic_content["line"]), "invalid content", content)
+                return (None, None, None, None, None, None, None, None)
+            commands.append(parsed_info)
 
-        with open(os.path.join(kic_build_folder, "confs", "{0}.kijc".format(name)), 'wb') as fs:
+        with open(os.path.join(kic_build_folder, "confs", "{0}-{1}-{2}.kijc".format(author, name, version)), 'wb') as fs:
             simplejson.dump(commands, fs)
 
         self.logger.debug("parsed {0}".format(kic_path))

@@ -3,6 +3,7 @@
 
 from __future__ import division
 import os
+import hashlib
 from kindo.utils.urllib import urlretrieve
 from kindo.utils.progressbar import *
 
@@ -22,3 +23,8 @@ def download_with_progressbar(url, target):
     urlretrieve(url, target, reporthook=progress_reporthook)
 
     pbar.finish()
+
+def get_md5(value):
+    hash = hashlib.md5()
+    hash.update(value)
+    return hash.hexdigest()

@@ -63,6 +63,6 @@ setup(
 
     entry_points="""
     [console_scripts]
-    kindo=kindo.kindo:run
+    kindo=kindo.__main__:run
     """
 )

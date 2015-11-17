@@ -4,7 +4,7 @@
 import os
 import tempfile
 
-from kindo import KINDO_VERSION, KINDO_API_VERSION
+from . import KINDO_VERSION, KINDO_API_VERSION
 from kindo.utils.config_parser import ConfigParser
 
 

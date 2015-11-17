@@ -17,7 +17,7 @@ class FromCommand(Command):
         Command.__init__(self, startfolder, configs, options, logger)
 
     def parse(self, value):
-        value = value.strip()[5:]
+        value = value[5:]
 
         if not value:
             return {}
@@ -28,22 +28,27 @@ class FromCommand(Command):
             if "code" not in image_info:
                 break
 
+            # CODE NEEDED
+            if image_info["code"] != "040014000":
+                raise Exception("[{0}] {1}".format(value, image_info["msg"]))
+
             code = prompt("please input the extraction code: ")
             if not code:
                 return {}
 
             image_info = self._pull_image_info(self._get_pull_engine_url(), value, {"code": code})
 
+        image_name = "{0}.ki".format(image_info["name"].replace("/", "-").replace(":", "-"))
+
         return {
             "action": "FROM",
-            "args": {"url": image_info["url"], "name": image_info["name"]},
+            "args": {"url": image_info["url"], "name": image_name},
             "files": [],
-            "images": [{"url": image_info["url"], "name": image_info["name"]}]
+            "images": [{"url": image_info["url"], "name": image_name}]
         }
 
-    def run(self, command, depsdir, position, envs):
-        
-        return 1, position, "", envs
+    def run(self, command, filesdir, imagesdir, position, envs):
+        return position, envs
 
     def _get_pull_engine_url(self):
         pull_engine_url = "%s/v1/pull" % self.configs.get("index", KINDO_DEFAULT_HUB_HOST)

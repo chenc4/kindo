@@ -11,14 +11,14 @@ class WorkdirCommand(Command):
         Command.__init__(self, startfolder, configs, options, logger)
 
     def parse(self, value):
-        value = value.strip()
-        if len(value) > 8 and value[:8].lower() == "workdir ":
-            return {
-                "action": "WORKDIR",
-                "args": {"dir": value[8:]},
-                "variables": []
-            }
-        return {}
+        if not value[8:]:
+            return {}
 
-    def run(self, command, depsdir, position, envs):
-        return 1, command["args"]["dir"], "", envs
+        return {
+            "action": "WORKDIR",
+            "args": {"dir": value[8:]},
+            "variables": []
+        }
+
+    def run(self, command, filesdir, imagesdir, position, envs):
+        return command["args"]["dir"], envs

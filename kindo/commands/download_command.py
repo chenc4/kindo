@@ -12,22 +12,20 @@ class DownloadCommand(Command):
         Command.__init__(self, startfolder, configs, options, logger)
 
     def parse(self, value):
-        value = value.strip()
-        if len(value) > 9 and value[:9].lower() == "download ":
-            strs = re.split("\s+", value[9:])
+        strs = re.split("\s+", value[9:])
 
-            if len(strs) > 1:
-                f_file = strs[0]
-                t_file = strs[1]
+        if len(strs) > 1:
+            f_file = strs[0]
+            t_file = strs[1]
 
-                return {
-                    "action": "DOWNLOAD",
-                    "args": {"from": f_file, "to": t_file},
-                    "variables": []
-                }
+            return {
+                "action": "DOWNLOAD",
+                "args": {"from": f_file, "to": t_file},
+                "variables": []
+            }
         return {}
 
-    def run(self, command, depsdir, position, envs):
+    def run(self, command, filesdir, imagesdir, position, envs):
         with cd(position):
             with shell_env(**envs):
                 target = os.path.realpath(command["args"]["to"])
@@ -36,9 +34,9 @@ class DownloadCommand(Command):
 
                 if command["args"]["from"][:7].lower() != "http://" and command["args"]["from"][:8].lower() != "https://":
                     if not self.download(command["args"]["from"], target):
-                        return 0, position, "DOWNLOAD ERROR: %s download failed" % command["args"]["from"], envs
+                        raise Exception("{0} download failed".format(command["args"]["from"]))
                 else:
                     if not self.download_by_url(command["args"]["from"], target):
-                        return 0, position, "DOWNLOAD ERROR: %s download failed" % command["args"]["from"], envs
-                return 1, position, "", envs
-        return -1, position, "", envs
+                        raise Exception("{0} download failed".format(command["args"]["from"]))
+                return position, envs
+        return position, envs

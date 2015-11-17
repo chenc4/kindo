@@ -13,17 +13,18 @@ class RunCommand(Command):
         Command.__init__(self, startfolder, configs, options, logger)
 
     def parse(self, value):
-        value = value.strip()
-        if len(value) > 4 and value[:4].lower() == "run ":
-            return {
-                "action": "RUN",
-                "args": {"command": value[4:]},
-                "variables": []
-            }
-        return {}
+        if not value[4:]:
+            return {}
 
-    def run(self, command, depsdir, position, envs):
+        return {
+            "action": "RUN",
+            "args": {"command": value[4:]},
+            "files": [],
+            "images": []
+        }
+
+    def run(self, command, filesdir, imagesdir, position, envs):
         with cd(position):
             with shell_env(**envs):
                 self.execute(command["args"]["command"])
-        return 1, position, "", envs
+        return position, envs

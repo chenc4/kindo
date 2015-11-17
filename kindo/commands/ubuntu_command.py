@@ -14,21 +14,21 @@ class UbuntuCommand(Command):
         Command.__init__(self, startfolder, configs, options, logger)
 
     def parse(self, value):
-        value = value.strip()
+        if not value[7:]:
+            return {}
 
-        if len(value) > 7 and value[:7].lower() == "ubuntu ":
-            return {
-                "action": "UBUNTU",
-                "args": {"command": value[7:]},
-                "variables": []
-            }
-        return {}
+        return {
+            "action": "UBUNTU",
+            "args": {"command": value[7:]},
+            "files": [],
+            "images": []
+        }
 
-    def run(self, command, depsdir, position, envs):
+    def run(self, command, filesdir, imagesdir, position, envs):
         if "Ubuntu" in self.get_system_info()["system"]:
             with cd(position):
                 with shell_env(**envs):
                     self.execute(command["args"]["command"])
 
-            return 1, position, "", envs
-        return -1, position, "", envs
+            return position, envs
+        return position, envs

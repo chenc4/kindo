@@ -11,25 +11,21 @@ class EnvCommand(Command):
         Command.__init__(self, startfolder, configs, options, logger)
 
     def parse(self, value):
-        value = value.strip()
+        strs = re.split("\s+", value[4:])
 
-        if len(value) > 3 and value[:4].lower() == "env ":
-            strs = re.split("\s+", value[4:])
+        if len(strs) >= 2:
+            env_key = strs[0]
+            env_value = strs[1]
 
-            if len(strs) >= 2:
-                env_key = strs[0]
-                env_value = strs[1]
-
-                return {
-                    "action": "ENV",
-                    "args": {"key": env_key, "value": env_value},
-                    "variables": [],
-                    "files": []
-                }
+            return {
+                "action": "ENV",
+                "args": {"key": env_key, "value": env_value},
+                "variables": [],
+                "files": []
+            }
         return {}
 
-    def run(self, command, depsdir, position, envs):
+    def run(self, command, filesdir, imagesdir, position, envs):
         envs[command["args"]["key"]] = command["args"]["value"]
 
-        self.logger.debug(envs)
-        return 1, position, "", envs
+        return position, envs
