@@ -62,7 +62,7 @@ class PullModule(KindoCore):
         if version:
             params["uniqueName"] = "%s:%s" % (params["uniqueName"], version)
         else:
-            params["uniqueName"] = "%s:1.0" % params["uniqueName"]
+            params["uniqueName"] = "%s:latest" % params["uniqueName"]
 
         r = requests.get(pull_engine_url, params=params)
         if r.status_code != 200:

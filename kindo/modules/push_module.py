@@ -112,7 +112,7 @@ class PushModule(KindoCore):
         author, name = name.split("/") if "/" in name else ("", name)
 
         kiname = "anonymous-%s" % name if not author else "%s-%s" % (author, name)
-        kiname = "%s-1.0" % kiname if not version else "%s-%s" % (kiname, version)
+        kiname = "%s-latest" % kiname if not version else "%s-%s" % (kiname, version)
 
         path = self.get_image_path(kiname)
         self.logger.debug("finding %s" % path)
