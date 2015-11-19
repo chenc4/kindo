@@ -11,7 +11,7 @@ class EnvCommand(Command):
         Command.__init__(self, startfolder, configs, options, logger)
 
     def parse(self, value):
-        strs = re.split("\s+", value[4:])
+        strs = re.split("[\s|=]+", value[4:])
 
         if len(strs) >= 2:
             env_key = strs[0]
