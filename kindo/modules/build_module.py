@@ -27,6 +27,7 @@ from kindo.commands.ubuntu_command import UbuntuCommand
 from kindo.commands.centos_command import CentOSCommand
 from kindo.commands.addonrun_command import AddOnRunCommand
 from kindo.commands.env_command import EnvCommand
+from kindo.commands.maintainer_command import MaintainerCommand
 
 
 class BuildModule(KindoCore):
@@ -66,7 +67,8 @@ class BuildModule(KindoCore):
             "ubuntu": UbuntuCommand(startfolder, configs, options, logger),
             "centos": CentOSCommand(startfolder, configs, options, logger),
             "addonrun": AddOnRunCommand(startfolder, configs, options, logger),
-            "env": EnvCommand(startfolder, configs, options, logger)
+            "env": EnvCommand(startfolder, configs, options, logger),
+            "maintainer": MaintainerCommand(startfolder, configs, options, logger)
         }
 
         self.re_pattern =  "^\s*(%s)\s+" % "|".join(self.handlers.keys())
@@ -179,7 +181,7 @@ class BuildModule(KindoCore):
                     return
                 finally:
                     shutil.rmtree(kic_build_folder)
-                self.logger.info("build ok: {0}".format(kic_path_info["path"]))
+                self.logger.info("Successfully built {0}".format(kic_path_info["path"]))
         except Exception as e:
             self.logger.debug(traceback.format_exc())
             self.logger.error(e)
@@ -234,6 +236,7 @@ class BuildModule(KindoCore):
 
         kic_content_list = self.get_kic_content(kic_path)
 
+        step = 0
         for kic_content in kic_content_list:
             content = kic_content["content"]
             if content[0] == "#":
@@ -265,17 +268,24 @@ class BuildModule(KindoCore):
 
                 continue
 
+            step += 1
+            self.logger.info("Step %s : %s" % (step, content))
+
             patterns = re.search(self.re_pattern, content, re.IGNORECASE)
             if patterns is None:
-                self.logger.response_error("line {0}".format(kic_content["line"]), "invalid content", content)
+                self.logger.error("    ---> line {0} invalid content".format(kic_content["line"]))
                 return (None, None, None, None, None, None, None, None)
 
             key = patterns.groups()[0].lower()
             parsed_info = self.handlers[key].parse(content)
 
-            if not parsed_info:
-                self.logger.response_error("line {0}".format(kic_content["line"]), "invalid content", content)
+            if not parsed_info or "args" not in parsed_info:
+                self.logger.error("    ---> line {0} invalid content".format(kic_content["line"]))
                 return (None, None, None, None, None, None, None, None)
+
+
+            self.logger.info("    ---> %s" % (self._get_content_args_value(parsed_info["args"])))
+
             commands.append(parsed_info)
 
         with open(os.path.join(kic_build_folder, "confs", "{0}-{1}-{2}.kijc".format(author, name, version)), 'wb') as fs:
@@ -360,4 +370,10 @@ class BuildModule(KindoCore):
             zf.write(tar,arcname)
 
         zf.close()
+
+    def _get_content_args_value(self, args):
+        args_string = ""
+        for k, v in  args.items():
+            args_string = "%s : %s ;" % (k, v)
+        return args_string
 

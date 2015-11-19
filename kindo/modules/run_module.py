@@ -24,6 +24,7 @@ from kindo.commands.ubuntu_command import UbuntuCommand
 from kindo.commands.centos_command import CentOSCommand
 from kindo.commands.addonrun_command import AddOnRunCommand
 from kindo.commands.env_command import EnvCommand
+from kindo.commands.maintainer_command import MaintainerCommand
 
 
 class RunModule(KindoCore):
@@ -79,7 +80,8 @@ class RunModule(KindoCore):
             "ubuntu": UbuntuCommand(startfolder, configs, options, logger),
             "centos": CentOSCommand(startfolder, configs, options, logger),
             "addonrun": AddOnRunCommand(startfolder, configs, options, logger),
-            "env": EnvCommand(startfolder, configs, options, logger)
+            "env": EnvCommand(startfolder, configs, options, logger),
+            "maintainer": MaintainerCommand(startfolder, configs, options, logger)
         }
 
     def start(self):

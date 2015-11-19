@@ -2,6 +2,7 @@
 #-*- coding: utf-8 -*-
 import re
 import os
+import simplejson
 from fabric.api import cd
 from fabric.api import env
 from fabric.context_managers import shell_env
@@ -13,12 +14,20 @@ class RunCommand(Command):
         Command.__init__(self, startfolder, configs, options, logger)
 
     def parse(self, value):
-        if not value[4:]:
+        command_str = value[4:].strip()
+        if not command_str:
             return {}
+
+        try:
+            if command_str[0] == "[" and command_str[-1] == "]":
+                command_list = simplejson.loads(command_str)
+                command_str = " ".join(command_list)
+        except:
+            pass
 
         return {
             "action": "RUN",
-            "args": {"command": value[4:]},
+            "args": {"command": command_str},
             "files": [],
             "images": []
         }
