@@ -228,7 +228,7 @@ class BuildModule(KindoCore):
         commands, author, version, homepage, summary, license, platform = [], self.configs.get(
             "username",
             "anonymous"
-        ), "1.0", "", "", "", "linux"
+        ), "latest", "", "", "", "linux"
 
         name, ext = os.path.splitext(os.path.split(kic_path)[1])
 
