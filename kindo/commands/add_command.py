@@ -22,9 +22,9 @@ class AddCommand(Command):
         paths = []
         if command_value[0] == "[" and command_value[-1] == "]":
             try:
-                paths = simplejson.loads(command_value.replace("\\", "/"))
+                paths = simplejson.loads(command_value.replace("\\", "\\\\"))
             except:
-                pass
+                raise Exception("invalid json array")
 
         if not paths:
             # if path has whitespace, quote it. and support multi paths
