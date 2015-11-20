@@ -32,7 +32,7 @@ class EnvCommand(Command):
         return {
             "action": "ENV",
             "args": args,
-            "variables": [],
+            "images": [],
             "files": []
         }
 
