@@ -13,7 +13,7 @@ class RunCommand(Command):
     def __init__(self, startfolder, configs, options, logger):
         Command.__init__(self, startfolder, configs, options, logger)
 
-    def parse(self, value):
+    def parse(self, value, kic_path=None):
         command_str = value[4:].strip()
         if not command_str:
             return {}
@@ -32,7 +32,7 @@ class RunCommand(Command):
             "images": []
         }
 
-    def run(self, command, filesdir, imagesdir, position, envs):
+    def run(self, command, filesdir, imagesdir, position, envs, ki_path=None):
         with cd(position):
             with shell_env(**envs):
                 self.execute(command["args"]["command"])

@@ -16,7 +16,7 @@ class FromCommand(Command):
     def __init__(self, startfolder, configs, options, logger):
         Command.__init__(self, startfolder, configs, options, logger)
 
-    def parse(self, value):
+    def parse(self, value, kic_path=None):
         value = value[5:]
 
         if not value:
@@ -47,7 +47,7 @@ class FromCommand(Command):
             "images": [{"url": image_info["url"], "name": image_name}]
         }
 
-    def run(self, command, filesdir, imagesdir, position, envs):
+    def run(self, command, filesdir, imagesdir, position, envs, ki_path=None):
         return position, envs
 
     def _get_pull_engine_url(self):

@@ -2,134 +2,163 @@
 #-*- coding: utf-8 -*-
 import re
 import os
+import simplejson
 from fabric.api import cd
 from fabric.context_managers import shell_env
 from kindo.commands.command import Command
 from kindo.utils.config_parser import ConfigParser
+from kindo.utils.functions import download_with_progressbar, get_files_info, get_md5, get_content_parts
 
 
 class AddOnRunCommand(Command):
     def __init__(self, startfolder, configs, options, logger):
         Command.__init__(self, startfolder, configs, options, logger)
 
-    def parse(self, value):
-        strs = re.split("\s+", value[9:])
+    def parse(self, value, kic_path=None):
+        command_value = value[9:].strip()
+        if not command_value:
+            return {}
 
-        if len(strs) >= 2:
-            f_file = strs[0]
-            t_file = strs[1]
+        paths = []
+        if command_value[0] == "[" and command_value[-1] == "]":
+            try:
+                paths = simplejson.loads(command_value.replace("\\", "/"))
+            except:
+                pass
 
-            return {
-                "action": "ADDONRUN",
-                "args": {"from": f_file, "to": t_file},
-                "images": [],
-                "files": []
-            }
-        return {}
+        if not paths:
+            # if path has whitespace, quote it. and support multi paths
+            paths = get_content_parts(command_value)
 
-    def run(self, command, filesdir, imagesdir, position, envs):
-        src = self.get_file_path(command["args"]["from"])
-        if not os.path.isfile(src):
-            src = self.get_dir_path(command["args"]["from"])
+        if len(paths) == 1:
+            raise Exception("target not found")
 
-        ignore = True if self.configs.get("ignore", 1) == 1 else False
-        if not os.path.isfile(src) and not os.path.isdir(src):
-            if ignore:
-                return position, envs
-            raise Exception("{0} not found".format(src))
+        args = []
 
-        files = []
-        if os.path.isfile(src):
-            files.append(src)
-        elif os.path.isdir(src):
-            files = self.get_files_from_dir(src)
+        for path in paths[:-1]:
+            # the <src> allow remote file URL
+            if "http://" in path or "https://" in path:
+                urlinfo = urlparse.urlparse(path)
+                filename = os.path.split(urlinfo["path"])[1]
+
+                if (
+                    ":" in filename or
+                    "?" in filename or
+                    "*" in filename or
+                    "\"" in filename or
+                    "<" in filename or
+                    ">" in filename or
+                    "/" in filename or
+                    "\\" in filename or
+                    "|" in filename
+                ):
+                    raise Exception("the filename has special character")
+
+                # if <dest> ends with a trailing slash /, it will be considered a directory
+                if paths[-1][-1] == "/":
+                    to = "%s%s" % (paths[-1], filename)
+                    args.append({"from": path, "to": to})
+                elif len(paths) > 2:
+                    to = "%s/%s" % (paths[-1], filename)
+                    args.append({"from": path, "to": to})
+                else:
+                    args.append({"from": path, "to": paths[-1]})
+                continue
+
+            args.append({"from": path, "to": paths[-1]})
+
+
+        return {
+            "action": "ADDONRUN",
+            "args": args,
+            "images": [],
+            "files": []
+        }
+
+    def run(self, command, filesdir, imagesdir, position, envs, ki_path=None):
+        args = []
+
+        if isinstance(command["args"], dict):
+            args = [command["args"]]
+        elif isinstance(command["args"], list):
+            args = command["args"]
+
+        files_info = []
+        for arg in args:
+            src = arg["from"]
+            if "http://" in src or "https://" in src:
+                urlinfo = urlparse.urlparse(src)
+                filename = os.path.split(urlinfo["path"])[1]
+                file_name, file_ext = os.path.splitext(filename)
+
+                downloads_tmp_folder = os.path.join(self.kindo_tmps_path, "downloads")
+                if not os.path.isdir(downloads_tmp_folder):
+                    os.makedirs(downloads_tmp_folder)
+
+                # create unique tmpfile
+                src = os.path.join(downloads_tmp_folder, "%s%s" % (get_md5(arg["from"]), file_ext))
+                if not os.path.isfile(src):
+                    download_with_progressbar(arg["from"], src)
+            elif not os.path.isdir(src) and not os.path.isfile(src):
+                src = os.path.join(self.startfolder, arg["from"])
+
+            if (
+                not os.path.exists(src) and
+                "http://" not in arg["from"] and
+                "https://" not in arg["from"]
+            ):
+                ki_folder = os.path.dirname(ki_path)
+                src = os.path.join(ki_folder, arg["from"])
+
+            ignore = True if self.configs.get("ignore", 1) == 1 else False
+            if not os.path.isfile(src) and not os.path.isdir(src):
+                if ignore:
+                    return position, envs
+                raise Exception("{0} not found".format(src))
+
+            if os.path.isfile(src):
+                if arg["to"][-1] == "/":
+                    filedir, filename = os.path.split(src)
+                    files_info.append({
+                        "from": src,
+                        "to": "%s%s" % (arg["to"], filename)
+                    })
+                elif len(args) > 2:
+                    filedir, filename = os.path.split(src)
+                    files_info.append({
+                        "from": src,
+                        "to": "%s/%s" % (arg["to"], filename)
+                    })
+                else:
+                    files_info.append({
+                        "from": src,
+                        "to": arg["to"]
+                    })
+            elif os.path.isdir(src):
+                files = get_files_info(src)
+
+                for f in files:
+                    if arg["to"][-1] == "/":
+                        files_info.append({
+                            "from": f["url"],
+                            "to": "%s%s" % (arg["to"], f["name"])
+                        })
+                    elif len(files) > 1:
+                        files_info.append({
+                            "from": f["url"],
+                            "to": "%s/%s" % (arg["to"], f["name"])
+                        })
+                    else:
+                        files_info.append({
+                            "from": f["url"],
+                            "to": arg["to"]
+                        })
 
         with cd(position):
-            is_dir = None
-            if len(files) > 1 or os.path.isdir(src):
-                is_dir = True
-
             with shell_env(**envs):
-                for f in files:
-                    if not self.upload(f, command["args"]["to"], is_dir) and not ignore:
+                for file_info in files_info:
+                    if not self.upload(file_info["from"], file_info["to"]) and not ignore:
                         raise Exception("{0} upload failed".format(f))
-            return position, envs
         return position, envs
 
-    def get_file_path(self, path):
-        if not os.path.isfile(path):
-            src = os.path.realpath(path)
-            if not os.path.isfile(src):
-                src = os.path.join(self.startfolder, path)
-                if not os.path.isfile(src):
-                    src = os.path.join(os.path.dirname(self.get_ki_path()), path)
-                    if os.path.isfile(src):
-                        return src
-        return path
 
-    def get_dir_path(self, path):
-        if not os.path.isdir(path):
-            src = os.path.realpath(path)
-            if not os.path.isdir(src):
-                src = os.path.join(self.startfolder, path)
-                if not os.path.isdir(src):
-                    src = os.path.join(os.path.dirname(self.get_ki_path()), path)
-                    if os.path.isdir(src):
-                        return src
-        return path
-
-    def get_files_from_dir(self, dirpath):
-        files = []
-        for root, dirnames, filenames in os.walk(dirpath):
-            for filename in filenames:
-                self.logger.debug(os.path.join(root, filename))
-                files.append(os.path.join(root, filename))
-
-            for dirname in dirnames:
-                files += self.get_files_from_dir(os.path.join(root, dirname))
-
-        return files
-
-    def get_ki_path(self):
-        self.logger.debug(self.options)
-
-        ki_path = ""
-        for option in self.options:
-            ki_path = option
-            if ki_path[-3:] != ".ki":
-                ki_path = "%s.ki" % ki_path
-
-
-            if not os.path.isfile(ki_path):
-               path = os.path.realpath(ki_path)
-               if not os.path.isfile(path):
-                    path = os.path.join(self.startfolder, ki_path)
-                    if not os.path.isfile(path):
-                        path = self.get_image_path(option)
-
-                        if os.path.isfile(path):
-                            ki_path = path
-
-            if os.path.isfile(ki_path):
-                break
-
-        self.logger.debug(ki_path)
-        return ki_path
-
-    def get_image_path(self, section):
-        ini_path = os.path.join(self.kindo_settings_path, "images.ini")
-        if not os.path.isfile(ini_path):
-            return ""
-
-        cf = ConfigParser()
-        cf.read(ini_path)
-
-        sections = cf.sections()
-
-        if section in sections:
-            items = cf.items(section)
-
-            for k, v in items:
-                if k == "path":
-                    return v
-        return ""

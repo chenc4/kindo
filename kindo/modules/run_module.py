@@ -149,6 +149,7 @@ class RunModule(KindoCore):
                         commands=script_commands,
                         filesdir=ki_files_path,
                         imagesdir=ki_images_path,
+                        ki_path=ki_path,
                         hosts=env.passwords.keys()
                     )
         except Exception as e:
@@ -171,12 +172,13 @@ class RunModule(KindoCore):
                     commands=rm_file_commands,
                     filesdir=[],
                     imagesdir=[],
+                    ki_path=ki_path,
                     hosts=env.passwords.keys()
                 )
             except:
                 self.logger.debug(traceback.format_exc())
 
-    def execute_script_commands(self, commands, filesdir, imagesdir):
+    def execute_script_commands(self, commands, filesdir, imagesdir, ki_path):
         position = "~"
         envs = self.configs if self.configs is not None else {}
 
@@ -193,7 +195,8 @@ class RunModule(KindoCore):
                 filesdir=filesdir,
                 imagesdir=imagesdir,
                 position=position,
-                envs=envs
+                envs=envs,
+                ki_path=ki_path
             )
             envs = dict(_envs, **envs)
 

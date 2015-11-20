@@ -93,6 +93,7 @@ class BuildModule(KindoCore):
                     for kic_build_sub_folder in kic_build_sub_folders:
                         os.makedirs(kic_build_sub_folder)
 
+                output_ki_path = ""
                 try:
                     commands, author, version, homepage, name, summary, license, platform = self.build_kic(
                         kic_path_info["path"], kic_build_folder
@@ -181,7 +182,7 @@ class BuildModule(KindoCore):
                     return
                 finally:
                     shutil.rmtree(kic_build_folder)
-                self.logger.info("Successfully built {0}".format(kic_path_info["path"]))
+                self.logger.info("Successfully built {0} ==> {1}".format(kic_path_info["path"], output_ki_path))
         except Exception as e:
             self.logger.debug(traceback.format_exc())
             self.logger.error(e)
@@ -196,7 +197,8 @@ class BuildModule(KindoCore):
 
             target = os.path.join(kic_build_folder, "files", f["name"])
             if f["url"][:7] == "http://" or f["url"][:8] == "https://":
-                download_with_progressbar(f["url"], target)
+                if not os.path.isfile(target):
+                    download_with_progressbar(f["url"], target)
             elif not os.path.isfile(f["url"]):
                 f["url"] = os.path.join(os.path.dirname(kic_path), f["url"])
 
@@ -277,7 +279,7 @@ class BuildModule(KindoCore):
                 return (None, None, None, None, None, None, None, None)
 
             key = patterns.groups()[0].lower()
-            parsed_info = self.handlers[key].parse(content)
+            parsed_info = self.handlers[key].parse(content, kic_path)
 
             if not parsed_info or "args" not in parsed_info:
                 self.logger.error("    ---> line {0} invalid content".format(kic_content["line"]))
@@ -372,8 +374,16 @@ class BuildModule(KindoCore):
         zf.close()
 
     def _get_content_args_value(self, args):
-        args_string = ""
-        for k, v in  args.items():
-            args_string = "%s : %s ;" % (k, v)
-        return args_string
+        args_strings = []
+
+        if isinstance(args, dict):
+            for k, v in  args.items():
+                args_strings.append("%s : %s " % (k, v))
+        elif isinstance(args, list):
+            for arg in args:
+                if isinstance(arg, dict):
+                    for k, v in  arg.items():
+                        args_strings.append("%s : %s " % (k, v))
+
+        return "; ".join(args_strings)
 

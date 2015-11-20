@@ -12,7 +12,7 @@ class CheckCommand(Command):
     def __init__(self, startfolder, configs, options, logger):
         Command.__init__(self, startfolder, configs, options, logger)
 
-    def parse(self, value):
+    def parse(self, value, kic_path=None):
         if not value[6:]:
             return {}
 
@@ -33,7 +33,7 @@ class CheckCommand(Command):
             "variables": []
         }
 
-    def run(self, command, filesdir, imagesdir, position, envs):
+    def run(self, command, filesdir, imagesdir, position, envs, ki_path=None):
         with cd(position):
             with shell_env(**envs):
                 for port in command["args"]["ports"]:

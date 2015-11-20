@@ -2,55 +2,135 @@
 #-*- coding: utf-8 -*-
 import re
 import os
+import simplejson
+import urlparse
 from fabric.api import cd
 from fabric.context_managers import shell_env
 from kindo.commands.command import Command
+from kindo.utils.functions import download_with_progressbar, get_files_info, get_content_parts
 
 
 class AddCommand(Command):
     def __init__(self, startfolder, configs, options, logger):
         Command.__init__(self, startfolder, configs, options, logger)
 
-    def parse(self, value):
-        strs = self._get_content_info(value[4:])
+    def parse(self, value, kic_path=None):
+        command_value = value[4:].strip()
+        if not command_value:
+            return {}
 
-        if len(strs) >= 2:
-            f_file = strs[0]
-            t_file = strs[1]
+        paths = []
+        if command_value[0] == "[" and command_value[-1] == "]":
+            try:
+                paths = simplejson.loads(command_value.replace("\\", "/"))
+            except:
+                pass
 
-            if not f_file or not t_file:
-                return {}
+        if not paths:
+            # if path has whitespace, quote it. and support multi paths
+            paths = get_content_parts(command_value)
 
-            filedir, filename = os.path.split(re.sub("[\?|\+|\*|\<|\>|:]", "", os.path.split(f_file)[1]))
+        if len(paths) == 1:
+            raise Exception("target not found")
 
-            return {
-                "action": "ADD",
-                "args": {"from": filename, "to": t_file},
-                "images": [],
-                "files": [{"name": filename, "url": f_file}]
-            }
-        return {}
+        args = []
+        files = []
 
-    def run(self, command, filesdir, imagesdir, position, envs):
-        src = os.path.join(filesdir, command["args"]["from"])
-        if not os.path.isfile(src):
-            raise Exception("{0} not found".format(src))
+        for path in paths[:-1]:
+            # the <src> allow remote file URL
+            if "http://" in path or "https://" in path:
+                urlinfo = urlparse.urlparse(path)
+                filename = os.path.split(urlinfo["path"])[1]
 
-        with cd(position):
-            with shell_env(**envs):
-                if not self.upload(src, command["args"]["to"]):
-                    raise Exception("{0} upload failed".format(src))
-                return position, envs
+                if (
+                    ":" in filename or
+                    "?" in filename or
+                    "*" in filename or
+                    "\"" in filename or
+                    "<" in filename or
+                    ">" in filename or
+                    "/" in filename or
+                    "\\" in filename or
+                    "|" in filename
+                ):
+                    raise Exception("the filename has special character")
+
+                files.append(
+                    {"name": filename, "url": path}
+                )
+
+                # if <dest> ends with a trailing slash /, it will be considered a directory
+                if paths[-1][-1] == "/":
+                    to = "%s%s" % (paths[-1], filename)
+                    args.append({"from": filename, "to": to})
+                else:
+                    args.append({"from": filename, "to": paths[-1]})
+                continue
+
+            if not os.path.isdir(path) and not os.path.isfile(path):
+                kic_folder = os.path.dirname(kic_path)
+                path = os.path.join(kic_folder, path)
+
+            if not os.path.exists(path):
+                raise Exception("%s not found" % path)
+
+            # the <src> allow directory
+            if os.path.isdir(path):
+                files_info = get_files_info(path)
+
+                files.extend(files_info)
+
+                for file_info in files_info:
+                    # if <dest> ends with a trailing slash /, it will be considered a directory
+                    if paths[-1][-1] == "/":
+                        to = "%s%s" % (paths[-1], file_info["name"])
+                        args.append({"from": file_info["name"], "to": to})
+                    elif len(files_info) > 1:
+                        to = "%s/%s" % (paths[-1], file_info["name"])
+                        args.append({"from": file_info["name"], "to": to})
+                    else:
+                        args.append({"from": file_info["name"], "to": paths[-1]})
+            elif os.path.isfile(path):
+                filedir, filename = os.path.split(path)
+                files.append(
+                    {"name": filename, "url": path}
+                )
+
+                # if <dest> ends with a trailing slash /, it will be considered a directory
+                if paths[-1][-1] == "/":
+                    to = "%s%s" % (paths[-1], filename)
+                    args.append({"from": filename, "to": to})
+                elif len(paths) > 2:
+                    to = "%s/%s" % (paths[-1], filename)
+                    args.append({"from": filename, "to": to})
+                else:
+                    args.append({"from": filename, "to": paths[-1]})
+
+        return {
+            "action": "ADD",
+            "args": args,
+            "images": [],
+            "files": files
+        }
+
+    def run(self, command, filesdir, imagesdir, position, envs, ki_path=None):
+        if not command["args"]:
+            return position, envs
+
+        args = []
+        if isinstance(command["args"], dict):
+            args = [command["args"]]
+        elif isinstance(command["args"], list):
+            args = command["args"]
+
+        for arg in args:
+            src = os.path.join(filesdir, arg["from"])
+            if not os.path.isfile(src):
+                raise Exception("{0} not found".format(src))
+
+            with cd(position):
+                with shell_env(**envs):
+                    if not self.upload(src, arg["to"]):
+                        raise Exception("{0} upload failed".format(src))
+                    return position, envs
         return position, envs
-
-    def _get_content_info(self, content):
-        parts = [part.strip() for part in content.split("\"") if part != ""]
-        if len(parts) == 1:
-            if content[0] == "\"" and content[-1] == "\"":
-                return parts[0], ""
-
-            first_part_info = parts[0].split(" ")
-            if len(first_part_info) > 1:
-                return " ".join(first_part_info[:-1]), first_part_info[-1]
-            return first_part_info[0], ""
-        return parts[0], parts[1]

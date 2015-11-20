@@ -11,7 +11,7 @@ class DownloadCommand(Command):
     def __init__(self, startfolder, configs, options, logger):
         Command.__init__(self, startfolder, configs, options, logger)
 
-    def parse(self, value):
+    def parse(self, value, kic_path=None):
         strs = re.split("\s+", value[9:])
 
         if len(strs) > 1:
@@ -25,7 +25,7 @@ class DownloadCommand(Command):
             }
         return {}
 
-    def run(self, command, filesdir, imagesdir, position, envs):
+    def run(self, command, filesdir, imagesdir, position, envs, ki_path=None):
         with cd(position):
             with shell_env(**envs):
                 target = os.path.realpath(command["args"]["to"])

@@ -13,7 +13,7 @@ class CentOSCommand(Command):
     def __init__(self, startfolder, configs, options, logger):
         Command.__init__(self, startfolder, configs, options, logger)
 
-    def parse(self, value):
+    def parse(self, value, kic_path=None):
         command_str = value[7:].strip()
         if not command_str:
             return {}
@@ -32,7 +32,7 @@ class CentOSCommand(Command):
             "images": []
         }
 
-    def run(self, command, filesdir, imagesdir, position, envs):
+    def run(self, command, filesdir, imagesdir, position, envs, ki_path=None):
         if "CentOS" in self.get_system_info()["system"]:
             with cd(position):
                 with shell_env(**envs):
