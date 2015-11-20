@@ -24,10 +24,10 @@ class Command(KindoCore):
                     self._has_sudo = True
         return self._has_sudo
 
-    def execute(self, cmd, user=None):
+    def execute(self, cmd, user=None, group=None):
         if self.has_sudo():
             self.logger.debug("sudo: True")
-            return sudo(cmd, user=env.user if user is None else user)
+            return sudo(cmd, user=env.user if user is None else user, group=group)
         self.logger.debug("sudo: False")
         return run(cmd)
 
