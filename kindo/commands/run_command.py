@@ -18,9 +18,12 @@ class RunCommand(Command):
         if not command_str:
             return {}
 
-        if command_str[0] == "[" and command_str[-1] == "]":
-            command_list = simplejson.loads(command_str)
-            command_str = " && ".join(command_list)
+        try:
+            if command_str[0] == "[" and command_str[-1] == "]":
+                command_list = simplejson.loads(command_str.replace("\\", "\\\\"))
+                command_str = " ".join(command_list)
+        except:
+            raise Exception("invalid json array")
 
         return {
             "action": "RUN",

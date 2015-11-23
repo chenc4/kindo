@@ -20,7 +20,7 @@ class UbuntuCommand(Command):
 
         try:
             if command_str[0] == "[" and command_str[-1] == "]":
-                command_list = simplejson.loads(command_str)
+                command_list = simplejson.loads(command_str.replace("\\", "\\\\"))
                 command_str = " ".join(command_list)
         except:
             pass
