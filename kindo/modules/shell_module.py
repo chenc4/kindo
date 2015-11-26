@@ -97,8 +97,6 @@ class ShellModule(KindoCore):
 
         while True:
             for command in commands:
-                if "action" not in command:
-                    raise Exception("command invalid")
                 with settings(hide('stderr', 'warnings'), warn_only=True):
                     position, envs = self.runCommand.run(
                         command=command,
