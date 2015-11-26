@@ -83,9 +83,12 @@ class Kindo:
 
             core_command_cls.start()
         except KeyboardInterrupt as e:
-            self.logger.warn("quit")
+            pass
         except:
-            self.logger.debug(traceback.format_exc())
+            try:
+                self.logger.debug(traceback.format_exc())
+            except:
+                pass
 
     def show_help(self):
         banner = """a simple tool for packaging and deploying your codes

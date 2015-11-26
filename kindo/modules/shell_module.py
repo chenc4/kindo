@@ -4,7 +4,7 @@
 import os
 from fabric.state import output
 from fabric.tasks import execute
-from fabric.api import env
+from fabric.api import env, prompt, settings, hide
 from kindo.kindo_core import KindoCore
 from kindo.utils.config_parser import ConfigParser
 from kindo.commands.run_command import RunCommand
@@ -14,7 +14,8 @@ class ShellModule(KindoCore):
     def __init__(self, startfolder, configs, options, logger):
         KindoCore.__init__(self, startfolder, configs, options, logger)
 
-        env.colorize_errors = True
+        env.colorize_errors = False
+        env.disable_colors = True
         env.command_timeout = self.configs.get("timout", 60 * 30)
         env.output_prefix = ""
         env.passwords = {}
@@ -50,35 +51,70 @@ class ShellModule(KindoCore):
         self.runCommand = RunCommand(startfolder, configs, options, logger)
 
     def start(self):
-        if len(self.options) <= 2:
-            self.logger.response("no shell command", False)
-            return
-
         if env.passwords is None or len(env.passwords) == 0:
-            self.logger.response("hosts not found", False)
-            return
+            try:
+                host = prompt("please input host: ", default="")
+                if not host:
+                    self.logger.error("hosts not found")
+                    return
+
+                host = "%s:22" % host if host is not None and host.rfind(":") == -1 else host
+                host = "root@%s" % host if host is not None and host.rfind("@") == -1 else host
+
+                pwd = prompt("please input password: ", default="")
+                if not pwd:
+                    self.logger.error("passowrds not found")
+                    return
+
+                env.passwords[host] = pwd
+            except KeyboardInterrupt as e:
+                pass
+            except:
+                self.logger.debug(traceback.format_exc())
 
         try:
-            for option in self.options[2:]:
-                execute(
-                    self.execute_script_commands,
-                    commands=[{"action": "RUN", "args": {"command": option}, "variables": []}],
-                    hosts=env.passwords.keys()
-                )
+            cmds = self.options[2:]
+
+            cmd_infos = []
+            for cmd in cmds:
+                cmd_infos.append({"action": "RUN", "args": {"command": cmd}})
+
+            execute(
+                self.execute_script_commands,
+                commands=cmd_infos,
+                hosts=env.passwords.keys()
+            )
+
+        except KeyboardInterrupt as e:
+            pass
         except Exception as e:
             self.logger.debug(traceback.format_exc())
-            self.logger.response(e, False)
+            self.logger.error(e)
 
     def execute_script_commands(self, commands):
         position = "~"
-        for command in commands:
-            if "action" not in command:
-                raise Exception("command invalid")
+        envs = {}
 
-            status, position, errormsg = self.runCommand.run(command, None, position)
-            # if the command is executed(success or fail), not continue
-            if status == 0:
-                self.logger.debug(errormsg)
+        while True:
+            for command in commands:
+                if "action" not in command:
+                    raise Exception("command invalid")
+                with settings(hide('stderr', 'warnings'), warn_only=True):
+                    position, envs = self.runCommand.run(
+                        command=command,
+                        filesdir=None,
+                        imagesdir=None,
+                        position=position,
+                        envs=envs,
+                        ki_path=None
+                    )
+
+            if len(self.options[2:]) > 0:
+                return
+
+            cmd = prompt("[%s@%s %s]# " % (env.user, env.host, position), default="")
+            if cmd:
+                commands = [{"action": "RUN", "args": {"command": cmd}}]
 
     def get_hosts_setting(self):
         ini_path = os.path.join(self.kindo_settings_path, "hosts.ini")
