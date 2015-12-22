@@ -11,7 +11,6 @@ import shutil
 import zipfile
 import simplejson
 
-from kindo import KINDO_VERSION, KINDO_MIN_VERSION
 from kindo.kindo_core import KindoCore
 from kindo.utils.functions import download_with_progressbar
 from kindo.commands.add_command import AddCommand
@@ -33,6 +32,8 @@ class BuildModule(KindoCore):
 
         self.kic_path_infos = []
 
+        # get kics path from the command line
+        # support to build multi kics with one command
         for option in options[2:]:
             filename, ext = os.path.splitext(option)
             if "." not in ext:
@@ -54,6 +55,7 @@ class BuildModule(KindoCore):
                 }
             )
 
+        # cache commands
         self.handlers = {
             "from": FromCommand(startfolder, configs, options, logger),
             "add": AddCommand(startfolder, configs, options, logger),
@@ -80,15 +82,15 @@ class BuildModule(KindoCore):
                 if not os.path.isdir(kic_path_info["outfolder"]):
                     os.makedirs(kic_path_info["outfolder"])
 
-                kic_build_folder = os.path.join(self.kindo_tmps_path, uuid.uuid4().hex)
-                if not os.path.isdir(kic_build_folder):
-                    kic_build_sub_folders = [
-                        os.path.join(kic_build_folder, "confs"),
-                        os.path.join(kic_build_folder, "files"),
-                        os.path.join(kic_build_folder, "images")
-                    ]
-                    for kic_build_sub_folder in kic_build_sub_folders:
-                        os.makedirs(kic_build_sub_folder)
+                # build foder structure
+                #   files
+                #   images
+                #   confs
+                #       author-name-version.kic
+                #       author-name-version.kijc
+                #   manifest.json
+
+                kic_build_folder = self.create_build_folder()
 
                 output_ki_path = ""
                 try:
@@ -116,25 +118,21 @@ class BuildModule(KindoCore):
 
                     shutil.copy(
                         kic_path_info["path"],
-                        os.path.join(
-                            kic_build_folder,
-                            "confs",
-                            "%s-%s-%s.kic" % (author, name, version)
-                        )
+                        os.path.join(kic_build_folder, "confs", "%s-%s-%s.kic" % (author, name, version))
                     )
 
                     files = []
                     images = []
                     for c in commands:
                         if "files" in c:
-                            files += self.put_files_to_build_path(
+                            files += self.move_files_to_build_folder(
                                 c["files"],
                                 kic_build_folder,
                                 kic_path_info["path"]
                             )
 
                         if "images" in c:
-                            images += self.put_images_to_build_path(
+                            images += self.move_images_to_build_folder(
                                 c["images"],
                                 kic_build_folder
                             )
@@ -148,8 +146,8 @@ class BuildModule(KindoCore):
                         "license": license,
                         "platform": platform,
                         "build_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-                        "build_version": KINDO_VERSION,
-                        "min_version": KINDO_MIN_VERSION,
+                        "build_version": self.kindo_version,
+                        "min_version": self.kindo_min_version,
                         "files": files,
                         "images": images
                     }
@@ -158,10 +156,7 @@ class BuildModule(KindoCore):
                     with open(manifest, 'wb') as fs:
                         simplejson.dump(manifest_json, fs)
 
-                    output_ki_path = self.configs.get(
-                        "o",
-                        kic_path_info["outfolder"]
-                    )
+                    output_ki_path = self.configs.get("o", kic_path_info["outfolder"])
 
                     if output_ki_path[-3:].lower() != ".ki":
                         output_ki_path = os.path.join(output_ki_path, "%s-%s-%s.ki" % (author, name, version))
@@ -170,9 +165,7 @@ class BuildModule(KindoCore):
                     if not os.path.isdir(output_ki_dir):
                         os.makedirs(output_ki_dir)
 
-                    self.logger.debug("packaging %s" % output_ki_path)
                     self.zip_dir(kic_build_folder, output_ki_path)
-                    self.logger.debug("packaged %s" % output_ki_path)
                 except Exception as e:
                     self.logger.debug(traceback.format_exc())
                     self.logger.error(e)
@@ -184,7 +177,20 @@ class BuildModule(KindoCore):
             self.logger.debug(traceback.format_exc())
             self.logger.error(e)
 
-    def put_files_to_build_path(self, files, kic_build_folder, kic_path):
+    def create_build_folder(self):
+        kic_build_folder = os.path.join(self.kindo_tmps_path, uuid.uuid4().hex)
+        kic_build_sub_folders = [
+            os.path.join(kic_build_folder, "confs"),
+            os.path.join(kic_build_folder, "files"),
+            os.path.join(kic_build_folder, "images")
+        ]
+        for kic_build_sub_folder in kic_build_sub_folders:
+            if not os.path.isdir(kic_build_sub_folder):
+                os.makedirs(kic_build_sub_folder)
+
+        return kic_build_folder
+
+    def move_files_to_build_folder(self, files, kic_build_folder, kic_path):
         file_names = []
 
         for f in files:
@@ -207,7 +213,7 @@ class BuildModule(KindoCore):
             file_names.append(f["name"])
         return file_names
 
-    def put_images_to_build_path(self, images, kic_build_folder):
+    def move_images_to_build_folder(self, images, kic_build_folder):
         image_names = []
         for image in images:
             if "name" not in image or "url" not in image:
@@ -230,8 +236,6 @@ class BuildModule(KindoCore):
 
         name, ext = os.path.splitext(os.path.split(kic_path)[1])
 
-        self.logger.debug("parsing {0}".format(kic_path))
-
         kic_content_list = self.get_kic_content(kic_path)
 
         step = 0
@@ -246,8 +250,6 @@ class BuildModule(KindoCore):
                 if note_patterns is not None:
                     groups = note_patterns.groups()
                     group = groups[0].lower()
-
-                    self.logger.debug(group)
 
                     if group == "author":
                         author = groups[1]
@@ -287,8 +289,6 @@ class BuildModule(KindoCore):
 
         with open(os.path.join(kic_build_folder, "confs", "{0}-{1}-{2}.kijc".format(author, name, version)), 'wb') as fs:
             simplejson.dump(commands, fs)
-
-        self.logger.debug("parsed {0}".format(kic_path))
 
         if "t" in self.configs:
             tag = self.configs["t"]

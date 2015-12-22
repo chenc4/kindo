@@ -40,7 +40,7 @@ class PullModule(KindoCore):
             self.logger.response(e, False)
 
     def get_pull_engine_url(self):
-        pull_engine_url = "%s/v1/pull" % self.configs.get("index", "kindo.cycore.cn")
+        pull_engine_url = "%s/v1/pull" % self.configs.get("index", self.kind_default_hub_host)
 
         if pull_engine_url[:7].lower() != "http://" and pull_engine_url[:8].lower() != "https://":
             pull_engine_url = "http://%s" % pull_engine_url
