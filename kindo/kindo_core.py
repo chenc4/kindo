@@ -4,7 +4,7 @@
 import os
 import tempfile
 
-from . import KINDO_VERSION, KINDO_API_VERSION
+from . import KINDO_VERSION, KINDO_MIN_VERSION, KINDO_API_VERSION, KINDO_DEFAULT_HUB_HOST
 from kindo.utils.config_parser import ConfigParser
 
 
@@ -16,7 +16,9 @@ class KindoCore():
         self.logger = logger
 
         self.kindo_version = KINDO_VERSION
+        self.kindo_min_version = KINDO_MIN_VERSION
         self.kindo_api_version = KINDO_API_VERSION
+        self.kind_default_hub_host = KINDO_DEFAULT_HUB_HOST
         self.kindo_tmps_path = os.path.join(tempfile.gettempdir(), "kindo")
         self.kindo_caches_path = os.getenv("KINDO_CACHES_PATH")
         self.kindo_kics_path = os.getenv("KINDO_KICS_PATH")
