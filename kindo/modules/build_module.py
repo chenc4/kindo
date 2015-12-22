@@ -326,7 +326,7 @@ class BuildModule(KindoCore):
     def get_kic_info(self, option):
         if option[:7].lower() == "http://" or option[:8].lower() == "https://":
             urlinfo = urlparse.urlparse(option)
-            filename = os.path.split(urlinfo["path"])[1]
+            filename = os.path.split(urlinfo[1])[1]
             target = os.path.join(self.kindo_tmps_path, filename)
 
             download_with_progressbar(option, target)
