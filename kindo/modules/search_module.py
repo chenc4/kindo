@@ -178,11 +178,3 @@ class SearchModule(KindoCore):
         cf.write(open(ini_path, "w"))
 
         return True
-
-
-
-
-
-
-
-
