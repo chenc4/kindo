@@ -37,11 +37,11 @@ class RunModule(KindoCore):
         output.debug = False
         output.running = False
 
-        host = configs.get("h", None)
+        host = self.configs.get("h", None)
         host = "%s:22" % host if host is not None and host.rfind(":") == -1 else host
         host = "root@%s" % host if host is not None and host.rfind("@") == -1 else host
 
-        password = configs.get("p", "")
+        password = self.configs.get("p", "")
 
         if host is not None:
             env.passwords[host] = password
@@ -205,7 +205,6 @@ class RunModule(KindoCore):
         if "name" not in manifest or "author" not in manifest or "version" not in manifest:
             raise Exception("invalid manifest")
 
-
     def get_ki_path(self):
         self.logger.debug(self.options)
 
@@ -215,10 +214,9 @@ class RunModule(KindoCore):
             if ki_path[-3:] != ".ki":
                 ki_path = "%s.ki" % ki_path
 
-
             if not os.path.isfile(ki_path):
-               path = os.path.realpath(ki_path)
-               if not os.path.isfile(path):
+                path = os.path.realpath(ki_path)
+                if not os.path.isfile(path):
                     path = os.path.join(self.startfolder, ki_path)
                     if not os.path.isfile(path):
                         path = self.get_image_path(option)
@@ -226,7 +224,6 @@ class RunModule(KindoCore):
                         self.logger.debug("option: %s" % option)
                         if not path and "/" in option and ":" in option:
                             path = self.pull_image_path(option)
-
 
                     if os.path.isfile(path):
                         ki_path = path
@@ -396,13 +393,13 @@ class RunModule(KindoCore):
                 zfobj.setpassword(self.configs["kipwd"])
 
             for name in zfobj.namelist():
-                name = name.replace('\\','/')
+                name = name.replace('\\', '/')
 
                 if name.endswith('/'):
                     os.makedirs(os.path.join(unziptodir, name))
                 else:
                     ext_filename = os.path.join(unziptodir, name)
-                    ext_dir= os.path.dirname(ext_filename)
+                    ext_dir = os.path.dirname(ext_filename)
                     if not os.path.exists(ext_dir):
                         os.makedirs(ext_dir)
 
@@ -410,7 +407,7 @@ class RunModule(KindoCore):
                         fs.write(zfobj.read(name))
 
             return True
-        except Exception as e:
+        except Exception:
             self.logger.debug(traceback.format_exc())
         return False
 
@@ -437,5 +434,3 @@ class RunModule(KindoCore):
 
                 hosts[section][host] = password
         return hosts
-
-
