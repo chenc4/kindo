@@ -2,6 +2,7 @@
 #-*- coding: utf-8 -*-
 
 import os
+import traceback
 from fabric.state import output
 from fabric.tasks import execute
 from fabric.api import env, prompt, settings, hide

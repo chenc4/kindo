@@ -23,8 +23,7 @@ class ImagesModule(KindoCore):
                 image.get("pusher", "anonymous"),
                 image.get("size", 0),
                 image.get("buildtime", "")
-                ]
-            )
+            ])
 
         self.logger.response(table)
 

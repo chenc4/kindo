@@ -2,7 +2,6 @@
 #-*- coding: utf-8 -*-
 
 import os
-import shutil
 import traceback
 import zipfile
 import pickle
@@ -124,7 +123,6 @@ class RunModule(KindoCore):
                     for image_name in manifest["images"]:
                         image_path = os.path.join(ki_images_path, image_name)
                         self.run_ki(image_path)
-
 
             for f in os.listdir(ki_confs_path):
                 filename, ext = os.path.splitext(f)

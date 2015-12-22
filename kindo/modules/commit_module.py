@@ -160,7 +160,7 @@ class CommitModule(KindoCore):
                         fs.write(zfobj.read(name))
 
             return True
-        except Exception as e:
+        except Exception:
             self.logger.debug(traceback.format_exc())
         return False
 
@@ -168,7 +168,7 @@ class CommitModule(KindoCore):
         filelist = []
         if os.path.isfile(dirname):
             filelist.append(dirname)
-        else :
+        else:
             for root, dirs, files in os.walk(dirname):
                 for name in files:
                     filelist.append(os.path.join(root, name))
@@ -179,6 +179,6 @@ class CommitModule(KindoCore):
 
         for tar in filelist:
             arcname = tar[len(dirname):]
-            zf.write(tar,arcname)
+            zf.write(tar, arcname)
 
         zf.close()

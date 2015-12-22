@@ -2,13 +2,11 @@
 #-*- coding: utf-8 -*-
 import os
 import requests
-import hashlib
 import traceback
 from fabric.operations import prompt
 from kindo.kindo_core import KindoCore
 from kindo.utils.config_parser import ConfigParser
 from kindo.utils.functions import download_with_progressbar
-
 
 
 class PullModule(KindoCore):
@@ -84,7 +82,6 @@ class PullModule(KindoCore):
             self.logger.debug("%s existed, removing" % target)
             os.remove(target)
 
-
         if not os.path.isdir(self.kindo_images_path):
             os.makedirs(self.kindo_images_path)
 
@@ -117,5 +114,3 @@ class PullModule(KindoCore):
 
         cf.write(open(ini_path, "w"))
         return True
-
-

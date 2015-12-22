@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
 
-import os
 import re
 import requests
 import hashlib
 import traceback
 from fabric.operations import prompt
 from kindo.kindo_core import KindoCore
-from kindo.utils.config_parser import ConfigParser
 
 
 class LoginModule(KindoCore):

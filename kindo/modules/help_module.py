@@ -141,7 +141,7 @@ class HelpModule(KindoCore):
         self.show_kindo_command_options(self.options[2])
 
     def show_all_kindo_commands_options(self):
-       for name, command_info in self.commands_info.items():
+        for name, command_info in self.commands_info.items():
             info = """
 %s:
     %s

@@ -22,7 +22,6 @@ used to query various info about the object, if available.
 (mimetools.Message objects are queried with the getheader() method.)
 """
 
-import string
 import socket
 import os
 import time
@@ -68,6 +67,8 @@ else:
 
 # Shortcut for basic usage
 _urlopener = None
+
+
 def urlopen(url, data=None, proxies=None):
     """Create a file-like object for the specified URL to read from."""
     from warnings import warnpy3k
@@ -86,11 +87,15 @@ def urlopen(url, data=None, proxies=None):
         return opener.open(url)
     else:
         return opener.open(url, data)
+
+
 def urlretrieve(url, filename=None, reporthook=None, data=None):
     global _urlopener
     if not _urlopener:
         _urlopener = FancyURLopener()
     return _urlopener.retrieve(url, filename, reporthook, data)
+
+
 def urlcleanup():
     if _urlopener:
         _urlopener.cleanup()
@@ -105,6 +110,7 @@ except:
 else:
     _have_ssl = True
 
+
 # exception raised when downloaded size does not match content-length
 class ContentTooShortError(IOError):
     def __init__(self, message, content):
@@ -112,6 +118,8 @@ class ContentTooShortError(IOError):
         self.content = content
 
 ftpcache = {}
+
+
 class URLopener:
     """Class to open URLs.
     This is a class rather than just a subroutine because we may need
@@ -134,7 +142,7 @@ class URLopener:
         self.cert_file = x509.get('cert_file')
         self.addheaders = [('User-Agent', self.version)]
         self.__tempfiles = []
-        self.__unlink = os.unlink # See cleanup()
+        self.__unlink = os.unlink   # See cleanup()
         self.tempcache = None
         # Undocumented feature: if you assign {} to tempcache,
         # it is used to cache files retrieved with
@@ -191,7 +199,7 @@ class URLopener:
             proxy = self.proxies[urltype]
             urltype, proxyhost = splittype(proxy)
             host, selector = splithost(proxyhost)
-            url = (host, fullurl) # Signal special case to open_*()
+            url = (host, fullurl)   # Signal special case to open_*()
         else:
             proxy = None
         name = 'open_' + urltype
@@ -294,7 +302,7 @@ class URLopener:
         """Use HTTP protocol."""
         import httplib
         user_passwd = None
-        proxy_passwd= None
+        proxy_passwd = None
         if isinstance(url, str):
             host, selector = splithost(url)
             if host:
@@ -321,7 +329,8 @@ class URLopener:
                     host = realhost
 
             #print "proxy via http:", host, selector
-        if not host: raise IOError, ('http error', 'no host given')
+        if not host:
+            raise IOError, ('http error', 'no host given')
 
         if proxy_passwd:
             proxy_passwd = unquote(proxy_passwd)
@@ -341,18 +350,22 @@ class URLopener:
             h.putheader('Content-Length', '%d' % len(data))
         else:
             h.putrequest('GET', selector)
-        if proxy_auth: h.putheader('Proxy-Authorization', 'Basic %s' % proxy_auth)
-        if auth: h.putheader('Authorization', 'Basic %s' % auth)
-        if realhost: h.putheader('Host', realhost)
-        for args in self.addheaders: h.putheader(*args)
+        if proxy_auth:
+            h.putheader('Proxy-Authorization', 'Basic %s' % proxy_auth)
+        if auth:
+            h.putheader('Authorization', 'Basic %s' % auth)
+        if realhost:
+            h.putheader('Host', realhost)
+        for args in self.addheaders:
+            h.putheader(*args)
         h.endheaders(data)
         errcode, errmsg, headers = h.getreply()
         fp = h.getfile()
         if errcode == -1:
-            if fp: fp.close()
+            if fp:
+                fp.close()
             # something went wrong with the HTTP status line
-            raise IOError, ('http protocol error', 0,
-                            'got a bad status line', None)
+            raise IOError, ('http protocol error', 0, 'got a bad status line', None)
         # According to RFC 2616, "2xx" code indicates that the client's
         # request was successfully received, understood, and accepted.
         if (200 <= errcode < 300):
@@ -375,7 +388,8 @@ class URLopener:
                 result = method(url, fp, errcode, errmsg, headers)
             else:
                 result = method(url, fp, errcode, errmsg, headers, data)
-            if result: return result
+            if result:
+                return result
         return self.http_error_default(url, fp, errcode, errmsg, headers)
 
     def http_error_default(self, url, fp, errcode, errmsg, headers):
@@ -412,7 +426,8 @@ class URLopener:
                     if user_passwd:
                         selector = "%s://%s%s" % (urltype, realhost, rest)
                 #print "proxy via https:", host, selector
-            if not host: raise IOError, ('https error', 'no host given')
+            if not host:
+                raise IOError, ('https error', 'no host given')
             if proxy_passwd:
                 proxy_passwd = unquote(proxy_passwd)
                 proxy_auth = base64.b64encode(proxy_passwd).strip()
@@ -433,15 +448,20 @@ class URLopener:
                 h.putheader('Content-Length', '%d' % len(data))
             else:
                 h.putrequest('GET', selector)
-            if proxy_auth: h.putheader('Proxy-Authorization', 'Basic %s' % proxy_auth)
-            if auth: h.putheader('Authorization', 'Basic %s' % auth)
-            if realhost: h.putheader('Host', realhost)
-            for args in self.addheaders: h.putheader(*args)
+            if proxy_auth:
+                h.putheader('Proxy-Authorization', 'Basic %s' % proxy_auth)
+            if auth:
+                h.putheader('Authorization', 'Basic %s' % auth)
+            if realhost:
+                h.putheader('Host', realhost)
+            for args in self.addheaders:
+                h.putheader(*args)
             h.endheaders(data)
             errcode, errmsg, headers = h.getreply()
             fp = h.getfile()
             if errcode == -1:
-                if fp: fp.close()
+                if fp:
+                    fp.close()
                 # something went wrong with the HTTP status line
                 raise IOError, ('http protocol error', 0,
                                 'got a bad status line', None)

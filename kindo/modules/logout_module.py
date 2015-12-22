@@ -21,7 +21,6 @@ class LogoutModule(KindoCore):
             cf = ConfigParser()
             cf.read(ini_path)
 
-
             if "default" in cf.sections():
                 cf.remove_option("default", "username")
                 cf.remove_option("default", "password")

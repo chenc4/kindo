@@ -1,12 +1,10 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
 
-import os
 import hashlib
 import traceback
 import requests
 from kindo.kindo_core import KindoCore
-from kindo.utils.config_parser import ConfigParser
 
 
 class RmModule(KindoCore):
@@ -29,7 +27,6 @@ class RmModule(KindoCore):
     def delete_image(self, image_name):
         name, version = image_name.split(":") if ":"in image_name else (image_name, "")
         author, name = name.split("/") if "/" in name else (self.configs.get("username", "anonymous"), name)
-
 
         image_name = "%s/%s:%s" % (author, name, version)
 

@@ -4,9 +4,6 @@
 import os
 import traceback
 import requests
-import simplejson
-import zipfile
-import hashlib
 
 from fabric.operations import prompt
 from kindo.kindo_core import KindoCore

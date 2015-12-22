@@ -20,7 +20,6 @@ class PushModule(KindoCore):
         if push_engine_url[:7].lower() != "http://" and push_engine_url[:8].lower() != "https://":
             push_engine_url = "http://%s" % push_engine_url
 
-
         try:
             for option in self.options[2:]:
                 package_path = self.get_package_path(option)
@@ -160,13 +159,13 @@ class PushModule(KindoCore):
                 zfobj.setpassword(self.configs["kipwd"])
 
             for name in zfobj.namelist():
-                name = name.replace('\\','/')
+                name = name.replace('\\', '/')
 
                 if name.endswith('/'):
                     os.makedirs(os.path.join(unziptodir, name))
                 else:
                     ext_filename = os.path.join(unziptodir, name)
-                    ext_dir= os.path.dirname(ext_filename)
+                    ext_dir = os.path.dirname(ext_filename)
                     if not os.path.exists(ext_dir):
                         os.makedirs(ext_dir)
 
@@ -174,6 +173,6 @@ class PushModule(KindoCore):
                         fs.write(zfobj.read(name))
 
             return True
-        except Exception as e:
+        except Exception:
             self.logger.debug(traceback.format_exc())
         return False
