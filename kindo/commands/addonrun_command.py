@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
-import re
 import os
+import urlparse
 import simplejson
 from fabric.api import cd
 from fabric.context_managers import shell_env
 from kindo.commands.command import Command
-from kindo.utils.config_parser import ConfigParser
 from kindo.utils.functions import download_with_progressbar, get_files_info, get_md5, get_content_parts
 
 
@@ -66,7 +65,6 @@ class AddOnRunCommand(Command):
                 continue
 
             args.append({"from": path, "to": paths[-1]})
-
 
         return {
             "action": "ADDONRUN",
@@ -160,5 +158,3 @@ class AddOnRunCommand(Command):
                     if not self.upload(file_info["from"], file_info["to"]) and not ignore:
                         raise Exception("{0} upload failed".format(f))
         return position, envs
-
-

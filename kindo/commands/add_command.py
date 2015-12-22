@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
-import re
 import os
 import simplejson
 import urlparse
 from fabric.api import cd
 from fabric.context_managers import shell_env
 from kindo.commands.command import Command
-from kindo.utils.functions import download_with_progressbar, get_files_info, get_content_parts
+from kindo.utils.functions import get_files_info, get_content_parts
 
 
 class AddCommand(Command):

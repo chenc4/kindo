@@ -5,7 +5,6 @@ import requests
 from fabric.contrib.files import exists
 from fabric.api import env, sudo, settings, run, hide, put, get
 from kindo.kindo_core import KindoCore
-from kindo.utils.config_parser import ConfigParser
 
 
 class Command(KindoCore):
@@ -64,7 +63,7 @@ class Command(KindoCore):
 
     def download(self, remote, local):
         if exists(remote, use_sudo=self.has_sudo()):
-            if target[-1] == "/" and not os.path.isdir(local):
+            if remote[-1] == "/" and not os.path.isdir(local):
                 os.makedirs(local)
 
             with settings(hide('stderr', 'warnings'), warn_only=True):

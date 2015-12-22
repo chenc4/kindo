@@ -1,12 +1,9 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
 
-import re
-import os
 import requests
 
-from fabric.api import cd, prompt
-from fabric.context_managers import shell_env
+from fabric.api import prompt
 
 from kindo import KINDO_DEFAULT_HUB_HOST
 from kindo.commands.command import Command

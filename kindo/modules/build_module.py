@@ -5,12 +5,9 @@ import os
 import re
 import time
 import uuid
-import tempfile
 import traceback
-import requests
 import urlparse
 import shutil
-import pickle
 import zipfile
 import simplejson
 
@@ -71,7 +68,7 @@ class BuildModule(KindoCore):
             "maintainer": MaintainerCommand(startfolder, configs, options, logger)
         }
 
-        self.re_pattern =  "^\s*(%s)\s+" % "|".join(self.handlers.keys())
+        self.re_pattern = "^\s*(%s)\s+" % "|".join(self.handlers.keys())
 
     def start(self):
         try:
@@ -187,7 +184,6 @@ class BuildModule(KindoCore):
             self.logger.debug(traceback.format_exc())
             self.logger.error(e)
 
-
     def put_files_to_build_path(self, files, kic_build_folder, kic_path):
         file_names = []
 
@@ -285,7 +281,6 @@ class BuildModule(KindoCore):
                 self.logger.error("    ---> line {0} invalid content".format(kic_content["line"]))
                 return (None, None, None, None, None, None, None, None)
 
-
             self.logger.info("    ---> %s" % (self._get_content_args_value(parsed_info["args"])))
 
             commands.append(parsed_info)
@@ -336,7 +331,7 @@ class BuildModule(KindoCore):
 
             download_with_progressbar(option, target)
             if os.path.isfile(target):
-                return target, os.path.realpath(configs.get("o", self.startfolder))
+                return target, os.path.realpath(self.configs.get("o", self.startfolder))
             return None, None
 
         kic_maybe_paths = [
@@ -358,7 +353,7 @@ class BuildModule(KindoCore):
         filelist = []
         if os.path.isfile(dirname):
             filelist.append(dirname)
-        else :
+        else:
             for root, dirs, files in os.walk(dirname):
                 for name in files:
                     filelist.append(os.path.join(root, name))
@@ -369,7 +364,7 @@ class BuildModule(KindoCore):
 
         for tar in filelist:
             arcname = tar[len(dirname):]
-            zf.write(tar,arcname)
+            zf.write(tar, arcname)
 
         zf.close()
 
@@ -377,13 +372,12 @@ class BuildModule(KindoCore):
         args_strings = []
 
         if isinstance(args, dict):
-            for k, v in  args.items():
+            for k, v in args.items():
                 args_strings.append("%s : %s " % (k, v))
         elif isinstance(args, list):
             for arg in args:
                 if isinstance(arg, dict):
-                    for k, v in  arg.items():
+                    for k, v in arg.items():
                         args_strings.append("%s : %s " % (k, v))
 
         return "; ".join(args_strings)
-

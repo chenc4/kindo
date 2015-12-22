@@ -106,6 +106,3 @@ class KindoCore():
 
         cf.set("default", key, value)
         cf.write(open(ini_path, "w"))
-
-
-

@@ -107,7 +107,6 @@ DEFAULTSECT = "DEFAULT"
 MAX_INTERPOLATION_DEPTH = 10
 
 
-
 # exception classes
 class Error(Exception):
     """Base class for ConfigParser exceptions."""
@@ -136,6 +135,7 @@ class Error(Exception):
 
     __str__ = __repr__
 
+
 class NoSectionError(Error):
     """Raised when no section matches a requested option."""
 
@@ -144,6 +144,7 @@ class NoSectionError(Error):
         self.section = section
         self.args = (section, )
 
+
 class DuplicateSectionError(Error):
     """Raised when a section is multiply-created."""
 
@@ -151,6 +152,7 @@ class DuplicateSectionError(Error):
         Error.__init__(self, "Section %r already exists" % section)
         self.section = section
         self.args = (section, )
+
 
 class NoOptionError(Error):
     """A requested option was not found."""
@@ -162,6 +164,7 @@ class NoOptionError(Error):
         self.section = section
         self.args = (option, section)
 
+
 class InterpolationError(Error):
     """Base class for interpolation-related exceptions."""
 
@@ -170,6 +173,7 @@ class InterpolationError(Error):
         self.option = option
         self.section = section
         self.args = (option, section, msg)
+
 
 class InterpolationMissingOptionError(InterpolationError):
     """A string substitution required a setting which was not available."""
@@ -185,9 +189,11 @@ class InterpolationMissingOptionError(InterpolationError):
         self.reference = reference
         self.args = (option, section, rawval, reference)
 
+
 class InterpolationSyntaxError(InterpolationError):
     """Raised when the source text into which substitutions are made
     does not conform to the required syntax."""
+
 
 class InterpolationDepthError(InterpolationError):
     """Raised when substitutions are nested too deeply."""
@@ -201,6 +207,7 @@ class InterpolationDepthError(InterpolationError):
         InterpolationError.__init__(self, option, section, msg)
         self.args = (option, section, rawval)
 
+
 class ParsingError(Error):
     """Raised when a configuration file does not follow legal syntax."""
 
@@ -213,6 +220,7 @@ class ParsingError(Error):
     def append(self, lineno, line):
         self.errors.append((lineno, line))
         self.message += '\n\t[line %2d]: %s' % (lineno, line)
+
 
 class MissingSectionHeaderError(ParsingError):
     """Raised when a key-value pair is found before any section header."""
@@ -442,15 +450,17 @@ class RawConfigParser:
         r'\['                                 # [
         r'(?P<header>[^]]+)'                  # very permissive!
         r'\]'                                 # ]
-        )
+    )
+
     OPTCRE = re.compile(
         r'(?P<option>[^=\s][^=]*)'          # very permissive!
-        r'\s*(?P<vi>[=])\s*'                 # any number of space/tab,
-                                              # followed by separator
-                                              # (either : or =), followed
-                                              # by any # space/tab
-        r'(?P<value>.*)$'                     # everything up to eol
-        )
+        r'\s*(?P<vi>[=])\s*'                # any number of space/tab,
+                                            # followed by separator
+                                            # (either : or =), followed
+                                            # by any # space/tab
+        r'(?P<value>.*)$'                   # everything up to eol
+    )
+
     OPTCRE_NV = re.compile(
         r'(?P<option>[^=\s][^=]*)'          # very permissive!
         r'\s*(?:'                             # any number of space/tab,
@@ -459,7 +469,7 @@ class RawConfigParser:
                                               # =), followed by any #
                                               # space/tab
         r'(?P<value>.*))?$'                   # everything up to eol
-        )
+    )
 
     def _read(self, fp, fpname):
         """Parse a sectioned setup file.
@@ -555,6 +565,7 @@ class RawConfigParser:
 
 import UserDict as _UserDict
 
+
 class _Chainmap(_UserDict.DictMixin):
     """Combine multiple mappings for successive lookups.
 
@@ -584,6 +595,7 @@ class _Chainmap(_UserDict.DictMixin):
                     result.append(key)
                     seen.add(key)
         return result
+
 
 class ConfigParser(RawConfigParser):
 

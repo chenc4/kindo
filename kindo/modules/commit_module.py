@@ -33,7 +33,7 @@ class CommitModule(KindoCore):
                 self.logger.response("commit failed", False)
                 return
             self.logger.response("commit ok")
-        except Exception as e:
+        except Exception:
             self.logger.debug(traceback.format_exc())
             self.logger.response("commit failed", False)
 
@@ -122,8 +122,8 @@ class CommitModule(KindoCore):
                 ki_path = "%s.ki" % ki_path
 
             if not os.path.isfile(ki_path):
-               path = os.path.realpath(ki_path)
-               if not os.path.isfile(path):
+                path = os.path.realpath(ki_path)
+                if not os.path.isfile(path):
                     path = os.path.join(self.startfolder, ki_path)
 
                     if os.path.isfile(path):
@@ -146,13 +146,13 @@ class CommitModule(KindoCore):
                 zfobj.setpassword(self.configs["kipwd"])
 
             for name in zfobj.namelist():
-                name = name.replace('\\','/')
+                name = name.replace('\\', '/')
 
                 if name.endswith('/'):
                     os.makedirs(os.path.join(unziptodir, name))
                 else:
                     ext_filename = os.path.join(unziptodir, name)
-                    ext_dir= os.path.dirname(ext_filename)
+                    ext_dir = os.path.dirname(ext_filename)
                     if not os.path.exists(ext_dir):
                         os.makedirs(ext_dir)
 

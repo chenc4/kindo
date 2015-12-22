@@ -8,6 +8,7 @@ import hashlib
 from kindo.utils.urllib import urlretrieve
 from kindo.utils.progressbar import *
 
+
 def download_with_progressbar(url, target):
     target_dir = os.path.dirname(target)
     if not os.path.isdir(target_dir):
@@ -25,10 +26,12 @@ def download_with_progressbar(url, target):
 
     pbar.finish()
 
+
 def get_md5(value):
     hash = hashlib.md5()
     hash.update(value)
     return hash.hexdigest()
+
 
 def get_files_info(directory):
     if not os.path.isdir(directory):
@@ -45,6 +48,7 @@ def get_files_info(directory):
             subdir = os.path.join(dirpath, dirname)
             files_info.extend(self._get_files_info(subdir))
     return files_info
+
 
 def get_content_parts(content):
     if not content:

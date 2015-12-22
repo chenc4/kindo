@@ -2,10 +2,7 @@
 #-*- coding: utf-8 -*-
 import os
 import sys
-import tempfile
 import traceback
-import paramiko
-import tarfile
 
 from kindo.utils.logger import Logger
 from kindo.utils.args_parser import ArgsParser
@@ -82,7 +79,7 @@ class Kindo:
             )
 
             core_command_cls.start()
-        except KeyboardInterrupt as e:
+        except KeyboardInterrupt:
             pass
         except:
             try:
@@ -122,6 +119,7 @@ script commands:
     workdir    set the work directory when the shell command is running
 """
         self.logger.info(banner)
+
 
 def run():
     startfolder = os.path.dirname(sys.executable)

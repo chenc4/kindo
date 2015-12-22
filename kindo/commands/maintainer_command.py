@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
-import re
-import os
-from fabric.api import cd
-from fabric.context_managers import shell_env
 from kindo.commands.command import Command
 
 

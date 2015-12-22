@@ -73,11 +73,13 @@ RANDOM = 20
 
 _re = re.compile("\033\[[0-9;]*m")
 
+
 def _get_size(text):
     lines = text.split("\n")
     height = len(lines)
     width = max([_str_block_width(line) for line in lines])
     return (width, height)
+
 
 class PrettyTable(object):
 
