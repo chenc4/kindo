@@ -68,7 +68,7 @@ class LoginModule(KindoCore):
             self.logger.response(e, False)
 
     def get_login_engine_url(self):
-        login_engine_url = "%s/v1/login" % self.configs.get("index", "kindo.cycore.cn")
+        login_engine_url = "%s/v1/login" % self.configs.get("index", self.kind_default_hub_host)
 
         if login_engine_url[:7].lower() != "http://" and login_engine_url[:8].lower() != "https://":
             login_engine_url = "http://%s" % login_engine_url

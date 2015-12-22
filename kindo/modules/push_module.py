@@ -16,7 +16,7 @@ class PushModule(KindoCore):
         KindoCore.__init__(self, startfolder, configs, options, logger)
 
     def start(self):
-        push_engine_url = "%s/v1/push" % self.configs.get("index", "kindo.cycore.cn")
+        push_engine_url = "%s/v1/push" % self.configs.get("index", self.kind_default_hub_host)
         if push_engine_url[:7].lower() != "http://" and push_engine_url[:8].lower() != "https://":
             push_engine_url = "http://%s" % push_engine_url
 

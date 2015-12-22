@@ -17,7 +17,7 @@ class SearchModule(KindoCore):
         KindoCore.__init__(self, startfolder, configs, options, logger)
 
     def start(self):
-        search_engine_url = "%s/v1/search" % self.configs.get("index", "kindo.cycore.cn")
+        search_engine_url = "%s/v1/search" % self.configs.get("index", self.kind_default_hub_host)
 
         if search_engine_url[:7].lower() != "http://" and search_engine_url[:8].lower() != "https://":
             search_engine_url = "http://%s" % search_engine_url
