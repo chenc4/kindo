@@ -31,28 +31,25 @@ class RmiModule(KindoCore):
         if not os.path.isfile(ini_path):
             return False
 
-        cf = ConfigParser()
-        cf.read(ini_path)
+        cf = ConfigParser(ini_path)
+        infos = cf.get()
 
-        sections = cf.sections()
-        if image_name in sections:
-            items = cf.items(image_name)
+        if image_name not in infos:
+            return True
 
-            self.logger.debug(items)
+        if "name" not in infos[image_name]:
+            return True
 
-            kiname = ""
-            for k, v in items:
-                if k == "name":
-                    kiname = v.replace("/", "-").replace(":", "-")
+        v = infos[image_name]["name"]
+        kiname = v.replace("/", "-").replace(":", "-")
 
-                    if kiname[-3:] != ".ki":
-                        kiname = "%s.ki" % kiname
-                    break
+        if kiname[-3:] != ".ki":
+            kiname = "%s.ki" % kiname
 
-            target = os.path.join(self.kindo_images_path, kiname)
-            if os.path.isfile(target):
-                os.remove(target)
+        target = os.path.join(self.kindo_images_path, kiname)
+        if os.path.isfile(target):
+            os.remove(target)
 
-            cf.remove_section(image_name)
-            cf.write(open(ini_path, "w"))
+        cf.remove(image_name)
+        cf.write()
         return True

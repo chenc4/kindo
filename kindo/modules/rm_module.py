@@ -53,7 +53,7 @@ class RmModule(KindoCore):
         self.logger.response("delete %s successfully" % image_name)
 
     def get_delete_engine_url(self):
-        delete_engine_url = "%s/v1/rm" % self.configs.get("index", self.kind_default_hub_host)
+        delete_engine_url = "%s/v1/rm" % self.configs.get("index", self.kindo_default_hub_host)
 
         if delete_engine_url[:7].lower() != "http://" and delete_engine_url[:8].lower() != "https://":
             delete_engine_url = "http://%s" % delete_engine_url

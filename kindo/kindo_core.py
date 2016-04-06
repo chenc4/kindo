@@ -18,7 +18,7 @@ class KindoCore():
         self.kindo_version = KINDO_VERSION
         self.kindo_min_version = KINDO_MIN_VERSION
         self.kindo_api_version = KINDO_API_VERSION
-        self.kind_default_hub_host = KINDO_DEFAULT_HUB_HOST
+        self.kindo_default_hub_host = KINDO_DEFAULT_HUB_HOST
         self.kindo_tmps_path = os.path.join(tempfile.gettempdir(), "kindo")
         self.kindo_caches_path = os.getenv("KINDO_CACHES_PATH")
         self.kindo_kics_path = os.getenv("KINDO_KICS_PATH")
@@ -80,31 +80,15 @@ class KindoCore():
         if not os.path.isfile(ini_path):
             return {}
 
-        cf = ConfigParser()
-        cf.read(ini_path)
+        cf = ConfigParser(ini_path)
 
-        configs = {}
-        for section in cf.sections():
-            items = cf.items(section)
-            section = section.lower()
-
-            for k, v in items:
-                k = k.strip()
-                v = v.strip()
-                configs[k] = v
-        return configs
+        return cf.get()
 
     def set_kindo_setting(self, key, value):
         ini_path = os.path.join(self.kindo_settings_path, "kindo.ini")
         if not os.path.isdir(self.kindo_settings_path):
             os.makedirs(self.kindo_settings_path)
 
-        if not os.path.isfile(ini_path):
-            with open(ini_path, "w") as fs:
-                fs.write("[default]")
-
-        cf = ConfigParser()
-        cf.read(ini_path)
-
+        cf = ConfigParser(ini_path)
         cf.set("default", key, value)
-        cf.write(open(ini_path, "w"))
+        cf.write(ini_path)

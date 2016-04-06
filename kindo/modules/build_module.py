@@ -6,10 +6,13 @@ import re
 import time
 import uuid
 import traceback
-import urlparse
+try:
+    import urlparse
+except:
+    from urllib.parse import urlparse
 import shutil
 import zipfile
-import simplejson
+import json as simplejson
 
 from kindo.kindo_core import KindoCore
 from kindo.utils.functions import download_with_progressbar
@@ -44,6 +47,10 @@ class BuildModule(KindoCore):
                 continue
 
             kic_path, outfolder = self.get_kic_info(option)
+            if kic_path is not None and outfolder is None:
+                self.logger.warn("invalid target: {0}".format(self.configs.get("o", "")))
+                continue
+
             if kic_path is None or not kic_path:
                 self.logger.warn("{0} not found".format(option))
                 continue
@@ -154,7 +161,7 @@ class BuildModule(KindoCore):
 
                     manifest = os.path.join(kic_build_folder, "manifest.json")
                     with open(manifest, 'wb') as fs:
-                        simplejson.dump(manifest_json, fs)
+                        fs.write(simplejson.dumps(manifest_json).encode("utf-8"))
 
                     output_ki_path = self.configs.get("o", kic_path_info["outfolder"])
 
@@ -249,22 +256,23 @@ class BuildModule(KindoCore):
                 )
                 if note_patterns is not None:
                     groups = note_patterns.groups()
-                    group = groups[0].lower()
+                    if len(groups) > 0:
+                        group = groups[0].lower()
 
-                    if group == "author":
-                        author = groups[1]
-                    elif group == "version":
-                        version = groups[1]
-                    elif group == "homepage":
-                        homepage = groups[1]
-                    elif group == "name":
-                        name = groups[1]
-                    elif group == "summary":
-                        summary = groups[1]
-                    elif group == "license":
-                        license = groups[1]
-                    elif group == "platform":
-                        platform = groups[1]
+                        if group == "author":
+                            author = groups[1]
+                        elif group == "version":
+                            version = groups[1]
+                        elif group == "homepage":
+                            homepage = groups[1]
+                        elif group == "name":
+                            name = groups[1]
+                        elif group == "summary":
+                            summary = groups[1]
+                        elif group == "license":
+                            license = groups[1]
+                        elif group == "platform":
+                            platform = groups[1]
 
                 continue
 
@@ -288,7 +296,7 @@ class BuildModule(KindoCore):
             commands.append(parsed_info)
 
         with open(os.path.join(kic_build_folder, "confs", "{0}-{1}-{2}.kijc".format(author, name, version)), 'wb') as fs:
-            simplejson.dump(commands, fs)
+            fs.write(simplejson.dumps(commands).encode("utf-8"))
 
         if "t" in self.configs:
             tag = self.configs["t"]
@@ -343,6 +351,10 @@ class BuildModule(KindoCore):
         for kic_maybe_path in kic_maybe_paths:
             if os.path.isfile(kic_maybe_path):
                 kic_output_dir = self.configs.get("o", os.path.dirname(kic_maybe_path))
+                if os.path.isfile(kic_output_dir):
+                    if kic_output_dir[-3:].lower() != ".ki":
+                        return kic_maybe_path, None
+
                 if kic_output_dir[-3:].lower() == ".ki":
                     kic_output_dir = os.path.dirname(kic_output_dir)
                 return kic_maybe_path, os.path.realpath(kic_output_dir)

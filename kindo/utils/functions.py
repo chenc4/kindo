@@ -5,7 +5,7 @@ from __future__ import division
 import os
 import re
 import hashlib
-from kindo.utils.urllib import urlretrieve
+from kindo.utils.urllib1 import urlretrieve
 from kindo.utils.progressbar import *
 
 

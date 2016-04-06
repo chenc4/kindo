@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
 import os
-import urlparse
+try:
+    import urlparse
+except:
+    from urllib.parse import urlparse
 import simplejson
 from fabric.api import cd
 from fabric.context_managers import shell_env

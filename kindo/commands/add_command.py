@@ -2,7 +2,12 @@
 #-*- coding: utf-8 -*-
 import os
 import simplejson
-import urlparse
+
+try:
+    import urlparse
+except:
+    from urllib.parse import urlparse
+
 from fabric.api import cd
 from fabric.context_managers import shell_env
 from kindo.commands.command import Command

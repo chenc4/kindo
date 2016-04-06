@@ -16,7 +16,7 @@ class PushModule(KindoCore):
         KindoCore.__init__(self, startfolder, configs, options, logger)
 
     def start(self):
-        push_engine_url = "%s/v1/push" % self.configs.get("index", self.kind_default_hub_host)
+        push_engine_url = "%s/v1/push" % self.configs.get("index", self.kindo_default_hub_host)
         if push_engine_url[:7].lower() != "http://" and push_engine_url[:8].lower() != "https://":
             push_engine_url = "http://%s" % push_engine_url
 
@@ -126,18 +126,15 @@ class PushModule(KindoCore):
         if not os.path.isfile(ini_path):
             return ""
 
-        cf = ConfigParser()
-        cf.read(ini_path)
+        cf = ConfigParser(ini_path)
 
-        sections = cf.sections()
+        infos = cf.get()
+        if section not in infos:
+            return ""
 
-        if section in sections:
-            items = cf.items(section)
-
-            for k, v in items:
-                if k == "path":
-                    return v
-        return ""
+        if "path" not in infos[section]:
+            return ""
+        return infos[section]["path"]
 
     def get_cache_folder(self, filepath):
         # for example: /var/cache/kindo/nginx/nginx-1.0.0

@@ -321,13 +321,7 @@ class RunModule(KindoCore):
         if not os.path.isdir(self.kindo_settings_path):
             os.makedirs(self.kindo_settings_path)
 
-        cf = ConfigParser()
-        cf.read(ini_path)
-
-        sections = cf.sections()
-
-        if image_info["name"] not in sections:
-            cf.add_section(image_info["name"])
+        cf = ConfigParser(ini_path)
         cf.set(image_info["name"], "name", image_info["name"])
         cf.set(image_info["name"], "version", image_info["version"])
         cf.set(image_info["name"], "buildtime", image_info["buildtime"])
@@ -335,8 +329,7 @@ class RunModule(KindoCore):
         cf.set(image_info["name"], "size", image_info["size"])
         cf.set(image_info["name"], "url", image_info["url"])
         cf.set(image_info["name"], "path", path)
-
-        cf.write(open(ini_path, "w"))
+        cf.write()
         return True
 
     def get_ki_unpackage_folder(self, ki_path):
@@ -369,18 +362,16 @@ class RunModule(KindoCore):
         if not os.path.isfile(ini_path):
             return ""
 
-        cf = ConfigParser()
-        cf.read(ini_path)
+        cf = ConfigParser(ini_path)
+        infos = cf.get()
 
-        sections = cf.sections()
+        if section not in infos:
+            return ""
 
-        if section in sections:
-            items = cf.items(section)
+        if "path" not in infos[section]:
+            return ""
 
-            for k, v in items:
-                if k == "path":
-                    return v
-        return ""
+        return infos[section]["path"]
 
     def unzip_file(self, zipfilename, unziptodir):
         try:
@@ -416,18 +407,18 @@ class RunModule(KindoCore):
         if not os.path.isfile(ini_path):
             return {}
 
-        cf = ConfigParser()
-        cf.read(ini_path)
+        cf = ConfigParser(ini_path)
+        infos = cf.get()
 
         hosts = {}
-        for section in cf.sections():
-            items = cf.items(section)
+        for section in infos:
+            values = infos[section]
             section = section.lower()
 
             hosts[section] = {}
-            for host, password in items:
+            for host in values:
                 host = host.strip()
-                password = password.strip()
+                password = values[host].strip()
 
                 host = "%s:22" % host if host is not None and host.rfind(":") == -1 else host
                 host = "root@%s" % host if host is not None and host.rfind("@") == -1 else host

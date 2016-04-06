@@ -13,7 +13,7 @@ class RegisterModule(KindoCore):
         KindoCore.__init__(self, startfolder, configs, options, logger)
 
     def start(self):
-        register_engine_url = "%s/v1/register" % self.configs.get("index", self.kind_default_hub_host)
+        register_engine_url = "%s/v1/register" % self.configs.get("index", self.kindo_default_hub_host)
         if register_engine_url[:7].lower() != "http://" and register_engine_url[:8].lower() != "https://":
             register_engine_url = "http://%s" % register_engine_url
 
@@ -57,7 +57,7 @@ class RegisterModule(KindoCore):
             self.set_kindo_setting("username", username)
             self.set_kindo_setting("password", password)
 
-            self.logger.response("registered %s" % username)
+            self.logger.info("registered %s" % username)
         except Exception as e:
             self.logger.debug(traceback.format_exc())
-            self.logger.response(e, False)
+            self.logger.error(e)

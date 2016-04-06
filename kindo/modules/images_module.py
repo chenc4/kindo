@@ -16,7 +16,9 @@ class ImagesModule(KindoCore):
         table = PrettyTable(["Name", "Version", "Pusher", "Size", "BuildTime"])
         table.padding_width = 1
 
-        for section, image in images.items():
+        for section in images:
+            image = images[section]
+
             table.add_row([
                 image.get("name", ""),
                 image.get("version", "1.0"),
@@ -25,24 +27,13 @@ class ImagesModule(KindoCore):
                 image.get("buildtime", "")
             ])
 
-        self.logger.response(table)
+        self.logger.info(table)
 
     def get_images_list(self):
         ini_path = os.path.join(self.kindo_settings_path, "images.ini")
         if not os.path.isfile(ini_path):
             return {}
 
-        cf = ConfigParser()
-        cf.read(ini_path)
+        cf = ConfigParser(ini_path)
 
-        images = {}
-        for section in cf.sections():
-            images[section] = {}
-
-            items = cf.items(section)
-
-            for k, v in items:
-                k = k.strip()
-                v = v.strip()
-                images[section][k] = v
-        return images
+        return cf.get()

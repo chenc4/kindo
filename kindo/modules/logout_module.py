@@ -18,14 +18,11 @@ class LogoutModule(KindoCore):
             return
 
         try:
-            cf = ConfigParser()
-            cf.read(ini_path)
+            cf = ConfigParser(ini_path)
+            cf.remove("default", "username")
+            cf.remove("default", "password")
+            cf.write()
 
-            if "default" in cf.sections():
-                cf.remove_option("default", "username")
-                cf.remove_option("default", "password")
-
-            cf.write(open(ini_path, "w"))
             self.logger.response("logout successfully")
         except Exception as e:
             self.logger.debug(traceback.format_exc())

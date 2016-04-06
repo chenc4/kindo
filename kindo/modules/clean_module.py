@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
 
+import os
 import shutil
 from kindo.kindo_core import KindoCore
 
@@ -10,4 +11,5 @@ class CleanModule(KindoCore):
         KindoCore.__init__(self, startfolder, configs, options, logger)
 
     def start(self):
-        shutil.rmtree(self.kindo_caches_path)
+        if os.path.isdir(self.kindo_caches_path):
+            shutil.rmtree(self.kindo_caches_path)

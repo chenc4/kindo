@@ -17,7 +17,7 @@ class PullModule(KindoCore):
         pull_engine_url = self.get_pull_engine_url()
         try:
             if len(self.options) < 3:
-                self.logger.response("image no found", False)
+                self.logger.error("image no found")
                 return
 
             response = self.pull_image_info(pull_engine_url)
@@ -37,10 +37,15 @@ class PullModule(KindoCore):
 
         except Exception as e:
             self.logger.debug(traceback.format_exc())
-            self.logger.response(e, False)
+            self.logger.error(e)
 
     def get_pull_engine_url(self):
-        pull_engine_url = "%s/v1/pull" % self.configs.get("index", self.kind_default_hub_host)
+        if "api.github.com" in self.kindo_default_hub_host:
+            if self.kindo_default_hub_host[:7].lower() != "http://" and self.kindo_default_hub_host[:8].lower() != "https://":
+                self.kindo_default_hub_host = "http://%s" % self.kindo_default_hub_host
+            return self.kindo_default_hub_host
+
+        pull_engine_url = "%s/v1/pull" % self.configs.get("index", self.kindo_default_hub_host)
 
         if pull_engine_url[:7].lower() != "http://" and pull_engine_url[:8].lower() != "https://":
             pull_engine_url = "http://%s" % pull_engine_url
@@ -50,6 +55,30 @@ class PullModule(KindoCore):
     def pull_image_info(self, pull_engine_url, params=None):
         name, version = self.options[2].split(":") if ":"in self.options[2] else (self.options[2], "")
         author, name = name.split("/") if "/" in name else ("", name)
+
+        if "api.github.com" in self.kindo_default_hub_host:
+            sparts = self.kindo_default_hub_host.split("/")
+            if len(sparts) < 6:
+                return None
+
+            author = author if author else "anonymous"
+            version = version if version else "latest"
+
+            url = "%s/contents/%s/%s/%s.ki" % (pull_engine_url, author, name, version)
+            r = requests.get(url)
+            if r.status_code != 200:
+                return None
+
+            info = r.json()
+
+            return {
+                "name": name,
+                "version": version,
+                "url": info["download_url"],
+                "pusher": sparts[5],
+                "size": info["size"],
+                "buildtime": ""
+            }
 
         params = dict({"uniqueName": name}, **params) if params is not None else {"uniqueName": name}
         if author:
@@ -85,7 +114,10 @@ class PullModule(KindoCore):
         if not os.path.isdir(self.kindo_images_path):
             os.makedirs(self.kindo_images_path)
 
-        download_with_progressbar(url, target)
+        try:
+            download_with_progressbar(url, target)
+        except:
+            raise Exception("\"%s\" can't be downloaded" % url)
         return target
 
     def add_image_info(self, image_info, path):
@@ -97,13 +129,7 @@ class PullModule(KindoCore):
         if not os.path.isdir(self.kindo_settings_path):
             os.makedirs(self.kindo_settings_path)
 
-        cf = ConfigParser()
-        cf.read(ini_path)
-
-        sections = cf.sections()
-
-        if image_info["name"] not in sections:
-            cf.add_section(image_info["name"])
+        cf = ConfigParser(ini_path)
         cf.set(image_info["name"], "name", image_info["name"])
         cf.set(image_info["name"], "version", image_info["version"])
         cf.set(image_info["name"], "buildtime", image_info["buildtime"])
@@ -111,6 +137,6 @@ class PullModule(KindoCore):
         cf.set(image_info["name"], "size", image_info["size"])
         cf.set(image_info["name"], "url", image_info["url"])
         cf.set(image_info["name"], "path", path)
+        cf.write()
 
-        cf.write(open(ini_path, "w"))
         return True

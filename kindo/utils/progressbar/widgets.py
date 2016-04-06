@@ -121,7 +121,7 @@ class ETA(Timer):
 class FileTransferSpeed(Widget):
     'Widget for showing the transfer speed (useful for file transfers).'
 
-    format = '%6.2f %s%s/s'
+    formater = '%6.2f %s%s/s'
     prefixes = ' kMGTPEZY'
     __slots__ = ('unit', 'format')
 
@@ -131,14 +131,14 @@ class FileTransferSpeed(Widget):
     def update(self, pbar):
         'Updates the widget with the current SI prefixed speed.'
 
-        if pbar.seconds_elapsed < 2e-6 or pbar.currval < 2e-6: # =~ 0
+        if pbar.seconds_elapsed < 2e-6 or pbar.currval < 2e-6:  # =~ 0
             scaled = power = 0
         else:
             speed = pbar.currval / pbar.seconds_elapsed
             power = int(math.log(speed, 1000))
             scaled = speed / 1000.**power
 
-        return self.format % (scaled, self.prefixes[power], self.unit)
+        return self.formater % (scaled, self.prefixes[power], self.unit)
 
 
 class AnimatedMarker(Widget):

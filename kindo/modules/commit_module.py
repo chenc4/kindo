@@ -19,7 +19,7 @@ class CommitModule(KindoCore):
 
     def start(self):
         if not os.path.isfile(self.ki_path):
-            self.logger.response("ki not found: %s" % self.ki_path, False)
+            self.logger.error("ki not found: %s" % self.ki_path)
             return
 
         try:
@@ -30,12 +30,12 @@ class CommitModule(KindoCore):
             ki_output_path, manifest = self.create_new_image()
 
             if not self.add_image_info(manifest, ki_output_path):
-                self.logger.response("commit failed", False)
+                self.logger.info("commit failed")
                 return
-            self.logger.response("commit ok")
+            self.logger.info("commit ok")
         except Exception:
             self.logger.debug(traceback.format_exc())
-            self.logger.response("commit failed", False)
+            self.logger.error("commit failed")
 
     def add_image_info(self, image_info, path):
         if not path:
@@ -45,14 +45,8 @@ class CommitModule(KindoCore):
         if not os.path.isdir(self.kindo_settings_path):
             os.makedirs(self.kindo_settings_path)
 
-        cf = ConfigParser()
-        cf.read(ini_path)
-
-        sections = cf.sections()
-
+        cf = ConfigParser(ini_path)
         section = "%s/%s:%s" % (image_info["author"], image_info["name"], image_info["version"])
-        if section not in sections:
-            cf.add_section(section)
         cf.set(section, "name", image_info["name"])
         cf.set(section, "author", image_info["author"])
         cf.set(section, "version", image_info["version"])
@@ -61,8 +55,8 @@ class CommitModule(KindoCore):
         cf.set(section, "size", os.path.getsize(path))
         cf.set(section, "url", "")
         cf.set(section, "path", path)
+        cf.write()
 
-        cf.write(open(ini_path, "w"))
         return True
 
     def create_new_image(self):

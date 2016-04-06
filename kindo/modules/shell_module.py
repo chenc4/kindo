@@ -120,18 +120,18 @@ class ShellModule(KindoCore):
         if not os.path.isfile(ini_path):
             return {}
 
-        cf = ConfigParser()
-        cf.read(ini_path)
+        cf = ConfigParser(ini_path)
+        infos = cf.get()
 
         hosts = {}
-        for section in cf.sections():
-            items = cf.items(section)
+        for section in infos:
+            items = infos[section]
             section = section.lower()
 
             hosts[section] = {}
-            for host, password in items:
+            for host in items:
                 host = host.strip()
-                password = password.strip()
+                password = items[host].strip()
 
                 host = "%s:22" % host if host is not None and host.rfind(":") == -1 else host
                 host = "root@%s" % host if host is not None and host.rfind("@") == -1 else host

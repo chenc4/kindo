@@ -43,7 +43,7 @@ class LoginModule(KindoCore):
                 login_engine_url,
                 data={
                     "username": username,
-                    "token": hashlib.new("md5", password).hexdigest()
+                    "token": hashlib.new("md5", password.encode("utf-8")).hexdigest()
                 }
             )
             if r.status_code != 200:
@@ -62,13 +62,13 @@ class LoginModule(KindoCore):
             self.set_kindo_setting("username", username)
             self.set_kindo_setting("password", password)
 
-            self.logger.response("login successfully")
+            self.logger.info("login successfully")
         except Exception as e:
             self.logger.debug(traceback.format_exc())
-            self.logger.response(e, False)
+            self.logger.error(e)
 
     def get_login_engine_url(self):
-        login_engine_url = "%s/v1/login" % self.configs.get("index", self.kind_default_hub_host)
+        login_engine_url = "%s/v1/login" % self.configs.get("index", self.kindo_default_hub_host)
 
         if login_engine_url[:7].lower() != "http://" and login_engine_url[:8].lower() != "https://":
             login_engine_url = "http://%s" % login_engine_url

@@ -17,7 +17,7 @@ class SearchModule(KindoCore):
         KindoCore.__init__(self, startfolder, configs, options, logger)
 
     def start(self):
-        search_engine_url = "%s/v1/search" % self.configs.get("index", self.kind_default_hub_host)
+        search_engine_url = "%s/v1/search" % self.configs.get("index", self.kindo_default_hub_host)
 
         if search_engine_url[:7].lower() != "http://" and search_engine_url[:8].lower() != "https://":
             search_engine_url = "http://%s" % search_engine_url
@@ -48,17 +48,17 @@ class SearchModule(KindoCore):
                     table.add_row([index, ki["name"], ki["version"], ki["pusher"], ki["size"]])
 
                 if len(response) == 0:
-                    self.logger.response("image not found: %s" % option, False)
+                    self.logger.error("image not found: %s" % option)
                     continue
 
-                self.logger.response(table)
+                self.logger.info(table)
 
                 number = self.get_input_number(response)
                 if number > -1:
                     self.pull_image(response[number]["name"])
         except Exception as e:
             self.logger.debug(traceback.format_exc())
-            self.logger.response(e, False)
+            self.logger.error(e)
 
     def get_input_number(self, kis, max_times=3, now_time=0):
         if now_time < max_times:
@@ -159,14 +159,7 @@ class SearchModule(KindoCore):
         if not os.path.isdir(self.kindo_settings_path):
             os.makedirs(self.kindo_settings_path)
 
-        cf = ConfigParser()
-        cf.read(ini_path)
-
-        sections = cf.sections()
-
-        if image_info["name"] not in sections:
-            cf.add_section(image_info["name"])
-
+        cf = ConfigParser(ini_path)
         cf.set(image_info["name"], "name", image_info["name"])
         cf.set(image_info["name"], "version", image_info["version"])
         cf.set(image_info["name"], "buildtime", image_info["buildtime"])
@@ -174,7 +167,6 @@ class SearchModule(KindoCore):
         cf.set(image_info["name"], "size", image_info["size"])
         cf.set(image_info["name"], "url", image_info["url"])
         cf.set(image_info["name"], "path", path)
-
-        cf.write(open(ini_path, "w"))
+        cf.write()
 
         return True
