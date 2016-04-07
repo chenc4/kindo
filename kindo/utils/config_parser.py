@@ -49,6 +49,9 @@ class ConfigParser:
         return self.configs[section][key]
 
     def set(self, section, key, value):
+        if section not in self.configs:
+            self.configs[section] = {}
+
         self.configs[section][key] = value
 
     def remove(self, section=None, key=None):
@@ -60,6 +63,9 @@ class ConfigParser:
 
         if key is None:
             del self.configs[section]
+            return
+
+        if key not in self.configs[section]:
             return
 
         del self.configs[section][key]

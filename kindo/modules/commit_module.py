@@ -28,6 +28,9 @@ class CommitModule(KindoCore):
             # unzip package and rezip to new package
 
             ki_output_path, manifest = self.create_new_image()
+            if ki_output_path is None or manifest is None:
+                self.logger.error(u"invalid kindo package")
+                return
 
             if not self.add_image_info(manifest, ki_output_path):
                 self.logger.info("commit failed")
@@ -50,8 +53,8 @@ class CommitModule(KindoCore):
         cf.set(section, "name", image_info["name"])
         cf.set(section, "author", image_info["author"])
         cf.set(section, "version", image_info["version"])
-        cf.set(section, "buildtime", image_info["buildtime"])
-        cf.set(section, "pusher", image_info["pusher"])
+        cf.set(section, "buildtime", image_info.get("build_time", image_info.get("buildtime", "")))
+        cf.set(section, "pusher", image_info.get("pusher", ""))
         cf.set(section, "size", os.path.getsize(path))
         cf.set(section, "url", "")
         cf.set(section, "path", path)
@@ -83,6 +86,9 @@ class CommitModule(KindoCore):
             manifest["name"] = name
 
         manifest["pusher"] = self.configs.get("username", "")
+
+        if "author" not in manifest or "version" not in manifest or "name" not in manifest:
+            return None, None
 
         simplejson.dump(manifest, open(manifest_path, "w"))
 

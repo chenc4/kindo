@@ -5,7 +5,7 @@ from __future__ import division
 import os
 import re
 import hashlib
-from kindo.utils.urllib1 import urlretrieve
+import urllib
 from kindo.utils.progressbar import *
 
 
@@ -22,7 +22,7 @@ def download_with_progressbar(url, target):
             return
         pbar.update(progress)
 
-    urlretrieve(url, target, reporthook=progress_reporthook)
+    urllib.request.urlretrieve(url, target, reporthook=progress_reporthook)
 
     pbar.finish()
 

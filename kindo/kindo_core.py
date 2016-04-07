@@ -25,6 +25,18 @@ class KindoCore():
         self.kindo_images_path = os.getenv("KINDO_IMAGES_PATH")
         self.kindo_settings_path = os.getenv("KINDO_SETTINGS_PATH")
 
+        if self.kindo_default_hub_host[-1] == "/":
+            self.kindo_default_hub_host = self.kindo_default_hub_host[:-1]
+
+        if self.kindo_default_hub_host[-11:] == ".github.com" or self.kindo_default_hub_host[-10:] == "github.com":
+            self.kindo_default_hub_host = "https://api.github.com/repos/shenghe/kindo-images"
+
+        if self.kindo_default_hub_host[:14] == "api.github.com":
+            self.kindo_default_hub_host = "https://%s" % self.kindo_default_hub_host
+
+        if self.kindo_default_hub_host[:7] != "http://" and self.kindo_default_hub_host[:8] != "https://":
+            self.kindo_default_hub_host = "http://%s" % self.kindo_default_hub_host
+
         if self.kindo_caches_path is None:
             if os.getenv("APPDATA") is None:
                 if os.path.isdir("/var/cache"):

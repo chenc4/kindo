@@ -15,6 +15,9 @@ class LoginModule(KindoCore):
 
     def start(self):
         login_engine_url = self.get_login_engine_url()
+        if login_engine_url is None:
+            self.logger.error("not support github")
+            return
 
         username = ""
         password = ""
@@ -68,6 +71,9 @@ class LoginModule(KindoCore):
             self.logger.error(e)
 
     def get_login_engine_url(self):
+        if "api.github.com" in self.kindo_default_hub_host:
+            return
+
         login_engine_url = "%s/v1/login" % self.configs.get("index", self.kindo_default_hub_host)
 
         if login_engine_url[:7].lower() != "http://" and login_engine_url[:8].lower() != "https://":

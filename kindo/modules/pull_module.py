@@ -22,6 +22,7 @@ class PullModule(KindoCore):
 
             response = self.pull_image_info(pull_engine_url)
             if response is None:
+                self.logger.error("image not found")
                 return
 
             if "code" in response:
@@ -41,8 +42,6 @@ class PullModule(KindoCore):
 
     def get_pull_engine_url(self):
         if "api.github.com" in self.kindo_default_hub_host:
-            if self.kindo_default_hub_host[:7].lower() != "http://" and self.kindo_default_hub_host[:8].lower() != "https://":
-                self.kindo_default_hub_host = "http://%s" % self.kindo_default_hub_host
             return self.kindo_default_hub_host
 
         pull_engine_url = "%s/v1/pull" % self.configs.get("index", self.kindo_default_hub_host)
@@ -56,7 +55,7 @@ class PullModule(KindoCore):
         name, version = self.options[2].split(":") if ":"in self.options[2] else (self.options[2], "")
         author, name = name.split("/") if "/" in name else ("", name)
 
-        if "api.github.com" in self.kindo_default_hub_host:
+        if self.kindo_default_hub_host[:22] == "https://api.github.com":
             sparts = self.kindo_default_hub_host.split("/")
             if len(sparts) < 6:
                 return None

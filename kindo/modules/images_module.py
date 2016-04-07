@@ -22,7 +22,7 @@ class ImagesModule(KindoCore):
             table.add_row([
                 image.get("name", ""),
                 image.get("version", "1.0"),
-                image.get("pusher", "anonymous"),
+                image.get("author", "anonymous"),
                 image.get("size", 0),
                 image.get("buildtime", "")
             ])

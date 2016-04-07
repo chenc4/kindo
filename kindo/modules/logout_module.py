@@ -14,7 +14,7 @@ class LogoutModule(KindoCore):
     def start(self):
         ini_path = os.path.join(self.kindo_settings_path, "kindo.ini")
         if not os.path.isfile(ini_path):
-            self.logger.response("logout successfully")
+            self.logger.info("logout successfully")
             return
 
         try:
@@ -23,7 +23,7 @@ class LogoutModule(KindoCore):
             cf.remove("default", "password")
             cf.write()
 
-            self.logger.response("logout successfully")
+            self.logger.info("logout successfully")
         except Exception as e:
             self.logger.debug(traceback.format_exc())
-            self.logger.response(e, False)
+            self.logger.error(e)
