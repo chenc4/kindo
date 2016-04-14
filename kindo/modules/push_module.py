@@ -71,10 +71,10 @@ class PushModule(KindoCore):
                 if "code" in response:
                     raise Exception(response["msg"])
 
-            self.logger.response("push ok")
+            self.logger.info("push ok")
         except Exception as e:
             self.logger.debug(traceback.format_exc())
-            self.logger.response(e, False)
+            self.logger.error(e)
 
     def get_package_path(self, name):
         kiname = name if name[-3:] == ".ki" else "%s.ki" % name
