@@ -41,7 +41,7 @@ Topic :: Utilities
 """.strip().splitlines()
 
 setup(
-    install_requires=["fabric", "requests", "pyinstaller", "simplejson"],
+    install_requires=["Jinja2", "paramiko", "requests", "simplejson", "pycrypto"],
 
     name='kindo',
     version="1.0.0",

@@ -3,9 +3,9 @@
 
 import os
 import traceback
-from fabric.state import output
-from fabric.tasks import execute
-from fabric.api import env, prompt, settings, hide
+from kindo.utils.fabric.state import output
+from kindo.utils.fabric.tasks import execute
+from kindo.utils.fabric.api import env, prompt, settings, hide
 from kindo.kindo_core import KindoCore
 from kindo.utils.config_parser import ConfigParser
 from kindo.commands.run_command import RunCommand

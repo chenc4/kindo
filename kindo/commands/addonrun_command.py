@@ -6,8 +6,8 @@ try:
 except:
     from urllib.parse import urlparse
 import simplejson
-from fabric.api import cd
-from fabric.context_managers import shell_env
+from kindo.utils.fabric.api import cd
+from kindo.utils.fabric.context_managers import shell_env
 from kindo.commands.command import Command
 from kindo.utils.functions import download_with_progressbar, get_files_info, get_md5, get_content_parts
 

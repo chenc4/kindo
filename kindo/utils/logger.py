@@ -6,7 +6,7 @@ import os
 import time
 import logging
 import platform
-from fabric.api import env
+from kindo.utils.fabric.api import env
 
 FOREGROUND_WHITE = 0x0007
 FOREGROUND_BLUE = 0x01  # text color contains blue.

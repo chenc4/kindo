@@ -16,27 +16,27 @@ class Plugin:
 
         self.host = host
 
-def login(self, username, password):
-        api_url = "%s/v1/login" % self.host
+    def login(self, username, password):
+            api_url = "%s/v1/login" % self.host
 
-        try:
-            r = requests.post(
-                api_url,
-                data={
-                    "username": username,
-                    "token": hashlib.new("md5", password.encode("utf-8")).hexdigest()
-                }
-            )
-            if r.status_code != 200:
-                return False, "\"%s\" can't connect" % self.host
+            try:
+                r = requests.post(
+                    api_url,
+                    data={
+                        "username": username,
+                        "token": hashlib.new("md5", password.encode("utf-8")).hexdigest()
+                    }
+                )
+                if r.status_code != 200:
+                    return False, "\"%s\" can't connect" % self.host
 
-            response = r.json()
+                response = r.json()
 
-            if "username" not in response:
-                return False, "login failed"
-        except Exception as e:
-            return False, e
-        return True, response
+                if "username" not in response:
+                    return False, "login failed"
+            except Exception as e:
+                return False, e
+            return True, response
 
     def pull(self, author, name, version):
         api_url = "%s/v1/pull" % self.host

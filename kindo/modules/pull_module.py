@@ -3,7 +3,7 @@
 import os
 import requests
 import traceback
-from fabric.operations import prompt
+from kindo.utils.fabric.operations import prompt
 from kindo.kindo_core import KindoCore
 from kindo.utils.config_parser import ConfigParser
 from kindo.utils.functions import download_with_progressbar

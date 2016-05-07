@@ -3,7 +3,7 @@
 
 import requests
 
-from fabric.api import prompt
+from kindo.utils.fabric.api import prompt
 
 from kindo import KINDO_DEFAULT_HUB_HOST
 from kindo.commands.command import Command

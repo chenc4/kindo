@@ -5,7 +5,7 @@ import re
 import requests
 import hashlib
 import traceback
-from fabric.operations import prompt
+from kindo.utils.fabric.operations import prompt
 from kindo.kindo_core import KindoCore
 
 

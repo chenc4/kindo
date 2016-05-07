@@ -8,8 +8,8 @@ try:
 except:
     from urllib.parse import urlparse
 
-from fabric.api import cd
-from fabric.context_managers import shell_env
+from kindo.utils.fabric.api import cd
+from kindo.utils.fabric.context_managers import shell_env
 from kindo.commands.command import Command
 from kindo.utils.functions import get_files_info, get_content_parts
 

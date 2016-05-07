@@ -8,7 +8,7 @@ import pickle
 import requests
 import simplejson
 
-from fabric.api import env, output, execute
+from kindo.utils.fabric.api import env, output, execute
 
 from kindo.kindo_core import KindoCore
 from kindo.utils.config_parser import ConfigParser

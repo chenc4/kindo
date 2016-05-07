@@ -2,8 +2,8 @@
 #-*- coding: utf-8 -*-
 import os
 import requests
-from fabric.contrib.files import exists
-from fabric.api import env, sudo, settings, run, hide, put, get
+from kindo.utils.fabric.contrib.files import exists
+from kindo.utils.fabric.api import env, sudo, settings, run, hide, put, get
 from kindo.kindo_core import KindoCore
 
 
