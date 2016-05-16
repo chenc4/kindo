@@ -12,19 +12,20 @@ class RmiModule(KindoCore):
 
     def start(self):
         if len(self.options) < 3:
-            self.logger.response("no images", False)
+            self.logger.error("no images")
             return
 
         self.logger.debug(self.options)
 
         try:
-            if self.delete_image(self.options[2]):
-                self.logger.response("delete ok")
-            else:
-                self.logger.response("delete failed", False)
+            for option in self.options[2:]:
+                if self.delete_image(option):
+                    self.logger.info("delete ok")
+                else:
+                    self.logger.error("delete failed")
         except Exception as e:
             self.logger.debug(traceback.format_exc())
-            self.logger.response(e, False)
+            self.logger.error(e, False)
 
     def delete_image(self, image_name):
         ini_path = os.path.join(self.kindo_settings_path, "images.ini")
@@ -37,18 +38,10 @@ class RmiModule(KindoCore):
         if image_name not in infos:
             return True
 
-        if "name" not in infos[image_name]:
-            return True
-
-        v = infos[image_name]["name"]
-        kiname = v.replace("/", "-").replace(":", "-")
-
-        if kiname[-3:] != ".ki":
-            kiname = "%s.ki" % kiname
-
-        target = os.path.join(self.kindo_images_path, kiname)
-        if os.path.isfile(target):
-            os.remove(target)
+        if "path" in infos[image_name]:
+            target = infos[image_name]["path"]
+            if os.path.isfile(target):
+                os.remove(target)
 
         cf.remove(image_name)
         cf.write()

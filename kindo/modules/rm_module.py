@@ -22,8 +22,12 @@ class RmModule(KindoCore):
             self.logger.error(e, False)
 
     def delete_image(self, image_name):
-        name, version = image_name.split(":") if ":"in image_name else (image_name, "latest")
-        author, name = name.split("/") if "/" in name else (self.configs.get("default", {}).get("username", "anonymous"), name)
+        name, version = image_name.split(":") if ":"in image_name else (image_name, "")
+        author, name = name.split("/") if "/" in name else (self.configs.get("default", {}).get("username", ""), name)
+
+        if not author or not name or not version:
+            self.logger.error("invalid image name")
+            return
 
         isok, res = self.api.rm(
             author,
