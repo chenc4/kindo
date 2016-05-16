@@ -47,7 +47,7 @@ def get_files_info(directory):
 
         for dirname in dirnames:
             subdir = os.path.join(dirpath, dirname)
-            files_info.extend(self._get_files_info(subdir))
+            files_info.extend(get_files_info(subdir))
     return files_info
 
 
