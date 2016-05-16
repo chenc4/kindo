@@ -80,7 +80,7 @@ class Plugin:
         try:
             r = requests.post(api_url, data={"username": username, "password": password})
             if r.status_code != 200:
-                return False, "\"%s\" can't connect" % api_url
+                return False, r.text
         except Exception as e:
             return False, e
         return True, r.json()
@@ -91,17 +91,16 @@ class Plugin:
         data = {
             "uniqueName": "%s/%s:%s" % (author, name, version),
             "username": username,
-            "password": hashlib.new("md5", password).hexdigest()
+            "token": hashlib.new("md5", password.encode("utf-8")).hexdigest()
         }
 
         try:
             r = requests.post(api_url, data=data)
             if r.status_code != 200:
-                return False, "\"%s\" can't connect" % api_url
+                return False, r.text
+            return True, r.json()
         except Exception as e:
             return False, e
-
-        return True, r.json()
 
     def search(self, q):
         api_url = "%s/v1/search" % self.host

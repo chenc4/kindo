@@ -3,7 +3,6 @@
 
 import os
 import traceback
-import requests
 
 from kindo.utils.fabric.operations import prompt
 from kindo.kindo_core import KindoCore
@@ -17,52 +16,39 @@ class SearchModule(KindoCore):
         KindoCore.__init__(self, startfolder, configs, options, logger)
 
     def start(self):
-        search_engine_url = "%s/v1/search" % self.configs.get("index", self.kindo_default_hub_host)
-
-        if search_engine_url[:7].lower() != "http://" and search_engine_url[:8].lower() != "https://":
-            search_engine_url = "http://%s" % search_engine_url
-
         try:
             for option in self.options[2:]:
                 self.logger.debug("searching %s" % option)
 
-                params = {"q": option}
+                isok, res = self.api.search(option)
+                if not isok:
+                    continue
 
-                self.logger.debug("connecting %s" % search_engine_url)
-                r = requests.get(search_engine_url, params=params)
-                if r.status_code != 200:
-                    self.logger.error("\"%s\" can't connect" % search_engine_url)
-                    return
-
-                response = r.json()
-
-                if "code" in response:
-                    raise Exception(response["msg"])
-
-                self.logger.debug("searched %s results" % len(response))
+                self.logger.debug("searched %s results" % len(res))
 
                 table = PrettyTable(["number", "name", "version", "pusher", "size"])
                 index = 0
-                for ki in response:
+                for ki in res:
                     index += 1
                     table.add_row([index, ki["name"], ki["version"], ki["pusher"], ki["size"]])
 
-                if len(response) == 0:
-                    self.logger.error("image not found: %s" % option)
+                if len(res) == 0:
                     continue
 
                 self.logger.info(table)
 
-                number = self.get_input_number(response)
-                if number > -1:
-                    self.pull_image(response[number]["name"])
+                number = self.get_input_number(res)
+                if number is not None and number > -1:
+                    self.pull_image(res[number]["name"])
         except Exception as e:
             self.logger.debug(traceback.format_exc())
             self.logger.error(e)
 
     def get_input_number(self, kis, max_times=3, now_time=0):
         if now_time < max_times:
-            number = prompt("please input the number what you want to install", default="1")
+            number = prompt("please input the number what you want to install:", default="")
+            if not number:
+                return
             try:
                 number = int(number) - 1
 
@@ -76,9 +62,28 @@ class SearchModule(KindoCore):
 
         return -1
 
+    def pull_image(self, uniqueName):
+        name, version = uniqueName.split(":") if ":"in uniqueName else (uniqueName, "")
+        author, name = name.split("/") if "/" in name else ("", name)
+
+        try:
+            isok, res = self.api.pull(author, name, version)
+            if not isok:
+                self.logger.error(res)
+                return
+
+            if not self.add_image_info(res, self.download_package(res)):
+                raise Exception("pull failed")
+
+        except:
+            self.logger.debug(traceback.format_exc())
+
     def download_package(self, image_info):
         url = image_info["url"]
         name = image_info["name"]
+
+        if url is None or not url:
+            return
 
         self.logger.debug("downloading %s" % name)
 
@@ -97,62 +102,8 @@ class SearchModule(KindoCore):
         download_with_progressbar(url, target)
         return target
 
-    def pull_image(self, name):
-        pull_engine_url = self.get_pull_engine_url()
-        try:
-            self.logger.debug("pulling image info: %s" % name)
-
-            response = self.pull_image_info(pull_engine_url, name)
-            if response is None:
-                return
-
-            if "code" in response:
-                if response["code"] == "040014000":
-                    code = prompt("please input the extraction code: ")
-
-                    self.logger.debug("pulling image info again: %s" % name)
-                    response = self.pull_image_info(pull_engine_url, name, {"code": code})
-
-                if "code" in response:
-                    raise Exception(response["msg"])
-
-            if not self.add_image_info(response, self.download_package(response)):
-                raise Exception("pull failed")
-
-        except:
-            self.logger.debug(traceback.format_exc())
-
-    def pull_image_info(self, pull_engine_url, name, params=None):
-        name, version = name.split(":") if ":"in name else (name, "")
-        author, name = name.split("/") if "/" in name else ("", name)
-
-        params = dict({"uniqueName": name}, **params) if params is not None else {"uniqueName": name}
-        if author:
-            params["uniqueName"] = "%s/%s" % (author, params["uniqueName"])
-        else:
-            params["uniqueName"] = "anonymous/%s" % params["uniqueName"]
-
-        if version:
-            params["uniqueName"] = "%s:%s" % (params["uniqueName"], version)
-        else:
-            params["uniqueName"] = "%s:1.0" % params["uniqueName"]
-
-        r = requests.get(pull_engine_url, params=params)
-        if r.status_code != 200:
-            raise Exception("\"%s\" can't connect" % pull_engine_url, False)
-
-        return r.json()
-
-    def get_pull_engine_url(self):
-        pull_engine_url = "%s/v1/pull" % self.configs.get("index", "kindo.cycore.cn")
-
-        if pull_engine_url[:7].lower() != "http://" and pull_engine_url[:8].lower() != "https://":
-            pull_engine_url = "http://%s" % pull_engine_url
-
-        return pull_engine_url
-
     def add_image_info(self, image_info, path):
-        if not path:
+        if path is None or not path:
             return False
 
         ini_path = os.path.join(self.kindo_settings_path, "images.ini")

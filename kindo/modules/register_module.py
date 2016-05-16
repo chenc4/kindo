@@ -2,7 +2,6 @@
 #-*- coding: utf-8 -*-
 
 import re
-import requests
 import traceback
 from kindo.utils.fabric.operations import prompt
 from kindo.kindo_core import KindoCore
@@ -13,10 +12,6 @@ class RegisterModule(KindoCore):
         KindoCore.__init__(self, startfolder, configs, options, logger)
 
     def start(self):
-        register_engine_url = "%s/v1/register" % self.configs.get("index", self.kindo_default_hub_host)
-        if register_engine_url[:7].lower() != "http://" and register_engine_url[:8].lower() != "https://":
-            register_engine_url = "http://%s" % register_engine_url
-
         try:
             username = ""
             password = ""
@@ -44,20 +39,15 @@ class RegisterModule(KindoCore):
             if password != repassword:
                 raise Exception("the passwords you typed do not match")
 
-            self.logger.debug("connecting %s" % register_engine_url)
-            r = requests.post(register_engine_url, data={"username": username, "password": password})
-            if r.status_code != 200:
-                raise Exception("\"%s\" can't connect" % register_engine_url)
-
-            response = r.json()
-
-            if "code" in response:
-                raise Exception(response["msg"])
+            isok, res = self.api.register(username, password)
+            if not isok:
+                self.logger.error(res)
+                return
 
             self.set_kindo_setting("username", username)
             self.set_kindo_setting("password", password)
 
-            self.logger.info("registered %s" % username)
+            self.logger.info("registered")
         except Exception as e:
             self.logger.debug(traceback.format_exc())
             self.logger.error(e)
