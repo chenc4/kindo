@@ -1,13 +1,13 @@
+#!/usr/bin/env python
+#-*- coding: utf-8 -*-
 
-
-from functools import wraps
 import inspect
 import sys
 import textwrap
 
 from . import state
 from .utils import abort, warn, error
-from .network import to_dict, normalize_to_string, disconnect_all
+from .network import to_dict, disconnect_all
 from .context_managers import settings
 from .job_queue import JobQueue
 from .task_utils import crawl, merge, parse_kwargs
@@ -83,8 +83,7 @@ class Task(object):
     is_default = False
 
     # TODO: make it so that this wraps other decorators as expected
-    def __init__(self, alias=None, aliases=None, default=False, name=None,
-        *args, **kwargs):
+    def __init__(self, alias=None, aliases=None, default=False, name=None, *args, **kwargs):
         if alias is not None:
             self.aliases = [alias, ]
         if aliases is not None:
@@ -222,7 +221,8 @@ def _execute(task, host, my_env, args, kwargs, jobs, queue, multiprocessing):
     if queue is not None:
         local_env.update({'parallel': True, 'linewise': True})
     # Handle parallel execution
-    if queue is not None: # Since queue is only set for parallel
+    # Since queue is only set for parallel
+    if queue is not None:
         name = local_env['host_string']
         # Wrap in another callable that:
         # * expands the env it's given to ensure parallel, linewise, etc are
@@ -231,14 +231,16 @@ def _execute(task, host, my_env, args, kwargs, jobs, queue, multiprocessing):
         # * nukes the connection cache to prevent shared-access problems
         # * knows how to send the tasks' return value back over a Queue
         # * captures exceptions raised by the task
+
         def inner(args, kwargs, queue, name, env):
             state.env.update(env)
+
             def submit(result):
                 queue.put({'name': name, 'result': result})
             try:
                 state.connections.clear()
                 submit(task.run(*args, **kwargs))
-            except BaseException as e: # We really do want to capture everything
+            except BaseException as e:  # We really do want to capture everything
                 # SystemExit implies use of abort(), which prints its own
                 # traceback, host info etc -- so we don't want to double up
                 # on that. For everything else, though, we need to make
@@ -274,8 +276,10 @@ def _execute(task, host, my_env, args, kwargs, jobs, queue, multiprocessing):
         with settings(**local_env):
             return task.run(*args, **kwargs)
 
+
 def _is_task(task):
     return isinstance(task, Task)
+
 
 def execute(task, *args, **kwargs):
     """
@@ -347,8 +351,12 @@ def execute(task, *args, **kwargs):
     # Filter out hosts/roles kwargs
     new_kwargs, hosts, roles, exclude_hosts = parse_kwargs(kwargs)
     # Set up host list
-    my_env['all_hosts'], my_env['effective_roles'] = task.get_hosts_and_effective_roles(hosts, roles,
-                                                                                        exclude_hosts, state.env)
+    my_env['all_hosts'], my_env['effective_roles'] = task.get_hosts_and_effective_roles(
+        hosts,
+        roles,
+        exclude_hosts,
+        state.env
+    )
 
     parallel = requires_parallel(task)
     if parallel:

@@ -2,8 +2,6 @@
 Classes and subroutines dealing with network connections and related topics.
 """
 
-
-
 from functools import wraps
 import getpass
 import os
@@ -16,9 +14,8 @@ try:
 except ImportError:
     from io import StringIO
 
-
 from .auth import get_password, set_password
-from .utils import abort, handle_prompt_abort, warn
+from .utils import handle_prompt_abort, warn
 from .exceptions import NetworkError
 
 try:
@@ -56,7 +53,7 @@ def is_key_load_error(e):
 
 
 def _tried_enough(tries):
-    from fabric.state import env
+    from .state import env
     return tries >= env.connection_attempts
 
 
@@ -84,7 +81,7 @@ def get_gateway(host, port, cache, replace=False):
     :returns:
         A ``socket.socket``-like object, or ``None`` if none was created.
     """
-    from fabric.state import env, output
+    from .state import env, output
     sock = None
     proxy_command = ssh_config().get('proxycommand', None)
     if env.gateway:
@@ -142,7 +139,7 @@ class HostConnectionCache(dict):
         """
         Force a new connection to ``key`` host string.
         """
-        from fabric.state import env
+        from .state import env
 
         user, host, port = normalize(key)
         key = normalize_to_string(key)
@@ -150,8 +147,7 @@ class HostConnectionCache(dict):
         # break the loop when the host is gateway itself
         if env.gateway:
             seek_gateway = normalize_to_string(env.gateway) != key
-        self[key] = connect(
-            user, host, port, cache=self, seek_gateway=seek_gateway)
+        self[key] = connect(user, host, port, cache=self, seek_gateway=seek_gateway)
 
     def __getitem__(self, key):
         """
@@ -188,7 +184,7 @@ def ssh_config(host_string=None):
 
     May give an explicit host string as ``host_string``.
     """
-    from fabric.state import env
+    from .state import env
     dummy = {}
     if not env.use_ssh_config:
         return dummy
@@ -214,7 +210,7 @@ def key_filenames():
     to a list. Also performs ``os.path.expanduser`` expansion on any key
     filenames.
     """
-    from fabric.state import env
+    from .state import env
     keys = env.key_filename
     # For ease of use, coerce stringish key filename into list
     if isinstance(env.key_filename, str) or env.key_filename is None:
@@ -233,7 +229,7 @@ def key_from_env(passphrase=None):
     """
     Returns a paramiko-ready key from a text string of a private key
     """
-    from fabric.state import env, output
+    from .state import env, output
 
     if 'key' in env:
         if output.debug:
@@ -299,7 +295,7 @@ def normalize(host_string, omit_port=False):
     * If ``env.port`` is empty, ``env.default_port`` is checked (which should
       always be, as one would expect, port ``22``).
     """
-    from fabric.state import env
+    from .state import env
     # Gracefully handle "empty" input by returning empty output
     if not host_string:
         return ('', '') if omit_port else ('', '', '')
@@ -359,7 +355,7 @@ def denormalize(host_string):
     If the user part is the default user, it is removed;
     if the port is port 22, it also is removed.
     """
-    from fabric.state import env
+    from .state import env
 
     r = parse_host_string(host_string)
     user = ''
@@ -614,7 +610,11 @@ def connect(user, host, port, cache, seek_gateway=True):
 def _password_prompt(prompt, stream):
     # NOTE: Using encode-to-ascii to prevent (Windows, at least) getpass from
     # choking if given Unicode.
-    return getpass.getpass(prompt.encode('ascii', 'ignore'), stream)
+    if sys.version_info[0] < 3:
+        return getpass.getpass(prompt.encode('ascii', 'ignore'), stream)
+    else:
+        return getpass.getpass(prompt, stream)
+
 
 def prompt_for_password(prompt=None, no_colon=False, stream=None):
     """
@@ -633,7 +633,7 @@ def prompt_for_password(prompt=None, no_colon=False, stream=None):
     ``stream`` is the stream the prompt will be printed to; if not given,
     defaults to ``sys.stderr``.
     """
-    from fabric.state import env
+    from .state import env
     handle_prompt_abort("a connection or sudo password")
     stream = stream or sys.stderr
     # Construct prompt
@@ -674,8 +674,10 @@ def needs_host(func):
     def host_prompting_wrapper(*args, **kwargs):
         while not env.get('host_string', False):
             handle_prompt_abort("the target host connection string")
-            host_string = eval(input("No hosts found. Please specify (single)"
-                                    " host string for connection: "))
+            if sys.version_info[0] < 3:
+                host_string = eval(input("No hosts found. Please specify (single)  host string for connection: "))
+            else:
+                host_string = input("No hosts found. Please specify (single)  host string for connection: ")
             env.update(to_dict(host_string))
         return func(*args, **kwargs)
     host_prompting_wrapper.undecorated = func
@@ -689,7 +691,7 @@ def disconnect_all():
     Used at the end of ``fab``'s main loop, and also intended for use by
     library users.
     """
-    from fabric.state import connections, output
+    from .state import connections, output
     # Explicitly disconnect from all servers
     for key in list(connections.keys()):
         if output.status:

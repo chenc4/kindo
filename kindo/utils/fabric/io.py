@@ -114,7 +114,10 @@ class OutputLooper(object):
 
                     while _has_newline(printable_bytes) and printable_bytes != "":
                         # at most 1 split !
-                        cr = re.search("(\r\n|\r|\n)", printable_bytes)
+                        if sys.version_info[0] < 3:
+                            cr = re.search("(\r\n|\r|\n)", printable_bytes)
+                        else:
+                            cr = re.search("(\r\n|\r|\n)", printable_bytes.decode("utf-8"))
                         if cr is None:
                             break
                         end_of_line = printable_bytes[:cr.start(0)]
@@ -142,7 +145,10 @@ class OutputLooper(object):
                         self._flush(printable_bytes)
 
                 # Now we have handled printing, handle interactivity
-                read_lines = re.split(r"(\r|\n|\r\n)", bytelist)
+                if sys.version_info[0] < 3:
+                    read_lines = re.split(r"(\r|\n|\r\n)", bytelist)
+                else:
+                    read_lines = re.split(r"(\r|\n|\r\n)", bytelist.decode("utf-8"))
                 for fragment in read_lines:
                     # Store in capture buffer
                     self.capture += fragment

@@ -8,10 +8,10 @@ import os.path
 from datetime import datetime
 from tempfile import mkdtemp
 
-from fabric.network import needs_host, key_filenames, normalize
-from fabric.operations import local, run, sudo, put
-from fabric.state import env, output
-from fabric.context_managers import cd
+from ..network import needs_host, key_filenames, normalize
+from ..operations import local, run, sudo, put
+from ..state import env, output
+from ..context_managers import cd
 
 __all__ = ['rsync_project', 'upload_project']
 

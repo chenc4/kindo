@@ -1,4 +1,4 @@
-from fabric.tasks import WrappedCallableTask
+from .tasks import WrappedCallableTask
 
 
 def unwrap_tasks(module, hide_nontasks=False):

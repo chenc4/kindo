@@ -17,14 +17,14 @@ import sys
 import types
 
 # For checking callables against the API, & easy mocking
-from fabric import api, state, colors
-from fabric.contrib import console, files, project
+from . import api, state, colors
+from .contrib import console, files, project
 
-from fabric.network import disconnect_all, ssh
-from fabric.state import env_options
-from fabric.tasks import Task, execute, get_task_details
-from fabric.task_utils import _Dict, crawl
-from fabric.utils import abort, indent, warn, _pty_size
+from .network import disconnect_all, ssh
+from .state import env_options
+from .tasks import Task, execute, get_task_details
+from .task_utils import _Dict, crawl
+from .utils import abort, indent, warn, _pty_size
 import collections
 from functools import reduce
 

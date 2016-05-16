@@ -57,7 +57,7 @@ class SFTP(object):
         return True
 
     def glob(self, path):
-        from fabric.state import win32
+        from .state import win32
         dirpart, pattern = os.path.split(path)
         rlist = self.ftp.listdir(dirpart)
 
@@ -106,7 +106,7 @@ class SFTP(object):
             yield top, dirs, nondirs
 
     def mkdir(self, path, use_sudo):
-        from fabric.api import sudo, hide
+        from .api import sudo, hide
         if use_sudo:
             with hide('everything'):
                 sudo('mkdir "%s"' % path)
@@ -114,7 +114,7 @@ class SFTP(object):
             self.ftp.mkdir(path)
 
     def get(self, remote_path, local_path, use_sudo, local_is_path, rremote=None, temp_dir=""):
-        from fabric.api import sudo, hide
+        from .api import sudo, hide
 
         # rremote => relative remote path, so get(/var/log) would result in
         # this function being called with
@@ -230,10 +230,9 @@ class SFTP(object):
                 result.append(self.get(rpath, lpath, use_sudo, True, rremote, temp_dir))
         return result
 
-    def put(self, local_path, remote_path, use_sudo, mirror_local_mode, mode,
-        local_is_path, temp_dir):
+    def put(self, local_path, remote_path, use_sudo, mirror_local_mode, mode, local_is_path, temp_dir):
 
-        from fabric.api import sudo, hide
+        from .api import sudo, hide
         pre = self.ftp.getcwd()
         pre = pre if pre else ''
         if local_is_path and self.isdir(remote_path):

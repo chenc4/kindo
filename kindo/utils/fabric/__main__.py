@@ -1,2 +1,2 @@
-import fabric.main
-fabric.main.main()
+from .main import main
+main()

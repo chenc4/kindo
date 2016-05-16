@@ -74,10 +74,8 @@ class ShellModule(KindoCore):
                 self.logger.debug(traceback.format_exc())
 
         try:
-            cmds = self.options[2:]
-
             cmd_infos = []
-            for cmd in cmds:
+            for cmd in self.options[2:]:
                 cmd_infos.append({"action": "RUN", "args": {"command": cmd}})
 
             execute(

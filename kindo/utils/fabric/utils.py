@@ -40,9 +40,9 @@ def abort(msg):
     .. _sys.exit: http://docs.python.org/library/sys.html#sys.exit
     .. _SystemExit: http://docs.python.org/library/exceptions.html#exceptions.SystemExit
     """
-    from fabric.state import output, env
+    from .state import output, env
     if not env.colorize_errors:
-        red  = lambda x: x
+        red = lambda x: x
     else:
         from .colors import red
 
@@ -71,7 +71,7 @@ def warn(msg):
     provided that the ``warnings`` output level (which is active by default) is
     turned on.
     """
-    from fabric.state import output, env
+    from .state import output, env
 
     if not env.colorize_errors:
         magenta = lambda x: x
@@ -132,7 +132,7 @@ def puts(text, show_prefix=None, end="\n", flush=False):
     .. versionadded:: 0.9.2
     .. seealso:: `~fabric.utils.fastprint`
     """
-    from fabric.state import output, env
+    from .state import output, env
     if show_prefix is None:
         show_prefix = env.output_prefix
     if output.user:
@@ -171,15 +171,15 @@ def fastprint(text, show_prefix=False, end="", flush=True):
 
 
 def handle_prompt_abort(prompt_for):
-    import fabric.state
+    from .state import env
     reason = "Needed to prompt for %s (host: %s), but %%s" % (
-        prompt_for, fabric.state.env.host_string
+        prompt_for, env.host_string
     )
     # Explicit "don't prompt me bro"
-    if fabric.state.env.abort_on_prompts:
+    if env.abort_on_prompts:
         abort(reason % "abort-on-prompts was set to True")
     # Implicit "parallel == stdin/prompts have ambiguous target"
-    if fabric.state.env.parallel:
+    if env.parallel:
         abort(reason % "input would be ambiguous in parallel mode")
 
 
@@ -286,7 +286,7 @@ def _pty_size():
     Defaults to 80x24 (which is also the 'ssh' lib's default) but will detect
     local (stdout-based) terminal window size on non-Windows platforms.
     """
-    from fabric.state import win32
+    from .state import win32
     if not win32:
         import fcntl
         import termios
@@ -331,11 +331,11 @@ def error(message, func=None, exception=None, stdout=None, stderr=None):
     If ``stdout`` and/or ``stderr`` are given, they are assumed to be strings
     to be printed.
     """
-    import fabric.state
+    from .state import env, output
     if func is None:
-        func = fabric.state.env.warn_only and warn or abort
+        func = env.warn_only and warn or abort
     # If exception printing is on, append a traceback to the message
-    if fabric.state.output.exceptions or fabric.state.output.debug:
+    if output.exceptions or output.debug:
         exception_message = format_exc()
         if exception_message:
             message += "\n\n" + exception_message
@@ -351,9 +351,9 @@ def error(message, func=None, exception=None, stdout=None, stderr=None):
             underlying = exception
         message += "\n\nUnderlying exception:\n" + indent(str(underlying))
     if func is abort:
-        if stdout and not fabric.state.output.stdout:
+        if stdout and not output.stdout:
             message += _format_error_output("Standard output", stdout)
-        if stderr and not fabric.state.output.stderr:
+        if stderr and not output.stderr:
             message += _format_error_output("Standard error", stderr)
     return func(message)
 

@@ -51,6 +51,7 @@ def _get_system_username():
             username = win32api.GetUserName()
     return username
 
+
 def _rc_path():
     """
     Return platform-specific default file path for $HOME/.fabricrc.
@@ -63,8 +64,7 @@ def _rc_path():
             from win32com.shell.shellcon import CSIDL_PROFILE
             expanded_rc_path = "%s/%s" % (
                 SHGetSpecialFolderPath(0, CSIDL_PROFILE),
-                rc_file
-                )
+                rc_file)
     return expanded_rc_path
 
 default_port = '22'  # hurr durr
@@ -85,91 +85,105 @@ default_ssh_config_path = os.path.join(os.path.expanduser('~'), '.ssh', 'config'
 #
 # User-facing documentation for these are kept in sites/docs/env.rst.
 env_options = [
-
-    make_option('-a', '--no_agent',
+    make_option(
+        '-a', '--no_agent',
         action='store_true',
         default=False,
         help="don't use the running SSH agent"
     ),
 
-    make_option('-A', '--forward-agent',
+    make_option(
+        '-A', '--forward-agent',
         action='store_true',
         default=False,
         help="forward local agent to remote end"
     ),
 
-    make_option('--abort-on-prompts',
+    make_option(
+        '--abort-on-prompts',
         action='store_true',
         default=False,
         help="abort instead of prompting (for password, host, etc)"
     ),
 
-    make_option('-c', '--config',
+    make_option(
+        '-c', '--config',
         dest='rcfile',
         default=_rc_path(),
         metavar='PATH',
         help="specify location of config file to use"
     ),
 
-    make_option('--colorize-errors',
+    make_option(
+        '--colorize-errors',
         action='store_true',
         default=False,
         help="Color error output",
     ),
 
-    make_option('-D', '--disable-known-hosts',
+    make_option(
+        '-D', '--disable-known-hosts',
         action='store_true',
         default=False,
         help="do not load user known_hosts file"
     ),
 
-    make_option('-e', '--eagerly-disconnect',
+    make_option(
+        '-e', '--eagerly-disconnect',
         action='store_true',
         default=False,
         help="disconnect from hosts as soon as possible"
     ),
 
-    make_option('-f', '--fabfile',
+    make_option(
+        '-f', '--fabfile',
         default='fabfile',
         metavar='PATH',
         help="python module file to import, e.g. '../other.py'"
     ),
 
-    make_option('-g', '--gateway',
+    make_option(
+        '-g', '--gateway',
         default=None,
         metavar='HOST',
         help="gateway host to connect through"
     ),
 
-    make_option('--gss-auth',
+    make_option(
+        '--gss-auth',
         action='store_true',
         default=None,
         help="Use GSS-API authentication"
     ),
 
-    make_option('--gss-deleg',
+    make_option(
+        '--gss-deleg',
         action='store_true',
         default=None,
         help="Delegate GSS-API client credentials or not"
     ),
 
-    make_option('--gss-kex',
+    make_option(
+        '--gss-kex',
         action='store_true',
         default=None,
         help="Perform GSS-API Key Exchange and user authentication"
     ),
 
-    make_option('--hide',
+    make_option(
+        '--hide',
         metavar='LEVELS',
         help="comma-separated list of output levels to hide"
     ),
 
-    make_option('-H', '--hosts',
+    make_option(
+        '-H', '--hosts',
         default=[],
         help="comma-separated list of hosts to operate on"
     ),
 
-    make_option('-i',
+    make_option(
+        '-i',
         action='append',
         dest='key_filename',
         metavar='PATH',
@@ -177,13 +191,15 @@ env_options = [
         help="path to SSH private key file. May be repeated."
     ),
 
-    make_option('-k', '--no-keys',
+    make_option(
+        '-k', '--no-keys',
         action='store_true',
         default=False,
         help="don't load private key files from ~/.ssh/"
     ),
 
-    make_option('--keepalive',
+    make_option(
+        '--keepalive',
         dest='keepalive',
         type=int,
         default=0,
@@ -191,13 +207,15 @@ env_options = [
         help="enables a keepalive every N seconds"
     ),
 
-    make_option('--linewise',
+    make_option(
+        '--linewise',
         action='store_true',
         default=False,
         help="print line-by-line instead of byte-by-byte"
     ),
 
-    make_option('-n', '--connection-attempts',
+    make_option(
+        '-n', '--connection-attempts',
         type='int',
         metavar='M',
         dest='connection_attempts',
@@ -205,82 +223,96 @@ env_options = [
         help="make M attempts to connect before giving up"
     ),
 
-    make_option('--no-pty',
+    make_option(
+        '--no-pty',
         dest='always_use_pty',
         action='store_false',
         default=True,
         help="do not use pseudo-terminal in run/sudo"
     ),
 
-    make_option('-p', '--password',
+    make_option(
+        '-p', '--password',
         default=None,
         help="password for use with authentication and/or sudo"
     ),
 
-    make_option('-P', '--parallel',
+    make_option(
+        '-P', '--parallel',
         dest='parallel',
         action='store_true',
         default=False,
         help="default to parallel execution method"
     ),
 
-    make_option('--port',
+    make_option(
+        '--port',
         default=default_port,
         help="SSH connection port"
     ),
 
-    make_option('-r', '--reject-unknown-hosts',
+    make_option(
+        '-r', '--reject-unknown-hosts',
         action='store_true',
         default=False,
         help="reject unknown hosts"
     ),
 
-    make_option('--system-known-hosts',
+    make_option(
+        '--system-known-hosts',
         default=None,
         help="load system known_hosts file before reading user known_hosts"
     ),
 
-    make_option('-R', '--roles',
+    make_option(
+        '-R', '--roles',
         default=[],
         help="comma-separated list of roles to operate on"
     ),
 
-    make_option('-s', '--shell',
+    make_option(
+        '-s', '--shell',
         default='/bin/bash -l -c',
         help="specify a new shell, defaults to '/bin/bash -l -c'"
     ),
 
-    make_option('--show',
+    make_option(
+        '--show',
         metavar='LEVELS',
         help="comma-separated list of output levels to show"
     ),
 
-    make_option('--skip-bad-hosts',
+    make_option(
+        '--skip-bad-hosts',
         action="store_true",
         default=False,
         help="skip over hosts that can't be reached"
     ),
 
-    make_option('--skip-unknown-tasks',
+    make_option(
+        '--skip-unknown-tasks',
         action="store_true",
         default=False,
         help="skip over unknown tasks"
     ),
 
-    make_option('--ssh-config-path',
+    make_option(
+        '--ssh-config-path',
         default=default_ssh_config_path,
         metavar='PATH',
         help="Path to SSH config file"
     ),
 
-    make_option('-t', '--timeout',
+    make_option(
+        '-t', '--timeout',
         type='int',
         default=10,
         metavar="N",
         help="set connection timeout to N seconds"
     ),
 
-    make_option('-T', '--command-timeout',
+    make_option(
+        '-T', '--command-timeout',
         dest='command_timeout',
         type='int',
         default=None,
@@ -288,29 +320,33 @@ env_options = [
         help="set remote command timeout to N seconds"
     ),
 
-    make_option('-u', '--user',
+    make_option(
+        '-u', '--user',
         default=_get_system_username(),
         help="username to use when connecting to remote hosts"
     ),
 
-    make_option('-w', '--warn-only',
+    make_option(
+        '-w', '--warn-only',
         action='store_true',
         default=False,
         help="warn, instead of abort, when commands fail"
     ),
 
-    make_option('-x', '--exclude-hosts',
+    make_option(
+        '-x', '--exclude-hosts',
         default=[],
         metavar='HOSTS',
         help="comma-separated list of hosts to exclude"
     ),
 
-    make_option('-z', '--pool-size',
-            dest='pool_size',
-            type='int',
-            metavar='INT',
-            default=0,
-            help="number of concurrent processes to use in parallel mode",
+    make_option(
+        '-z', '--pool-size',
+        dest='pool_size',
+        type='int',
+        metavar='INT',
+        default=0,
+        help="number of concurrent processes to use in parallel mode",
     ),
 
 ]

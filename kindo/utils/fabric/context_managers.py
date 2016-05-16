@@ -161,6 +161,7 @@ import sys
 
 if sys.version_info < (3, 0):
     from contextlib import nested
+
     def settings(*args, **kwargs):
         """
         Nest context managers and/or override ``env`` variables.
@@ -251,8 +252,12 @@ else:
     @contextmanager
     def settings(*args, **kwargs):
         # ... populate `managers`
+        managers = list(args)
+        if kwargs:
+            managers.append(_setenv(kwargs))
         with ExitStack() as stack:
-            yield tuple(stack.enter_context(cm) for cm in managers)    
+            yield tuple(stack.enter_context(cm) for cm in managers)
+
 
 def cd(path):
     """
