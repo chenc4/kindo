@@ -6,6 +6,7 @@ import os
 import re
 import hashlib
 import urllib
+import zipfile
 from kindo.utils.progressbar import *
 
 
@@ -75,3 +76,36 @@ def get_content_parts(content):
         else:
             new_parts += [p for p in part.split(" ") if p.strip() != ""]
     return new_parts
+
+
+def unzip_to_folder(zip_path, folder, name=None, pwd=None):
+    if not os.path.isfile(zip_path):
+        return False
+
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+
+    zfobj = zipfile.ZipFile(zip_path)
+
+    if pwd is not None:
+        zfobj.setpassword(pwd)
+
+    for zfname in zfobj.namelist():
+        zfname = zfname.replace('\\', '/')
+
+        if zfname.endswith('/'):
+            os.makedirs(os.path.join(folder, zfname))
+            continue
+
+        if name is not None and name != zfname:
+            continue
+
+        ext_filename = os.path.join(folder, zfname)
+        ext_dir = os.path.dirname(ext_filename)
+        if not os.path.exists(ext_dir):
+            os.makedirs(ext_dir)
+
+        with open(ext_filename, 'wb') as fs:
+            fs.write(zfobj.read(zfname))
+
+    return True

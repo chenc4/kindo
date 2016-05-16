@@ -89,14 +89,16 @@ class KindoCore():
 
         self.configs = dict(self.get_kindo_setting(), **self.configs)
 
-    def get_kindo_setting(self):
+    def get_kindo_setting(self, key=None):
         ini_path = os.path.join(self.kindo_settings_path, "kindo.ini")
         if not os.path.isfile(ini_path):
             return {}
 
         cf = ConfigParser(ini_path)
 
-        return cf.get()
+        if key is None:
+            return cf.get()
+        return cf.get("default", key)
 
     def set_kindo_setting(self, key, value):
         ini_path = os.path.join(self.kindo_settings_path, "kindo.ini")

@@ -55,10 +55,10 @@ class Plugin:
         try:
             r = requests.get(api_url, params=params)
             if r.status_code != 200:
-                return False, "\"%s\" can't connect" % api_url
+                return False, r.text
+            return True, r.json()
         except Exception as e:
             return False, e
-        return True, r.json()
 
     def push(self, kipath, info):
         api_url = "%s/v1/push" % self.host
@@ -69,10 +69,10 @@ class Plugin:
         try:
             r = requests.post(api_url, data=info, files={"file": open(kipath, "rb")})
             if r.status_code != 200:
-                return False, "\"%s\" can't connect" % api_url
+                return False, r.text
+            return True, r.json()
         except Exception as e:
             return False, e
-        return True, r.json()
 
     def register(self, username, password):
         api_url = "%s/v1/register" % self.host

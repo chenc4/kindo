@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
 import os
-import requests
 import traceback
-from kindo.utils.fabric.operations import prompt
 from kindo.kindo_core import KindoCore
 from kindo.utils.config_parser import ConfigParser
 from kindo.utils.functions import download_with_progressbar
@@ -14,87 +12,25 @@ class PullModule(KindoCore):
         KindoCore.__init__(self, startfolder, configs, options, logger)
 
     def start(self):
-        pull_engine_url = self.get_pull_engine_url()
         try:
             if len(self.options) < 3:
                 self.logger.error("image no found")
                 return
 
-            response = self.pull_image_info(pull_engine_url)
-            if response is None:
-                self.logger.error("image not found")
+            name, version = self.options[2].split(":") if ":"in self.options[2] else (self.options[2], "")
+            author, name = name.split("/") if "/" in name else ("", name)
+
+            isok, res = self.api.pull(self.get_kindo_setting("username") if not author else author, name, version)
+            if not isok:
+                self.logger.error(res)
                 return
 
-            if "code" in response:
-                if response["code"] == "040014000":
-                    code = prompt("please input the extraction code: ")
-                    response = self.pull_image_info(pull_engine_url, {"code": code})
-
-                if "code" in response:
-                    raise Exception(response["msg"])
-
-            if not self.add_image_info(response, self.download_package(response)):
+            if not self.add_image_info(res, self.download_package(res)):
                 raise Exception("pull failed")
 
         except Exception as e:
             self.logger.debug(traceback.format_exc())
             self.logger.error(e)
-
-    def get_pull_engine_url(self):
-        if "api.github.com" in self.kindo_default_hub_host:
-            return self.kindo_default_hub_host
-
-        pull_engine_url = "%s/v1/pull" % self.configs.get("index", self.kindo_default_hub_host)
-
-        if pull_engine_url[:7].lower() != "http://" and pull_engine_url[:8].lower() != "https://":
-            pull_engine_url = "http://%s" % pull_engine_url
-
-        return pull_engine_url
-
-    def pull_image_info(self, pull_engine_url, params=None):
-        name, version = self.options[2].split(":") if ":"in self.options[2] else (self.options[2], "")
-        author, name = name.split("/") if "/" in name else ("", name)
-
-        if self.kindo_default_hub_host[:22] == "https://api.github.com":
-            sparts = self.kindo_default_hub_host.split("/")
-            if len(sparts) < 6:
-                return None
-
-            author = author if author else "anonymous"
-            version = version if version else "latest"
-
-            url = "%s/contents/%s/%s/%s.ki" % (pull_engine_url, author, name, version)
-            r = requests.get(url)
-            if r.status_code != 200:
-                return None
-
-            info = r.json()
-
-            return {
-                "name": name,
-                "version": version,
-                "url": info["download_url"],
-                "pusher": sparts[5],
-                "size": info["size"],
-                "buildtime": ""
-            }
-
-        params = dict({"uniqueName": name}, **params) if params is not None else {"uniqueName": name}
-        if author:
-            params["uniqueName"] = "%s/%s" % (author, params["uniqueName"])
-        else:
-            params["uniqueName"] = "anonymous/%s" % params["uniqueName"]
-
-        if version:
-            params["uniqueName"] = "%s:%s" % (params["uniqueName"], version)
-        else:
-            params["uniqueName"] = "%s:latest" % params["uniqueName"]
-
-        r = requests.get(pull_engine_url, params=params)
-        if r.status_code != 200:
-            raise Exception("\"%s\" can't connect" % pull_engine_url)
-
-        return r.json()
 
     def download_package(self, image_info):
         url = image_info["url"]
