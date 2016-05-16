@@ -2,8 +2,6 @@
 #-*- coding: utf-8 -*-
 
 import re
-import requests
-import hashlib
 import traceback
 from kindo.utils.fabric.operations import prompt
 from kindo.kindo_core import KindoCore
@@ -14,11 +12,6 @@ class LoginModule(KindoCore):
         KindoCore.__init__(self, startfolder, configs, options, logger)
 
     def start(self):
-        login_engine_url = self.get_login_engine_url()
-        if login_engine_url is None:
-            self.logger.error("not support github")
-            return
-
         username = ""
         password = ""
 
@@ -28,7 +21,7 @@ class LoginModule(KindoCore):
             username = self.options[2]
 
         if not username or len(re.findall("[^a-zA-Z0-9]", username)) > 0:
-            self.logger.response("username invalid", False)
+            self.logger.error("username invalid", False)
             return
 
         if len(self.options) <= 3:
@@ -37,29 +30,13 @@ class LoginModule(KindoCore):
             password = self.options[3]
 
         if not password:
-            self.logger.response("invalid password", False)
+            self.logger.error("invalid password", False)
             return
 
         try:
-            self.logger.debug("connecting %s" % login_engine_url)
-            r = requests.post(
-                login_engine_url,
-                data={
-                    "username": username,
-                    "token": hashlib.new("md5", password.encode("utf-8")).hexdigest()
-                }
-            )
-            if r.status_code != 200:
-                raise Exception("\"%s\" can't connect" % login_engine_url)
-
-            response = r.json()
-
-            if "code" in response:
-                self.logger.error(response["msg"])
-                return
-
-            if "username" not in response:
-                self.logger.error("login failed")
+            isok, res = self.api.login(username, password)
+            if not isok:
+                self.logger.error(res)
                 return
 
             self.set_kindo_setting("username", username)
@@ -69,14 +46,3 @@ class LoginModule(KindoCore):
         except Exception as e:
             self.logger.debug(traceback.format_exc())
             self.logger.error(e)
-
-    def get_login_engine_url(self):
-        if "api.github.com" in self.kindo_default_hub_host:
-            return
-
-        login_engine_url = "%s/v1/login" % self.configs.get("index", self.kindo_default_hub_host)
-
-        if login_engine_url[:7].lower() != "http://" and login_engine_url[:8].lower() != "https://":
-            login_engine_url = "http://%s" % login_engine_url
-
-        return login_engine_url

@@ -3,8 +3,6 @@
 Functions to be used in fabfiles and other non-core code, such as run()/sudo().
 """
 
-
-
 import os
 import os.path
 import posixpath
@@ -15,8 +13,7 @@ import time
 from glob import glob
 from contextlib import closing, contextmanager
 
-from .context_managers import (settings, char_buffered, hide,
-    quiet as quiet_manager, warn_only as warn_only_manager)
+from .context_managers import (settings, char_buffered, hide, quiet as quiet_manager, warn_only as warn_only_manager)
 from .io import output_loop, input_loop
 from .network import needs_host, ssh, ssh_config
 from .sftp import SFTP
@@ -208,7 +205,10 @@ def prompt(text, key=None, default='', validate=None):
     value = None
     while value is None:
         # Get input
-        value = eval(input(prompt_str)) or default
+        if sys.version_info[0] < 3:
+            value = eval(input(prompt_str)) or default
+        else:
+            value = input(prompt_str) or default
         # Handle validation
         if validate:
             # Callable

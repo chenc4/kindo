@@ -32,7 +32,7 @@ class Kindo:
         self.options, self.configs = ArgsParser(self.argv).parse_args()
 
         logs_path = "/var/log/kindo" if os.path.isdir("/var/log") else os.path.join(self.startfolder, "logs")
-        is_debug = True if "d" in self.configs else False
+        is_debug = True if "debug" in self.configs else False
 
         self.logger = Logger(logs_path, is_debug)
 
