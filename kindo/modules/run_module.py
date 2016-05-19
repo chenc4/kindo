@@ -30,25 +30,16 @@ class RunModule(KindoCore):
     def __init__(self, startfolder, configs, options, logger):
         KindoCore.__init__(self, startfolder, configs, options, logger)
 
-        env.colorize_errors = True
-        env.command_timeout = self.configs.get("timout", 60 * 30)
-        env.output_prefix = ""
-        env.passwords = {}
-        output.debug = False
-        output.running = False
+        host = self.configs.get("h", self.configs.get("host", ""))
+        password = self.configs.get("p", self.configs.get("password", ""))
+        groups = self.configs.get("g", self.configs.get("group", []))
 
-        host = self.configs.get("h", None)
         host = "%s:22" % host if host is not None and host.rfind(":") == -1 else host
         host = "root@%s" % host if host is not None and host.rfind("@") == -1 else host
 
-        password = self.configs.get("p", "")
-
-        if host is not None:
-            env.passwords[host] = password
+        self.activate_hosts = {}
 
         hosts = self.get_hosts_setting()
-
-        groups = configs["g"].split(",") if "g" in configs else []
         for group in groups:
             group = group.strip()
 
@@ -57,15 +48,10 @@ class RunModule(KindoCore):
                 continue
 
             for k, v in hosts[group].items():
-                env.passwords[k] = v
+                self.activate_hosts[k] = v
 
-        if len(env.passwords) == 0 and "default" in hosts:
-            for k, v in hosts["default"].items():
-                env.passwords[k] = v
-
-        if "ssh" in self.configs:
-            env.use_ssh_config = True
-            env.ssh_config_path = os.path.realpath(self.configs["ssh"])
+        if host:
+            self.activate_hosts[host] = password
 
         self.ki_path = self.get_ki_path()
 
@@ -84,45 +70,39 @@ class RunModule(KindoCore):
         }
 
     def start(self):
-        if env.passwords is None or len(env.passwords) == 0:
+        if len(self.activate_hosts) == 0:
             self.logger.error("hosts not found")
             return
 
-        self.run_ki(self.ki_path)
-
-    def run_ki(self, ki_path):
-        if ki_path is None or not os.path.isfile(ki_path):
-            self.logger.error("{0} not found".format(ki_path))
+        if self.ki_path is None or not os.path.isfile(self.ki_path):
+            self.logger.error("{0} not found".format(self.ki_path))
             return
 
+        self.run_image(self.ki_path)
+
+    def run_image(self, ki_path):
         ki_unpackage_folder = self.get_ki_unpackage_folder(ki_path)
 
-        ki_confs_path = os.path.join(ki_unpackage_folder, "confs")
-        ki_files_path = os.path.join(ki_unpackage_folder, "files")
-        ki_images_path = os.path.join(ki_unpackage_folder, "images")
-        ki_manifest_path = os.path.join(ki_unpackage_folder, "manifest.json")
-
-        # downward compatible
-        if not os.path.isdir(ki_confs_path):
-            ki_confs_path = os.path.join(ki_unpackage_folder, "kibcs")
-
-        if not os.path.isdir(ki_files_path):
-            ki_files_path = os.path.join(ki_unpackage_folder, "deps")
+        ki_confs_path, ki_files_path, ki_images_path, ki_manifest_path = self.get_image_standard_folders(
+            ki_unpackage_folder)
 
         if not os.path.isdir(ki_confs_path) or not os.path.isfile(ki_manifest_path):
-            self.logger.error("invalid ki package")
+            self.logger.error("invalid image")
             return
 
         manifest = {}
         try:
+            image_run_info = {}
             with open(ki_manifest_path, "rb") as fs:
                 manifest = simplejson.load(fs)
-                self.test_whether_compatible(manifest)
+                if not self.is_compatible_and_valid_image(manifest):
+                    self.logger.error("invalid image")
+                    return
 
                 if "images" in manifest:
                     for image_name in manifest["images"]:
                         image_path = os.path.join(ki_images_path, image_name)
-                        self.run_ki(image_path)
+                        self.run_image(image_path)
 
             for f in os.listdir(ki_confs_path):
                 filename, ext = os.path.splitext(f)
@@ -132,7 +112,7 @@ class RunModule(KindoCore):
                 script = os.path.join(ki_confs_path, f)
                 with open(script, 'rb') as fs:
                     script_commands = []
-                    # 兼容早期配置文件
+                    #  backward-compatible
                     if ext == ".kibc":
                         script_commands = pickle.load(fs)
                     elif ext == ".kijc":
@@ -142,13 +122,13 @@ class RunModule(KindoCore):
                         self.logger.warn("empty commands: {0}".format(script))
                         continue
 
-                    execute(
+                    self._run_image(
                         self.execute_script_commands,
                         commands=script_commands,
                         filesdir=ki_files_path,
                         imagesdir=ki_images_path,
                         ki_path=ki_path,
-                        hosts=env.passwords.keys()
+                        hosts=self.activate_hosts
                     )
         except Exception as e:
             self.logger.debug(traceback.format_exc())
@@ -161,20 +141,34 @@ class RunModule(KindoCore):
                         rm_file_commands.append(
                             {
                                 "action": "RUN",
-                                "args": {"command": "rm -f \"{0}\"".format(f)},
-                                "variables": []
+                                "args": {"command": 'rm -f "{0}"'.format(f)}
                             }
                         )
-                execute(
+                self._run_image(
                     self.execute_script_commands,
                     commands=rm_file_commands,
                     filesdir=[],
                     imagesdir=[],
                     ki_path=ki_path,
-                    hosts=env.passwords.keys()
+                    hosts=self.activate_hosts
                 )
             except:
                 self.logger.debug(traceback.format_exc())
+
+    def get_image_standard_folders(self, ki_unpackage_folder):
+        ki_confs_path = os.path.join(ki_unpackage_folder, "confs")
+        ki_files_path = os.path.join(ki_unpackage_folder, "files")
+        ki_images_path = os.path.join(ki_unpackage_folder, "images")
+        ki_manifest_path = os.path.join(ki_unpackage_folder, "manifest.json")
+        # downward compatible
+        if not os.path.isdir(ki_confs_path):
+            ki_confs_path = os.path.join(ki_unpackage_folder, "kibcs")
+        if not os.path.isdir(ki_files_path):
+            ki_files_path = os.path.join(ki_unpackage_folder, "deps")
+        return ki_confs_path, ki_files_path, ki_images_path, ki_manifest_path
+
+    def _run_image(self, func, commands, filesdir, imagesdir, ki_path, hosts):
+
 
     def execute_script_commands(self, commands, filesdir, imagesdir, ki_path):
         position = "~"
@@ -198,17 +192,15 @@ class RunModule(KindoCore):
             )
             envs = dict(_envs, **envs)
 
-    def test_whether_compatible(self, manifest):
+    def is_compatible_and_valid_image(self, manifest):
         if "min_version" in manifest and manifest["min_version"] > self.kindo_version:
-            raise Exception("the min version is too high")
+            return False
 
         if "name" not in manifest or "author" not in manifest or "version" not in manifest:
-            raise Exception("invalid manifest")
+            return False
+        return True
 
     def get_ki_path(self):
-        self.logger.debug(self.options)
-
-        ki_path = ""
         for option in self.options[2:]:
             ki_path = option
             if ki_path[-3:] != ".ki":
@@ -220,19 +212,13 @@ class RunModule(KindoCore):
                     path = os.path.join(self.startfolder, ki_path)
                     if not os.path.isfile(path):
                         path = self.get_image_path(option)
-                        self.logger.debug("get_image_path: %s" % path)
-                        self.logger.debug("option: %s" % option)
                         if not path and "/" in option and ":" in option:
                             path = self.pull_image_path(option)
 
-                    if os.path.isfile(path):
-                        ki_path = path
+                ki_path = path
 
             if os.path.isfile(ki_path):
-                break
-
-        self.logger.debug(ki_path)
-        return ki_path
+                return ki_path
 
     def pull_image_path(self, imagename):
         pull_engine_url = self.get_pull_engine_url()
@@ -257,35 +243,6 @@ class RunModule(KindoCore):
         except:
             self.logger.debug(traceback.format_exc())
         return ""
-
-    def get_pull_engine_url(self):
-        pull_engine_url = "%s/v1/pull" % self.configs.get("index", "kindo.cycore.cn")
-
-        if pull_engine_url[:7].lower() != "http://" and pull_engine_url[:8].lower() != "https://":
-            pull_engine_url = "http://%s" % pull_engine_url
-
-        return pull_engine_url
-
-    def pull_image_info(self, pull_engine_url, imagename, params=None):
-        name, version = imagename.split(":") if ":"in imagename else (imagename, "")
-        author, name = name.split("/") if "/" in name else ("", name)
-
-        params = dict({"uniqueName": name}, **params) if params is not None else {"uniqueName": name}
-        if author:
-            params["uniqueName"] = "%s/%s" % (author, params["uniqueName"])
-        else:
-            params["uniqueName"] = "anonymous/%s" % params["uniqueName"]
-
-        if version:
-            params["uniqueName"] = "%s:%s" % (params["uniqueName"], version)
-        else:
-            params["uniqueName"] = "%s:1.0" % params["uniqueName"]
-
-        r = requests.get(pull_engine_url, params=params)
-        if r.status_code != 200:
-            raise Exception("\"%s\" can't connect" % pull_engine_url)
-
-        return r.json()
 
     def download_package(self, image_info):
         url = image_info["url"]
@@ -343,7 +300,7 @@ class RunModule(KindoCore):
             with open(ki_length_cache_file, "r") as fs:
                 ki_length_cache_file_content = fs.read()
                 if ki_length_cache_file_content:
-                    length = long(ki_length_cache_file_content)
+                    length = int(ki_length_cache_file_content)
 
         if not os.path.isdir(ki_unpackage_folder):
             os.makedirs(ki_unpackage_folder)
