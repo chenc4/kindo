@@ -109,3 +109,39 @@ def unzip_to_folder(zip_path, folder, name=None, pwd=None):
             fs.write(zfobj.read(zfname))
 
     return True
+
+
+def prompt(text, default=''):
+    # Set up default display
+    default_str = ""
+    if default != '':
+        default_str = " [%s] " % str(default).strip()
+    else:
+        default_str = " "
+    # Construct full prompt string
+    prompt_str = text.strip() + default_str
+    # Loop until we pass validation
+
+    if sys.version_info[0] < 3:
+        value = raw_input(prompt_str) or default
+    else:
+        value = input(prompt_str) or default
+
+    return value
+
+
+def hostparse(value):
+    username = "root"
+    host = ""
+    port = 22
+
+    values = value.split("@")
+    if len(values) > 1:
+        username = values[0]
+        host = values[1]
+
+    values = host.split(":")
+    if len(values) > 1:
+        host = values[0]
+        port = values[1]
+    return host, port, username

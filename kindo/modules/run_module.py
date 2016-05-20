@@ -11,7 +11,7 @@ from multiprocessing import Pool
 from kindo.kindo_core import KindoCore
 from kindo.utils.kissh import KiSSHClient
 from kindo.utils.config_parser import ConfigParser
-from kindo.utils.functions import download_with_progressbar, get_md5
+from kindo.utils.functions import download_with_progressbar, get_md5, hostparse
 from kindo.modules.run.add_command import AddCommand
 from kindo.modules.run.check_command import CheckCommand
 from kindo.modules.run.from_command import FromCommand
@@ -29,28 +29,37 @@ class RunModule(KindoCore):
     def __init__(self, startfolder, configs, options, logger):
         KindoCore.__init__(self, startfolder, configs, options, logger)
 
-        host = self.configs.get("h", self.configs.get("host", ""))
-        password = self.configs.get("p", self.configs.get("password", ""))
-        groups = self.configs.get("g", self.configs.get("group", []))
+        host = self.configs.get("h", self.configs.get("host", "")).strip()
+        password = self.configs.get("p", self.configs.get("password", "")).strip()
+        group = self.configs.get("g", self.configs.get("group", "")).strip()
 
         host = "%s:22" % host if host is not None and host.rfind(":") == -1 else host
         host = "root@%s" % host if host is not None and host.rfind("@") == -1 else host
 
-        self.activate_hosts = []
-
         hosts = self.get_hosts_setting()
-        for group in groups:
-            group = group.strip()
 
-            if group not in hosts:
-                self.logger.warn("GROUP NOT FOUND: %s" % group)
-                continue
+        if group and group not in hosts:
+            self.logger.warn("GROUP NOT FOUND")
 
-            for k, v in hosts[group].items():
-                self.activate_hosts.append({k: v})
-
+        self.activate_hosts = []
         if host:
-            self.activate_hosts.append({host: password})
+            host, port, username = hostparse(host)
+            self.activate_hosts.append({
+                "host": host,
+                "port": port,
+                "username": username,
+                "password": password
+            })
+
+        if group in hosts:
+            for k, v in hosts[group].items():
+                host, port, username = hostparse(k)
+                self.activate_hosts.append({
+                    "host": host,
+                    "port": port,
+                    "username": username,
+                    "password": v
+                })
 
         self.ki_paths = self.get_ki_paths()
 
@@ -73,6 +82,10 @@ class RunModule(KindoCore):
             self.logger.error("hosts not found")
             return
 
+        if len(self.ki_paths) == 0:
+            self.logger.error("image not found")
+            return
+
         run_infos = []
         for ki_path in self.ki_paths:
             image_run_infos = self.get_image_run_infos(ki_path)
@@ -80,9 +93,7 @@ class RunModule(KindoCore):
             for host_info in self.activate_hosts:
                 run_infos.append({"host_info": host_info, "image_run_infos": image_run_infos})
 
-        print(run_infos)
-        # 多进程执行命令
-        processes = 10 if len(self.ki_paths) > 10 else len(self.ki_paths)
+        processes = 10 if len(self.activate_hosts) > 10 else len(self.activate_hosts)
         pool = Pool(processes=processes)
         pool.apply_async(self.execute, run_infos)
         pool.close()
@@ -94,7 +105,7 @@ class RunModule(KindoCore):
         try:
             ki_unpackage_folder = self.get_ki_unpackage_folder(ki_path)
 
-            ki_confs_path, ki_files_path, ki_images_path, ki_manifest_path = self.get_image_standard_folders(
+            ki_confs_path, ki_files_path, ki_images_path, ki_manifest_path = self.get_image_standard_paths(
                 ki_unpackage_folder)
 
             if not os.path.isdir(ki_confs_path) or not os.path.isfile(ki_manifest_path):
@@ -147,7 +158,7 @@ class RunModule(KindoCore):
 
         return image_run_infos
 
-    def get_image_standard_folders(self, ki_unpackage_folder):
+    def get_image_standard_paths(self, ki_unpackage_folder):
         ki_confs_path = os.path.join(ki_unpackage_folder, "confs")
         ki_files_path = os.path.join(ki_unpackage_folder, "files")
         ki_images_path = os.path.join(ki_unpackage_folder, "images")
@@ -161,10 +172,15 @@ class RunModule(KindoCore):
 
     def execute(self, run_info):
         try:
-            position = "~"
+            cd = "~"
             envs = self.configs if self.configs is not None else {}
 
-            with KiSSHClient(run_info["host_info"]) as ssh_client:
+            with KiSSHClient(
+                run_info["host_info"]["host"],
+                run_info["host_info"]["port"],
+                run_info["host_info"]["username"],
+                run_info["host_info"]["password"],
+            ) as ssh_client:
                 image_run_infos = run_info["image_run_infos"]
                 ki_files_path = run_info["ki_files_path"]
                 ki_images_path = run_info["ki_images_path"]
@@ -183,12 +199,12 @@ class RunModule(KindoCore):
                             if action not in self.handlers:
                                 raise Exception("{0} not supported".format(action))
 
-                            position, _envs = self.handlers[action].run(
+                            cd, _envs = self.handlers[action].run(
                                 ssh_client,
                                 command,
                                 ki_files_path,
                                 ki_images_path,
-                                position,
+                                cd,
                                 envs,
                                 ki_path
                             )

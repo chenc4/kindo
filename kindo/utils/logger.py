@@ -6,7 +6,6 @@ import os
 import time
 import logging
 import platform
-from kindo.utils.fabric.api import env
 
 FOREGROUND_WHITE = 0x0007
 FOREGROUND_BLUE = 0x01  # text color contains blue.
@@ -76,24 +75,3 @@ class Logger:
 
     def critical(self, message):
         self.logger.critical(message)
-
-    def response(self, message, is_ok=True, host="127.0.0.1"):
-        msg = """
-%s | %s  >>
-
-%s
-""" % (host if env.host is None else env.host, "success" if is_ok else "failed", message)
-
-        if is_ok:
-            self.info(msg)
-        else:
-            self.error(msg)
-
-    def response_error(self, message, short_msg, long_msg):
-        msg = """
-[%s] %s  >>
-
-%s
-""" % (message, short_msg, long_msg)
-
-        self.error(msg)

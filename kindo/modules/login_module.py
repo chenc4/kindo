@@ -3,7 +3,7 @@
 
 import re
 import traceback
-from kindo.utils.fabric.operations import prompt
+from kindo.utils.functions import prompt
 from kindo.kindo_core import KindoCore
 
 

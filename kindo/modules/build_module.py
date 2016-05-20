@@ -16,17 +16,17 @@ import json as simplejson
 
 from kindo.kindo_core import KindoCore
 from kindo.utils.functions import download_with_progressbar
-from kindo.commands.add_command import AddCommand
-from kindo.commands.check_command import CheckCommand
-from kindo.commands.from_command import FromCommand
-from kindo.commands.run_command import RunCommand
-from kindo.commands.workdir_command import WorkdirCommand
-from kindo.commands.download_command import DownloadCommand
-from kindo.commands.ubuntu_command import UbuntuCommand
-from kindo.commands.centos_command import CentOSCommand
-from kindo.commands.addonrun_command import AddOnRunCommand
-from kindo.commands.env_command import EnvCommand
-from kindo.commands.maintainer_command import MaintainerCommand
+from kindo.modules.run.add_command import AddCommand
+from kindo.modules.run.check_command import CheckCommand
+from kindo.modules.run.from_command import FromCommand
+from kindo.modules.run.run_command import RunCommand
+from kindo.modules.run.workdir_command import WorkdirCommand
+from kindo.modules.run.download_command import DownloadCommand
+from kindo.modules.run.ubuntu_command import UbuntuCommand
+from kindo.modules.run.centos_command import CentOSCommand
+from kindo.modules.run.addonrun_command import AddOnRunCommand
+from kindo.modules.run.env_command import EnvCommand
+from kindo.modules.run.maintainer_command import MaintainerCommand
 
 
 class BuildModule(KindoCore):

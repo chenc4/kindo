@@ -8,7 +8,7 @@ try:
 except:
     from urllib.parse import urlparse
 
-from kindo.commands.command import Command
+from kindo.modules.run.command import Command
 from kindo.utils.functions import get_files_info, get_content_parts
 
 

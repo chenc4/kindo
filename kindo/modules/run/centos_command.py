@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
 import simplejson
-from kindo.commands.command import Command
+from kindo.modules.run.command import Command
 
 
 class CentOSCommand(Command):
@@ -27,6 +27,11 @@ class CentOSCommand(Command):
             "images": []
         }
 
-    def run(self, ssh_client, command, filesdir, imagesdir, position, envs, ki_path=None):
-        ssh_client.execute(command["args"]["command"], position, envs)
-        return position, envs
+    def run(self, ssh_client, command, filesdir, imagesdir, cd, envs, ki_path=None):
+        stdouts, stderrs = ssh_client.execute(command["args"]["command"], cd, envs)
+        for stdout in stdouts:
+            self.logger.info(stdout)
+
+        for stderr in stderrs:
+            self.logger.error(stderr)
+        return cd, envs

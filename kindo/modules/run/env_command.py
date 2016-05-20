@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
 import re
-from kindo.commands.command import Command
+from kindo.modules.run.command import Command
 from kindo.utils.functions import get_content_parts
 
 

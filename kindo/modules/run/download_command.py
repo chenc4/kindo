@@ -2,7 +2,7 @@
 #-*- coding: utf-8 -*-
 import re
 import os
-from kindo.commands.command import Command
+from kindo.modules.run.command import Command
 from kindo.utils.functions import download_with_progressbar
 
 

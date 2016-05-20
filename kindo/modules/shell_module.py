@@ -2,116 +2,128 @@
 #-*- coding: utf-8 -*-
 
 import os
+import getpass
 import traceback
-from kindo.utils.fabric.state import output
-from kindo.utils.fabric.tasks import execute
-from kindo.utils.fabric.api import env, prompt, settings, hide
 from kindo.kindo_core import KindoCore
 from kindo.utils.config_parser import ConfigParser
-from kindo.commands.run_command import RunCommand
+from kindo.utils.functions import prompt, hostparse
+from kindo.utils.kissh import KiSSHClient
+from kindo.modules.run.run_command import RunCommand
 
 
 class ShellModule(KindoCore):
     def __init__(self, startfolder, configs, options, logger):
         KindoCore.__init__(self, startfolder, configs, options, logger)
 
-        env.colorize_errors = False
-        env.disable_colors = True
-        env.command_timeout = self.configs.get("timout", 60 * 30)
-        env.output_prefix = ""
-        env.passwords = {}
-        output.debug = False
-        output.running = False
+        host = self.configs.get("h", self.configs.get("host", "")).strip()
+        password = self.configs.get("p", self.configs.get("password", "")).strip()
+        group = self.configs.get("g", self.configs.get("group", "")).strip()
 
-        host = configs.get("h", None)
         host = "%s:22" % host if host is not None and host.rfind(":") == -1 else host
         host = "root@%s" % host if host is not None and host.rfind("@") == -1 else host
 
-        password = configs.get("p", "")
-
-        if host is not None:
-            env.passwords[host] = password
-
         hosts = self.get_hosts_setting()
 
-        groups = configs["g"].split(",") if "g" in configs else []
-        for group in groups:
-            group = group.strip()
+        if group and group not in hosts:
+            self.logger.warn("GROUP NOT FOUND: %s" % group)
 
-            if group not in hosts:
-                self.logger.warn("GROUP NOT FOUND: %s" % group)
-                continue
+        self.activate_hosts = []
+        if host:
+            host, port, username = hostparse(host)
+            while not password:
+                password = getpass.getpass("please input password: ")
 
+            self.activate_hosts.append({
+                "host": host,
+                "port": port,
+                "username": username,
+                "password": password
+            })
+
+        if group in hosts:
             for k, v in hosts[group].items():
-                env.passwords[k] = v
-
-        if len(env.passwords) == 0 and "default" in hosts:
-            for k, v in hosts["default"].items():
-                env.passwords[k] = v
+                host, port, username = hostparse(k)
+                self.activate_hosts.append({
+                    "host": host,
+                    "port": port,
+                    "username": username,
+                    "password": v
+                })
 
         self.runCommand = RunCommand(startfolder, configs, options, logger)
 
     def start(self):
-        if env.passwords is None or len(env.passwords) == 0:
+        if len(self.activate_hosts) == 0:
             try:
                 host = prompt("please input host: ", default="")
-                if not host:
+                if host is None or not host:
                     self.logger.error("hosts not found")
                     return
 
-                host = "%s:22" % host if host is not None and host.rfind(":") == -1 else host
-                host = "root@%s" % host if host is not None and host.rfind("@") == -1 else host
+                port = 22
+                username = "root"
 
-                pwd = prompt("please input password: ", default="")
-                if not pwd:
+                pos = host.rfind(":")
+                if pos == -1:
+                    host = host
+                else:
+                    host = host[:pos]
+                    port = host[pos + 1:]
+
+                pos = host.find("@")
+                if pos != -1:
+                    username = host[:pos]
+                    host = host[pos + 1:]
+
+                password = getpass.getpass("please input password: ")
+                if not password:
                     self.logger.error("passowrds not found")
                     return
 
-                env.passwords[host] = pwd
+                self.activate_hosts.append({
+                    "host": host,
+                    "port": port,
+                    "username": username,
+                    "password": password
+                })
+
             except KeyboardInterrupt as e:
                 pass
             except:
                 self.logger.debug(traceback.format_exc())
 
+        if len(self.activate_hosts) > 1:
+            self.logger.error("too many hosts")
+            return
+
         try:
-            cmd_infos = []
-            for cmd in self.options[2:]:
-                cmd_infos.append({"action": "RUN", "args": {"command": cmd}})
-
-            execute(
-                self.execute_script_commands,
-                commands=cmd_infos,
-                hosts=env.passwords.keys()
-            )
-
+            self.execute(self.options[2:])
         except KeyboardInterrupt as e:
+            pass
+        except EOFError as e:
             pass
         except Exception as e:
             self.logger.debug(traceback.format_exc())
             self.logger.error(e)
 
-    def execute_script_commands(self, commands):
-        position = "~"
-        envs = {}
+    def execute(self, commands):
+        for activate_host in self.activate_hosts:
+            with KiSSHClient(
+                activate_host["host"],
+                int(activate_host["port"]),
+                activate_host["username"],
+                activate_host["password"],
+            ) as ssh_client:
+                while True:
+                    for command in commands:
+                        stdouts, stderrs = ssh_client.execute(command)
+                        for stdout in stdouts:
+                            self.logger.info(stdout)
 
-        while True:
-            for command in commands:
-                with settings(hide('stderr', 'warnings'), warn_only=True):
-                    position, envs = self.runCommand.run(
-                        command=command,
-                        filesdir=None,
-                        imagesdir=None,
-                        position=position,
-                        envs=envs,
-                        ki_path=None
-                    )
+                        for stderr in stderrs:
+                            self.logger.info(stderr)
 
-            if len(self.options[2:]) > 0:
-                return
-
-            cmd = prompt("[%s@%s %s]# " % (env.user, env.host, position), default="")
-            if cmd:
-                commands = [{"action": "RUN", "args": {"command": cmd}}]
+                    commands = [prompt("[%s@%s:%s ~]# " % (activate_host["username"], activate_host["host"], activate_host["port"]), default="")]
 
     def get_hosts_setting(self):
         ini_path = os.path.join(self.kindo_settings_path, "hosts.ini")

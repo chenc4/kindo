@@ -6,7 +6,7 @@ try:
 except:
     from urllib.parse import urlparse
 import simplejson
-from kindo.commands.command import Command
+from kindo.modules.run.command import Command
 from kindo.utils.functions import download_with_progressbar, get_files_info, get_md5, get_content_parts
 
 
