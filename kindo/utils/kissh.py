@@ -223,15 +223,3 @@ class KiSSHClient:
         )
 
         return 'export {} && {}'.format(exports, command)
-
-
-if __name__ == "__main__":
-    client = KiSSHClient("172.16.79.22", 12302, "root", "iflytek!@#2014")
-    print(client.execute("echo 123 && pwd", "/usr/local"))
-    client.mkdir("/test", True)
-    print(client.isdir("/test"))
-    print(client.exists("/test"))
-    print(client.isdir("/test/1"))
-    print(client.islink("/test"))
-    print(client.put("D:/1 2", "/test/"))
-    print(client.get("/test/", "D:/text"))
