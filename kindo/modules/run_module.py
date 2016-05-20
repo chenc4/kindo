@@ -2,6 +2,7 @@
 #-*- coding: utf-8 -*-
 
 import os
+import sys
 import getpass
 import traceback
 import zipfile
@@ -49,7 +50,7 @@ class RunModule(KindoCore):
                 password = getpass.getpass("please input password: ")
             self.activate_hosts.append({
                 "host": host,
-                "port": port,
+                "port": int(port),
                 "username": username,
                 "password": password
             })
@@ -59,7 +60,7 @@ class RunModule(KindoCore):
                 host, port, username = hostparse(k)
                 self.activate_hosts.append({
                     "host": host,
-                    "port": port,
+                    "port": int(port),
                     "username": username,
                     "password": v
                 })
@@ -98,7 +99,7 @@ class RunModule(KindoCore):
 
         processes = 10 if len(self.activate_hosts) > 10 else len(self.activate_hosts)
         pool = Pool(processes=processes)
-        pool.apply_async(self.execute, run_infos)
+        pool.map(self.execute, run_infos)
         pool.close()
         pool.join()
 
@@ -338,7 +339,10 @@ class RunModule(KindoCore):
                 raise Exception("unpackage failed")
 
             with open(ki_length_cache_file, "wb") as fs:
-                fs.write(str(ki_length))
+                length = str(ki_length)
+                if sys.version_info[0] > 2:
+                    length = length.encode("utf-8")
+                fs.write(length)
         return ki_unpackage_folder
 
     def get_image_path(self, section):

@@ -61,7 +61,7 @@ class Kindo:
             self.show_help()
             return
 
-        command = self.argv[1].lower()
+        command = self.options[1].lower()
         if command not in self.core_commands:
             ext = os.path.splitext(command)[1].lower()
             if ext not in [".kic", ".ki"]:

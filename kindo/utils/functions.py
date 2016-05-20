@@ -29,6 +29,9 @@ def download_with_progressbar(url, target):
 
 
 def get_md5(value):
+    if sys.version_info[0] > 2:
+        value = value.encode("utf-8")
+
     hash = hashlib.md5()
     hash.update(value)
     return hash.hexdigest()
