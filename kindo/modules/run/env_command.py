@@ -34,7 +34,7 @@ class EnvCommand(Command):
             "files": []
         }
 
-    def run(self, command, filesdir, imagesdir, position, envs, ki_path=None):
+    def run(self, ssh_client, command, filesdir, imagesdir, cd, envs, ki_path=None):
         # old kic didn't support that the command type is list
         if isinstance(command["args"], list):
             for c in command["args"]:
@@ -42,7 +42,7 @@ class EnvCommand(Command):
         elif isinstance(command["args"], dict):
             envs[command["args"]["key"]] = command["args"]["value"]
 
-        return position, envs
+        return cd, envs
 
     def _parse_env_value(self, content):
         has_backslashes = True if "\ " in content else False
@@ -92,7 +92,3 @@ class EnvCommand(Command):
                 )
                 last_key = None
         return envs
-
-
-
-

@@ -25,14 +25,14 @@ class PullModule(KindoCore):
                 self.logger.error(res)
                 return
 
-            if not self.add_image_info(res, self.download_package(res)):
+            if not self.add_image_info(res, self.download_image(res)):
                 raise Exception("pull failed")
 
         except Exception as e:
             self.logger.debug(traceback.format_exc())
             self.logger.error(e)
 
-    def download_package(self, image_info):
+    def download_image(self, image_info):
         url = image_info["url"]
         name = image_info["name"]
 

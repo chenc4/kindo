@@ -8,10 +8,8 @@ try:
 except:
     from urllib.parse import urlparse
 
-
 from kindo.commands.command import Command
 from kindo.utils.functions import get_files_info, get_content_parts
-from kindo.utils.kissh import KiSSHClient
 
 
 class AddCommand(Command):
@@ -117,9 +115,9 @@ class AddCommand(Command):
             "files": files
         }
 
-    def run(self, command, filesdir, imagesdir, position, envs, ki_path=None):
+    def run(self, ssh_client, command, filesdir, imagesdir, cd, envs, ki_path=None):
         if not command["args"]:
-            return position, envs
+            return cd, envs
 
         args = []
         if isinstance(command["args"], dict):
@@ -132,9 +130,5 @@ class AddCommand(Command):
             if not os.path.isfile(src):
                 raise Exception("{0} not found".format(src))
 
-            with cd(position):
-                with shell_env(**envs):
-                    if not self.upload(src, arg["to"]):
-                        raise Exception("{0} upload failed".format(src))
-                    return position, envs
-        return position, envs
+            ssh_client.put(src, arg["to"])
+        return cd, envs

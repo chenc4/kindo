@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
 import simplejson
-from kindo.utils.fabric.api import cd
-from kindo.utils.fabric.context_managers import shell_env
 from kindo.commands.command import Command
 
 
@@ -29,11 +27,11 @@ class UbuntuCommand(Command):
             "images": []
         }
 
-    def run(self, command, filesdir, imagesdir, position, envs, ki_path=None):
-        if "Ubuntu" in self.get_system_info()["system"]:
-            with cd(position):
-                with shell_env(**envs):
-                    self.execute(command["args"]["command"])
+    def run(self, ssh_client, command, filesdir, imagesdir, cd, envs, ki_path=None):
+        stdouts, stderrs = ssh_client.execute(command["args"]["command"], cd, envs)
+        for stdout in stdouts:
+            self.logger.info(stdout)
 
-            return position, envs
-        return position, envs
+        for stderr in stderrs:
+            self.logger.error(stderr)
+        return cd, envs

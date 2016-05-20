@@ -6,8 +6,6 @@ try:
 except:
     from urllib.parse import urlparse
 import simplejson
-from kindo.utils.fabric.api import cd
-from kindo.utils.fabric.context_managers import shell_env
 from kindo.commands.command import Command
 from kindo.utils.functions import download_with_progressbar, get_files_info, get_md5, get_content_parts
 
@@ -76,7 +74,7 @@ class AddOnRunCommand(Command):
             "files": []
         }
 
-    def run(self, command, filesdir, imagesdir, position, envs, ki_path=None):
+    def run(self, ssh_client, command, filesdir, imagesdir, position, envs, ki_path=None):
         args = []
 
         if isinstance(command["args"], dict):
@@ -155,9 +153,7 @@ class AddOnRunCommand(Command):
                             "to": arg["to"]
                         })
 
-        with cd(position):
-            with shell_env(**envs):
-                for file_info in files_info:
-                    if not self.upload(file_info["from"], file_info["to"]) and not ignore:
-                        raise Exception("{0} upload failed".format(f))
+        for file_info in files_info:
+            if not ssh_client.put(file_info["from"], file_info["to"]) and not ignore:
+                raise Exception("{0} upload failed".format(f))
         return position, envs

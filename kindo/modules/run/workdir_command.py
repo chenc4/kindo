@@ -17,5 +17,5 @@ class WorkdirCommand(Command):
             "variables": []
         }
 
-    def run(self, command, filesdir, imagesdir, position, envs, ki_path=None):
+    def run(self, ssh_client, command, filesdir, imagesdir, cd, envs, ki_path=None):
         return command["args"]["dir"], envs

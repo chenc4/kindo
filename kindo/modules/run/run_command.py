@@ -1,17 +1,15 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
 import simplejson
-from kindo.utils.fabric.api import cd
-from kindo.utils.fabric.context_managers import shell_env
 from kindo.commands.command import Command
 
 
-class CentOSCommand(Command):
+class RunCommand(Command):
     def __init__(self, startfolder, configs, options, logger):
         Command.__init__(self, startfolder, configs, options, logger)
 
     def parse(self, value, kic_path=None):
-        command_str = value[7:].strip()
+        command_str = value[4:].strip()
         if not command_str:
             return {}
 
@@ -20,20 +18,20 @@ class CentOSCommand(Command):
                 command_list = simplejson.loads(command_str.replace("\\", "\\\\"))
                 command_str = " ".join(command_list)
         except:
-            pass
+            raise Exception("invalid json array")
 
         return {
-            "action": "CENTOS",
+            "action": "RUN",
             "args": {"command": command_str},
             "files": [],
             "images": []
         }
 
-    def run(self, command, filesdir, imagesdir, position, envs, ki_path=None):
-        if "CentOS" in self.get_system_info()["system"]:
-            with cd(position):
-                with shell_env(**envs):
-                    self.execute(command["args"]["command"])
+    def run(self, ssh_client, command, filesdir, imagesdir, cd, envs, ki_path=None):
+        stdouts, stderrs = ssh_client.execute(command["args"]["command"], cd, envs)
+        for stdout in stdouts:
+            self.logger.info(stdout)
 
-            return position, envs
-        return position, envs
+        for stderr in stderrs:
+            self.logger.error(stderr)
+        return cd, envs

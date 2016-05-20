@@ -1,17 +1,15 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
 import simplejson
-from kindo.utils.fabric.api import cd
-from kindo.utils.fabric.context_managers import shell_env
 from kindo.commands.command import Command
 
 
-class RunCommand(Command):
+class CentOSCommand(Command):
     def __init__(self, startfolder, configs, options, logger):
         Command.__init__(self, startfolder, configs, options, logger)
 
     def parse(self, value, kic_path=None):
-        command_str = value[4:].strip()
+        command_str = value[7:].strip()
         if not command_str:
             return {}
 
@@ -20,17 +18,15 @@ class RunCommand(Command):
                 command_list = simplejson.loads(command_str.replace("\\", "\\\\"))
                 command_str = " ".join(command_list)
         except:
-            raise Exception("invalid json array")
+            pass
 
         return {
-            "action": "RUN",
+            "action": "CENTOS",
             "args": {"command": command_str},
             "files": [],
             "images": []
         }
 
-    def run(self, command, filesdir, imagesdir, position, envs, ki_path=None):
-        with cd(position):
-            with shell_env(**envs):
-                self.execute(command["args"]["command"])
+    def run(self, ssh_client, command, filesdir, imagesdir, position, envs, ki_path=None):
+        ssh_client.execute(command["args"]["command"], position, envs)
         return position, envs

@@ -223,3 +223,13 @@ class KiSSHClient:
         )
 
         return 'export {} && {}'.format(exports, command)
+
+    def __exit__(self, type, value, traceback):
+        try:
+            if self.ssh_client is not None:
+                self.ssh_client.close()
+
+            if self.sftp is not None:
+                self.sftp.close()
+        except:
+            pass
