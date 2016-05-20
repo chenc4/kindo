@@ -2,6 +2,7 @@
 #-*- coding: utf-8 -*-
 
 import os
+import getpass
 import traceback
 import zipfile
 import pickle
@@ -44,6 +45,8 @@ class RunModule(KindoCore):
         self.activate_hosts = []
         if host:
             host, port, username = hostparse(host)
+            while not password:
+                password = getpass.getpass("please input password: ")
             self.activate_hosts.append({
                 "host": host,
                 "port": port,
@@ -177,7 +180,7 @@ class RunModule(KindoCore):
 
             with KiSSHClient(
                 run_info["host_info"]["host"],
-                run_info["host_info"]["port"],
+                int(run_info["host_info"]["port"]),
                 run_info["host_info"]["username"],
                 run_info["host_info"]["password"],
             ) as ssh_client:
