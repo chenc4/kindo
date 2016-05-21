@@ -130,5 +130,7 @@ class AddCommand(Command):
             if not os.path.isfile(src):
                 raise Exception("{0} not found".format(src))
 
-            ssh_client.put(src, arg["to"])
+            files = ssh_client.put(src, arg["to"])
+            if len(files) == 0:
+                raise Exception("upload failed")
         return cd, envs

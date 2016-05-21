@@ -227,7 +227,8 @@ class BuildModule(KindoCore):
                 continue
 
             target = os.path.join(kic_build_folder, "images", image["name"])
-            download_with_progressbar(image["url"], target)
+            if not os.path.isfile(target):
+                shutil.copy(image["url"],  target)
 
             if not os.path.isfile(target):
                 raise Exception("failed to download {0}".format(image["name"]))

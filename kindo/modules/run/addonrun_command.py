@@ -74,7 +74,7 @@ class AddOnRunCommand(Command):
             "files": []
         }
 
-    def run(self, ssh_client, command, filesdir, imagesdir, position, envs, ki_path=None):
+    def run(self, ssh_client, command, filesdir, imagesdir, cd, envs, ki_path=None):
         args = []
 
         if isinstance(command["args"], dict):
@@ -109,10 +109,10 @@ class AddOnRunCommand(Command):
                 ki_folder = os.path.dirname(ki_path)
                 src = os.path.join(ki_folder, arg["from"])
 
-            ignore = True if self.configs.get("ignore", 1) == 1 else False
+            ignore = True if "ignore" in self.configs else False
             if not os.path.isfile(src) and not os.path.isdir(src):
                 if ignore:
-                    return position, envs
+                    return cd, envs
                 raise Exception("{0} not found".format(src))
 
             if os.path.isfile(src):
@@ -154,6 +154,6 @@ class AddOnRunCommand(Command):
                         })
 
         for file_info in files_info:
-            if not ssh_client.put(file_info["from"], file_info["to"]) and not ignore:
+            if len(ssh_client.put(file_info["from"], file_info["to"])) == 0 and not ignore:
                 raise Exception("{0} upload failed".format(f))
-        return position, envs
+        return cd, envs

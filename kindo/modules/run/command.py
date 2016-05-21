@@ -8,5 +8,4 @@ class Command(KindoCore):
     def __init__(self, startfolder, configs, options, logger):
         KindoCore.__init__(self, startfolder, configs, options, logger)
 
-        self._has_sudo = None
         self._system_info = None

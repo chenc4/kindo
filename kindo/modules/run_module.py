@@ -8,10 +8,11 @@ import traceback
 import zipfile
 import pickle
 import simplejson
-from multiprocessing import Pool
+from multiprocessing import Pool, Manager
 
 from kindo.kindo_core import KindoCore
 from kindo.utils.kissh import KiSSHClient
+from kindo.utils.logger import Logger
 from kindo.utils.config_parser import ConfigParser
 from kindo.utils.functions import download_with_progressbar, get_md5, hostparse
 from kindo.modules.run.add_command import AddCommand
@@ -25,6 +26,82 @@ from kindo.modules.run.centos_command import CentOSCommand
 from kindo.modules.run.addonrun_command import AddOnRunCommand
 from kindo.modules.run.env_command import EnvCommand
 from kindo.modules.run.maintainer_command import MaintainerCommand
+
+
+def execute(context):
+    image_run_infos = context["image_run_infos"]
+    startfolder = context["startfolder"]
+    configs = context["configs"]
+    options = context["options"]
+
+    logs_path = "/var/log/kindo" if os.path.isdir("/var/log") else os.path.join(startfolder, "logs")
+    is_debug = True if "debug" in configs else False
+
+    logger = Logger(logs_path, is_debug)
+
+    cd = "~"
+    envs = dict({}, **configs)
+
+    handlers = {
+        "from": FromCommand(startfolder, configs, options, logger),
+        "add": AddCommand(startfolder, configs, options, logger),
+        "check": CheckCommand(startfolder, configs, options, logger),
+        "run": RunCommand(startfolder, configs, options, logger),
+        "workdir": WorkdirCommand(startfolder, configs, options, logger),
+        "download": DownloadCommand(startfolder, configs, options, logger),
+        "ubuntu": UbuntuCommand(startfolder, configs, options, logger),
+        "centos": CentOSCommand(startfolder, configs, options, logger),
+        "addonrun": AddOnRunCommand(startfolder, configs, options, logger),
+        "env": EnvCommand(startfolder, configs, options, logger),
+        "maintainer": MaintainerCommand(startfolder, configs, options, logger)
+    }
+
+    try:
+        with KiSSHClient(
+            context["host_info"]["host"],
+            context["host_info"]["port"],
+            context["host_info"]["username"],
+            context["host_info"]["password"],
+        ) as ssh_client:
+            try:
+                for image_run_info in image_run_infos:
+                    ki_files_path = image_run_info["ki_files_path"]
+                    ki_images_path = image_run_info["ki_images_path"]
+                    ki_path = image_run_info["ki_path"]
+                    files = image_run_info["files"]
+
+                    commands = image_run_info["commands"]
+
+                    for command in commands:
+                        if "action" not in command:
+                            raise Exception("command invalid")
+
+                        action = command["action"].lower()
+                        if action not in handlers:
+                            raise Exception("{0} not supported".format(action))
+
+                        cd, _envs = handlers[action].run(
+                            ssh_client,
+                            command,
+                            ki_files_path,
+                            ki_images_path,
+                            cd,
+                            envs,
+                            ki_path
+                        )
+                        envs = dict(_envs, **envs)
+            except Exception as e:
+                logger.debug(traceback.format_exc())
+                logger.error(e)
+            finally:
+                for f in files:
+                    try:
+                        ssh_client.execute("rm -f {}".format(f))
+                    except:
+                        pass
+    except Exception as e:
+        logger.debug(traceback.format_exc())
+        logger.error(e)
 
 
 class RunModule(KindoCore):
@@ -44,17 +121,6 @@ class RunModule(KindoCore):
             self.logger.warn("GROUP NOT FOUND")
 
         self.activate_hosts = []
-        if host:
-            host, port, username = hostparse(host)
-            while not password:
-                password = getpass.getpass("please input password: ")
-            self.activate_hosts.append({
-                "host": host,
-                "port": int(port),
-                "username": username,
-                "password": password
-            })
-
         if group in hosts:
             for k, v in hosts[group].items():
                 host, port, username = hostparse(k)
@@ -65,21 +131,16 @@ class RunModule(KindoCore):
                     "password": v
                 })
 
-        self.ki_paths = self.get_ki_paths()
+        if host:
+            host, port, username = hostparse(host)
+            self.activate_hosts.append({
+                "host": host,
+                "port": int(port),
+                "username": username,
+                "password": password
+            })
 
-        self.handlers = {
-            "from": FromCommand(startfolder, configs, options, logger),
-            "add": AddCommand(startfolder, configs, options, logger),
-            "check": CheckCommand(startfolder, configs, options, logger),
-            "run": RunCommand(startfolder, configs, options, logger),
-            "workdir": WorkdirCommand(startfolder, configs, options, logger),
-            "download": DownloadCommand(startfolder, configs, options, logger),
-            "ubuntu": UbuntuCommand(startfolder, configs, options, logger),
-            "centos": CentOSCommand(startfolder, configs, options, logger),
-            "addonrun": AddOnRunCommand(startfolder, configs, options, logger),
-            "env": EnvCommand(startfolder, configs, options, logger),
-            "maintainer": MaintainerCommand(startfolder, configs, options, logger)
-        }
+        self.ki_paths = self.get_ki_paths()
 
     def start(self):
         if len(self.activate_hosts) == 0:
@@ -90,16 +151,22 @@ class RunModule(KindoCore):
             self.logger.error("image not found")
             return
 
-        run_infos = []
+        execute_infos = []
         for ki_path in self.ki_paths:
             image_run_infos = self.get_image_run_infos(ki_path)
 
             for host_info in self.activate_hosts:
-                run_infos.append({"host_info": host_info, "image_run_infos": image_run_infos})
+                execute_infos.append({
+                    "host_info": host_info, 
+                    "image_run_infos": image_run_infos, 
+                    "startfolder": self.startfolder,
+                    "configs": self.configs,
+                    "options": self.options
+                })
 
         processes = 10 if len(self.activate_hosts) > 10 else len(self.activate_hosts)
         pool = Pool(processes=processes)
-        pool.map(self.execute, run_infos)
+        pool.map(execute, execute_infos)
         pool.close()
         pool.join()
 
@@ -173,58 +240,6 @@ class RunModule(KindoCore):
         if not os.path.isdir(ki_files_path):
             ki_files_path = os.path.join(ki_unpackage_folder, "deps")
         return ki_confs_path, ki_files_path, ki_images_path, ki_manifest_path
-
-    def execute(self, run_info):
-        try:
-            cd = "~"
-            envs = self.configs if self.configs is not None else {}
-
-            with KiSSHClient(
-                run_info["host_info"]["host"],
-                int(run_info["host_info"]["port"]),
-                run_info["host_info"]["username"],
-                run_info["host_info"]["password"],
-            ) as ssh_client:
-                image_run_infos = run_info["image_run_infos"]
-                ki_files_path = run_info["ki_files_path"]
-                ki_images_path = run_info["ki_images_path"]
-                ki_path = run_info["ki_path"]
-                files = run_info["files"]
-
-                try:
-                    for image_run_info in image_run_infos:
-                        commands = image_run_info["commands"]
-
-                        for command in commands:
-                            if "action" not in command:
-                                raise Exception("command invalid")
-
-                            action = command["action"].lower()
-                            if action not in self.handlers:
-                                raise Exception("{0} not supported".format(action))
-
-                            cd, _envs = self.handlers[action].run(
-                                ssh_client,
-                                command,
-                                ki_files_path,
-                                ki_images_path,
-                                cd,
-                                envs,
-                                ki_path
-                            )
-                            envs = dict(_envs, **envs)
-                except Exception as e:
-                    self.logger.debug(traceback.format_exc())
-                    self.logger.error(e)
-                finally:
-                    for f in files:
-                        try:
-                            ssh_client.execute("rm -f {}".format(f))
-                        except:
-                            pass
-        except Exception as e:
-            self.logger.debug(traceback.format_exc())
-            self.logger.error(e)
 
     def is_compatible_and_valid_image(self, manifest):
         if "min_version" in manifest and manifest["min_version"] > self.kindo_version:

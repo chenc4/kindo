@@ -21,9 +21,17 @@ class KiSSHClient:
 
         self.sudo_prompt = "sudo password:"
         self.shell = "/bin/bash -l -c"
+        self.has_sudo = None
 
     def execute(self, command, cd=None, envs=None, sudo=False, user=None, group=None, shell=None):
         try:
+            if cd is not None and cd[-1] == "/":
+                cd = cd[:-1]
+
+            if cd is not None and cd.startswith("~"):
+                home = self.sftp.normalize('.')
+                cd = cd.replace('~', home, 1)
+
             command = self._cd_wrap(command, cd)
             command = self._env_wrap(command, envs)
             command = self._shell_wrap(command)
@@ -32,18 +40,36 @@ class KiSSHClient:
             # if sudo, must use pty. "sudo: sorry, you must have a tty to run sudo"
             stdin, stdout, stderr = self.ssh_client.exec_command(command, get_pty=True if sudo else False)
             return [line.strip() for line in stdout.readlines()], [line.strip() for line in stderr.readlines()]
-        except:
-            return [], []
+        except Exception as e:
+            return [], [str(e)]
 
     def sudo(self, command, cd=None, envs=None):
-        return self.execute(command, cd, envs, True)
+        if self.has_sudo is None:
+            stdouts, stderrs = self.execute("sudo echo test", sudo=True)
+            self.has_sudo = True if len(stdouts) > 0  and stdouts[0] == "test" else False
 
-    def put(self, local, remote):
+        return self.execute(command, cd, envs, self.has_sudo)
+
+    def put(self, local, remote, cd=None):
         files = []
 
         try:
+            home = self.sftp.normalize('.')
+
             if remote[-1] == "/":
                 remote = remote[:-1]
+
+            if remote.startswith('~'):
+                remote = remote.replace('~', home, 1)
+
+            if cd is not None and cd[-1] == "/":
+                cd = cd[:-1]
+
+            if cd is not None and cd.startswith("~"):
+                cd = cd.replace('~', home, 1)
+
+            if not os.path.isabs(remote) and cd is not None:
+                remote = '{}/{}'.format(cd, remote)
 
             if os.path.isdir(local):
                 if self.exists(remote) and not self.isdir(remote):
@@ -71,13 +97,18 @@ class KiSSHClient:
 
                         files.append(src)
             elif os.path.isfile(local):
-                self.sftp.put(local, remote)
-                files.append(remote)
+                remote_folder = os.path.dirname(remote)
+                if not self.exists(remote_folder):
+                    self.mkdir(remote_folder)
+
+                if self.isdir(remote_folder):
+                    self.sftp.put(local, remote)
+                    files.append(remote)
         except:
             pass
         return files
 
-    def get(self, remote, local, overwrite=True, topdown=True):
+    def get(self, remote, local, overwrite=True, topdown=True, cd=None):
         files = []
         try:
             if remote is None or local is None:
@@ -86,9 +117,24 @@ class KiSSHClient:
             if not remote or not local:
                 return files
 
+            home = self.sftp.normalize('.')
+
+            if remote.startswith('~'):
+                remote = remote.replace('~', home, 1)
+
+            if cd is not None and cd[-1] == "/":
+                cd = cd[:-1]
+
+            if cd is not None and cd.startswith("~"):
+                cd = cd.replace('~', home, 1)
+
+            if not os.path.isabs(remote) and cd is not None:
+                remote = '{}/{}'.format(cd, remote)
+
             remote_is_dir = self.isdir(remote)
             if os.path.isdir(local) and not remote_is_dir:
-                return files
+                folder, filename = os.path.split(remote)
+                local = os.path.join(local, filename)
 
             if not remote_is_dir:
                 if not overwrite and os.path.isfile(local):
@@ -123,11 +169,11 @@ class KiSSHClient:
                     if not os.path.isdir(target_folder):
                         os.makedirs(target_folder)
 
-                    self.sftp.get(src, target)
-                    files.append(target)
+                    if os.path.isdir(target_folder):
+                        self.sftp.get(src, target)
+                        files.append(target)
         except:
             pass
-
         return files
 
     def shell(self):
@@ -145,8 +191,22 @@ class KiSSHClient:
         except IOError:
             return False
 
-    def exists(self, path):
+    def exists(self, path, cd=None):
         try:
+            home = self.sftp.normalize('.')
+
+            if path.startswith('~'):
+                path = path.replace('~', home, 1)
+
+            if cd is not None and cd[-1] == "/":
+                cd = cd[:-1]
+
+            if cd is not None and cd.startswith("~"):
+                cd = cd.replace('~', home, 1)
+
+            if not os.path.isabs(path) and cd is not None:
+                path = '{}/{}'.format(cd, path)
+
             self.sftp.lstat(path).st_mode
         except IOError:
             return False
@@ -206,7 +266,7 @@ class KiSSHClient:
         if user is not None:
             prefix = '-u "{}" {}'.format(user, prefix)
 
-        return 'sudo -S -p "{}" {}'.format(self.sudo_prompt, command)
+        return 'sudo -S -p "{}" {} {}'.format(self.sudo_prompt, prefix, command)
 
     def _cd_wrap(self, command, cd=None):
         if cd is None:
