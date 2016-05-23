@@ -87,7 +87,7 @@ class KindoCore():
             else:
                 self.kindo_settings_path = settings_path
 
-        self.configs = dict(self.get_kindo_setting(), **self.configs)
+        self.configs = dict(self.get_kindo_setting()["default"], **self.configs)
 
     def get_kindo_setting(self, key=None):
         ini_path = os.path.join(self.kindo_settings_path, "kindo.ini")

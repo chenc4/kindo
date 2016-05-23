@@ -5,6 +5,7 @@ import os
 import re
 import time
 import uuid
+import codecs
 import traceback
 try:
     import urlparse
@@ -310,7 +311,7 @@ class BuildModule(KindoCore):
         contents = []
 
         line = 0
-        with open(kic_path, "r") as fs:
+        with codecs.open(kic_path, "r", "utf-8") as fs:
             last_content = ""
             for content in fs:
                 line += 1

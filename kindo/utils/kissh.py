@@ -2,16 +2,20 @@
 #-*- coding: utf-8 -*-
 
 import os
+import sys
 import stat
 import paramiko
 
+win32 = (sys.platform == 'win32')
+
 
 class KiSSHClient:
-    def __init__(self, hostname, port=22, username=None, key=None):
+    def __init__(self, hostname, port=22, username=None, key=None, logger=None):
         self.hostname = hostname
         self.port = port
         self.username = username
         self.key = key
+        self.logger = logger
 
         self.ssh_client = paramiko.SSHClient()
         self.ssh_client.load_system_host_keys()
@@ -23,7 +27,7 @@ class KiSSHClient:
         self.shell = "/bin/bash -l -c"
         self.has_sudo = None
 
-    def execute(self, command, cd=None, envs=None, sudo=False, user=None, group=None, shell=None):
+    def execute(self, command, cd=None, envs=None, sudo=False, user=None, group=None, shell=False):
         try:
             if cd is not None and cd[-1] == "/":
                 cd = cd[:-1]
@@ -38,7 +42,7 @@ class KiSSHClient:
             if sudo:
                 command = self._sudo_wrap(command, self.username if user is None else user, group)
             # if sudo, must use pty. "sudo: sorry, you must have a tty to run sudo"
-            stdin, stdout, stderr = self.ssh_client.exec_command(command, get_pty=True if sudo else False)
+            stdin, stdout, stderr = self.ssh_client.exec_command(command, get_pty=sudo)
             return [line.strip() for line in stdout.readlines()], [line.strip() for line in stderr.readlines()]
         except Exception as e:
             return [], [str(e)]
@@ -46,7 +50,7 @@ class KiSSHClient:
     def sudo(self, command, cd=None, envs=None):
         if self.has_sudo is None:
             stdouts, stderrs = self.execute("sudo echo test", sudo=True)
-            self.has_sudo = True if len(stdouts) > 0  and stdouts[0] == "test" else False
+            self.has_sudo = True if len(stdouts) > 0 and stdouts[0] == "test" else False
 
         return self.execute(command, cd, envs, self.has_sudo)
 
@@ -104,8 +108,8 @@ class KiSSHClient:
                 if self.isdir(remote_folder):
                     self.sftp.put(local, remote)
                     files.append(remote)
-        except:
-            pass
+        except Exception as e:
+            print(e)
         return files
 
     def get(self, remote, local, overwrite=True, topdown=True, cd=None):
@@ -175,9 +179,6 @@ class KiSSHClient:
         except:
             pass
         return files
-
-    def shell(self):
-        pass
 
     def isdir(self, path):
         try:
@@ -277,12 +278,13 @@ class KiSSHClient:
         if envs is None:
             return command
 
-        exports = ' '.join(
-            '%s="%s"' % (k, v if k == 'PATH' else self._shell_escape(v))
-            for k, v in list(envs.items())
-        )
+        exports = []
+        for k, v in envs.items():
+            if k != 'PATH':
+                v = self._shell_escape(v)
+            exports.append('%s="%s"' % (k, v))
 
-        return 'export {} && {}'.format(exports, command)
+        return 'export {} && {}'.format(' '.join(exports), command)
 
     def __enter__(self):
         return self

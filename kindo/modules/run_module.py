@@ -3,12 +3,11 @@
 
 import os
 import sys
-import getpass
 import traceback
 import zipfile
 import pickle
 import simplejson
-from multiprocessing import Pool, Manager
+from multiprocessing import Pool
 
 from kindo.kindo_core import KindoCore
 from kindo.utils.kissh import KiSSHClient
@@ -62,6 +61,7 @@ def execute(context):
             context["host_info"]["port"],
             context["host_info"]["username"],
             context["host_info"]["password"],
+            logger
         ) as ssh_client:
             try:
                 for image_run_info in image_run_infos:
@@ -99,6 +99,8 @@ def execute(context):
                         ssh_client.execute("rm -f {}".format(f))
                     except:
                         pass
+    except KeyboardInterrupt:
+        pass
     except Exception as e:
         logger.debug(traceback.format_exc())
         logger.error(e)
@@ -112,8 +114,8 @@ class RunModule(KindoCore):
         password = self.configs.get("p", self.configs.get("password", "")).strip()
         group = self.configs.get("g", self.configs.get("group", "")).strip()
 
-        host = "%s:22" % host if host is not None and host.rfind(":") == -1 else host
-        host = "root@%s" % host if host is not None and host.rfind("@") == -1 else host
+        host = "%s:22" % host if host and host.rfind(":") == -1 else host
+        host = "root@%s" % host if host and host.rfind("@") == -1 else host
 
         hosts = self.get_hosts_setting()
 
@@ -124,21 +126,23 @@ class RunModule(KindoCore):
         if group in hosts:
             for k, v in hosts[group].items():
                 host, port, username = hostparse(k)
+                if host and port and username:
+                    self.activate_hosts.append({
+                        "host": host,
+                        "port": int(port),
+                        "username": username,
+                        "password": v
+                    })
+
+        if host:
+            host, port, username = hostparse(host)
+            if host and port and username:
                 self.activate_hosts.append({
                     "host": host,
                     "port": int(port),
                     "username": username,
-                    "password": v
+                    "password": password
                 })
-
-        if host:
-            host, port, username = hostparse(host)
-            self.activate_hosts.append({
-                "host": host,
-                "port": int(port),
-                "username": username,
-                "password": password
-            })
 
         self.ki_paths = self.get_ki_paths()
 
@@ -157,8 +161,8 @@ class RunModule(KindoCore):
 
             for host_info in self.activate_hosts:
                 execute_infos.append({
-                    "host_info": host_info, 
-                    "image_run_infos": image_run_infos, 
+                    "host_info": host_info,
+                    "image_run_infos": image_run_infos,
                     "startfolder": self.startfolder,
                     "configs": self.configs,
                     "options": self.options

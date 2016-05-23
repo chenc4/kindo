@@ -109,12 +109,6 @@ class AddOnRunCommand(Command):
                 ki_folder = os.path.dirname(ki_path)
                 src = os.path.join(ki_folder, arg["from"])
 
-            ignore = True if "ignore" in self.configs else False
-            if not os.path.isfile(src) and not os.path.isdir(src):
-                if ignore:
-                    return cd, envs
-                raise Exception("{0} not found".format(src))
-
             if os.path.isfile(src):
                 if arg["to"][-1] == "/":
                     filedir, filename = os.path.split(src)
@@ -154,6 +148,6 @@ class AddOnRunCommand(Command):
                         })
 
         for file_info in files_info:
-            if len(ssh_client.put(file_info["from"], file_info["to"])) == 0 and not ignore:
+            if len(ssh_client.put(file_info["from"], file_info["to"])) == 0:
                 raise Exception("{0} upload failed".format(f))
         return cd, envs
