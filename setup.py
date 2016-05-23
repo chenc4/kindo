@@ -44,11 +44,11 @@ setup(
     install_requires=["Jinja2", "paramiko", "requests", "simplejson", "pycrypto"],
 
     name='kindo',
-    version="1.0.0",
+    version="1.1.0",
 
     description="A simple tool for packaging and deploying your code to linux with just a command. it can be used on windows and linux",
     long_description=long_description,
-    keywords='kindo, deploy, package, fabric, DevOps',
+    keywords='kindo, deploy, system, DevOps',
 
     author='shenghe',
     author_email='sheng.he.china@gmail.com',
