@@ -28,15 +28,12 @@ class CentOSCommand(Command):
         }
 
     def run(self, ssh_client, command, filesdir, imagesdir, cd, envs, ki_path=None):
-        stdouts, stderrs = ssh_client.sudo("head -n 1 /etc/issue")
-        if len(stderrs) > 0 or not stdouts:
+        stdouts, stderrs, status = ssh_client.sudo("head -n 1 /etc/issue")
+        if status > 0:
             raise Exception(" ".join(stderrs))
 
         if "CentOS" in stdouts[0]:
-            stdouts, stderrs = ssh_client.sudo(command["args"]["command"], cd, envs)
-            if len(stderrs) > 0:
+            stdouts, stderrs, status = ssh_client.sudo(command["args"]["command"], cd, envs)
+            if status > 0:
                 raise Exception(" ".join(stderrs))
-
-            for stdout in stdouts:
-                self.logger.info(stdout)
         return cd, envs

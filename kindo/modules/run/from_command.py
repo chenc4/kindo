@@ -49,4 +49,3 @@ class FromCommand(Command):
 
     def run(self, ssh_client, command, filesdir, imagesdir, cd, envs, ki_path=None):
         return cd, envs
- 

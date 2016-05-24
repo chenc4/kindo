@@ -60,8 +60,7 @@ def execute(context):
             context["host_info"]["host"],
             context["host_info"]["port"],
             context["host_info"]["username"],
-            context["host_info"]["password"],
-            logger
+            context["host_info"]["password"]
         ) as ssh_client:
             try:
                 for image_run_info in image_run_infos:

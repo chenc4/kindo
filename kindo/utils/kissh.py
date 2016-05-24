@@ -4,18 +4,133 @@
 import os
 import sys
 import stat
+import time
+import traceback
+import threading
 import paramiko
+from select import select
 
 win32 = (sys.platform == 'win32')
 
+if win32:
+    import msvcrt
+    import ctypes
+
+    STD_OUTPUT_HANDLE = -11
+    std_out_handle = ctypes.windll.kernel32.GetStdHandle(STD_OUTPUT_HANDLE)
+
+    def set_color(color, handle=std_out_handle):
+        bool = ctypes.windll.kernel32.SetConsoleTextAttribute(handle, color)
+        return bool
+else:
+    def std_out_handle():
+        pass
+
+    def set_color(color, handle=std_out_handle):
+        pass
+
+FOREGROUND_WHITE = 0x0007
+FOREGROUND_BLUE = 0x01  # text color contains blue.
+FOREGROUND_GREEN = 0x02  # text color contains green.
+FOREGROUND_RED = 0x04  # text color contains red.
+FOREGROUND_YELLOW = FOREGROUND_RED | FOREGROUND_GREEN
+
+
+def output_loop(*args, **kwargs):
+    OutputLooper(*args, **kwargs).loop()
+
+
+def input_loop(chan, using_pty):
+    while not chan.exit_status_ready():
+        if win32:
+            have_char = msvcrt.kbhit()
+        else:
+            r, w, x = select([sys.stdin], [], [], 0.0)
+            have_char = (r and r[0] == sys.stdin)
+        if have_char and chan.input_enabled:
+            # Send all local stdin to remote end's stdin
+            byte = msvcrt.getch() if win32 else sys.stdin.read(1)
+            chan.sendall(byte)
+            # Optionally echo locally, if needed.
+            if not using_pty:
+                # Not using fastprint() here -- it prints as 'user'
+                # output level, don't want it to be accidentally hidden
+                sys.stdout.write(byte)
+                sys.stdout.flush()
+        time.sleep(paramiko.io_sleep)
+
+
+class OutputLooper(object):
+    def __init__(self, chan, attr, stream, capture, timeout, printing=True):
+        self.chan = chan
+        self.stream = stream
+        self.capture = capture
+        self.timeout = timeout
+        self.stdout_error = True if attr == "recv_stderr" else False
+        self.read_func = getattr(chan, attr)
+
+        self.printing = printing
+        self.read_size = 10
+        self.write_buffer = ""
+
+    def _flush(self, text=None):
+        if text is None:
+            self.capture.extend(self.write_buffer.split("\n")[:-1])
+            return
+
+        if text:
+            if self.stdout_error:
+                set_color(FOREGROUND_RED)
+            self.stream.write(text)
+
+            if text[-1] in ["\n", "\r", ".", u"。", " "]:
+                self.stream.flush()
+            if self.stdout_error:
+                set_color(FOREGROUND_WHITE)
+            self.write_buffer += text.strip("\r")
+
+    def loop(self):
+        try:
+            while True:
+                bytelist = self.read_func(self.read_size)
+                if not bytelist:
+                    self._flush()
+                    break
+
+                self._flush(bytelist.decode("utf-8"))
+        except:
+            print(traceback.format_exc())
+
+
+class ThreadHandler(object):
+    def __init__(self, name, callable, *args, **kwargs):
+        # Set up exception handling
+        self.exception = None
+
+        def wrapper(*args, **kwargs):
+            try:
+                callable(*args, **kwargs)
+            except BaseException:
+                self.exception = sys.exc_info()
+        # Kick off thread
+        thread = threading.Thread(None, wrapper, name, args, kwargs)
+        thread.setDaemon(True)
+        thread.start()
+        # Make thread available to instantiator
+        self.thread = thread
+
+    def raise_if_needed(self):
+        if self.exception:
+            e = self.exception
+            raise Exception(e)
+
 
 class KiSSHClient:
-    def __init__(self, hostname, port=22, username=None, key=None, logger=None):
+    def __init__(self, hostname, port=22, username=None, key=None):
         self.hostname = hostname
         self.port = port
         self.username = username
         self.key = key
-        self.logger = logger
 
         self.ssh_client = paramiko.SSHClient()
         self.ssh_client.load_system_host_keys()
@@ -24,8 +139,9 @@ class KiSSHClient:
         self.sftp = self.ssh_client.open_sftp()
 
         self.sudo_prompt = "sudo password:"
-        self.shell = "/bin/bash -l -c"
+        self._shell = "/bin/bash -l -c"
         self.has_sudo = None
+        self.execute_timeout = 60 * 3
 
     def execute(self, command, cd=None, envs=None, sudo=False, user=None, group=None, shell=False):
         try:
@@ -42,15 +158,14 @@ class KiSSHClient:
             if sudo:
                 command = self._sudo_wrap(command, self.username if user is None else user, group)
             # if sudo, must use pty. "sudo: sorry, you must have a tty to run sudo"
-            stdin, stdout, stderr = self.ssh_client.exec_command(command, get_pty=sudo)
-            return [line.strip() for line in stdout.readlines()], [line.strip() for line in stderr.readlines()]
+            return self.exec_command(command, get_pty=sudo)
         except Exception as e:
             return [], [str(e)]
 
     def sudo(self, command, cd=None, envs=None):
         if self.has_sudo is None:
-            stdouts, stderrs = self.execute("sudo echo test", sudo=True)
-            self.has_sudo = True if len(stdouts) > 0 and stdouts[0] == "test" else False
+            stdouts, stderrs, status = self.execute("sudo echo test", sudo=True)
+            self.has_sudo = True if status == 0 else False
 
         return self.execute(command, cd, envs, self.has_sudo)
 
@@ -250,7 +365,7 @@ class KiSSHClient:
     def _shell_wrap(self, command, shell=None):
         command = self._shell_escape(command)
 
-        return '{} "{}"'.format(self.shell if shell is None else shell, command)
+        return '{} "{}"'.format(self._shell if shell is None else shell, command)
 
     def _sudo_wrap(self, command, user, group=None):
         if user is not None and str(user).isdigit():
@@ -298,3 +413,40 @@ class KiSSHClient:
                 self.sftp.close()
         except:
             pass
+
+    def exec_command(self, command, bufsize=-1, timeout=None, get_pty=False):
+        with self.ssh_client._transport.open_session() as channel:
+            if get_pty:
+                channel.get_pty()
+            channel.settimeout(timeout)
+            channel.exec_command(command + "\n")
+
+            stdout_buf = []
+            stderr_buf = []
+            workers = (
+                ThreadHandler('out', output_loop, channel, "recv", capture=stdout_buf, stream=sys.stdout, timeout=timeout),
+                ThreadHandler('err', output_loop, channel, "recv_stderr", capture=stderr_buf, stream=sys.stderr, timeout=timeout),
+                ThreadHandler('in', input_loop, channel, False)
+            )
+
+            while True:
+                if channel.exit_status_ready():
+                    break
+
+                for worker in workers:
+                    worker.raise_if_needed()
+
+                try:
+                    time.sleep(paramiko.io_sleep)
+                except KeyboardInterrupt:
+                    channel.send('\x03')
+
+            # Obtain exit code of remote program now that we're done.
+            status = channel.recv_exit_status()
+
+            # Wait for threads to exit so we aren't left with stale threads
+            for worker in workers:
+                worker.thread.join()
+                worker.raise_if_needed()
+
+            return stdout_buf, stderr_buf, status

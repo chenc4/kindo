@@ -31,8 +31,8 @@ class CheckCommand(Command):
 
     def run(self, ssh_client, command, filesdir, imagesdir, cd, envs, ki_path=None):
         for port in command["args"]["ports"]:
-            stdouts, stderrs = ssh_client.sudo("netstat -an | grep %s" % port, cd, envs)
-            if len(stderrs) > 0:
+            stdouts, stderrs, status = ssh_client.sudo("netstat -an | grep %s" % port, cd, envs)
+            if status > 0:
                 raise Exception("CHECK ERROR: %s not found" % port)
 
         for f in command["args"]["files"]:
