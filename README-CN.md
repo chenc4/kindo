@@ -20,6 +20,10 @@ Kindo是采用Python开发，基于SSH协议的轻量级自动化部署工具，
 
 你可以从[Releases](https://github.com/shenghe/kindo/releases)下载二进制文件或安装包，Kindo目前支持在Windows和Linux上通过二进制安装。
 
+## 编译
+
+kindo依赖python版本2.7.11以上
+
 ### Windows
 
 下载Setup安装包，点击下一步即可。安装完成，自动注册kindo命令到环境变量。
@@ -42,7 +46,7 @@ source /etc/profile
 
 ```shell
 wget https://github.com/shenghe/kindo/archive/master.tar.gz
-tar -xzvf master.tar.gz 
+tar -xzvf master.tar.gz
 cd master/kindo && python setup.py install
 ```
 
