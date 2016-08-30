@@ -337,7 +337,7 @@ class KiSSHClient:
             # earlier import-*.
             names = self.ftp.listdir(top)
         except Exception:
-            return []
+            yield top, [], []
 
         dirs, nondirs = [], []
         for name in names:
