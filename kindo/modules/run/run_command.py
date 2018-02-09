@@ -28,7 +28,8 @@ class RunCommand(Command):
         }
 
     def run(self, ssh_client, command, filesdir, imagesdir, cd, envs, ki_path=None):
-        stdouts, stderrs, status = ssh_client.sudo(command["args"]["command"], cd, envs)
+        #stdouts, stderrs, status = ssh_client.sudo(command["args"]["command"], cd, envs)
+        stdouts, stderrs, status = ssh_client.execute(command["args"]["command"], cd, envs)
         if status > 0:
             raise Exception(" ".join(stderrs))
         return cd, envs

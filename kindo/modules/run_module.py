@@ -33,8 +33,9 @@ def execute(context):
     configs = context["configs"]
     options = context["options"]
 
-    logs_path = "/var/log/kindo" if os.path.isdir("/var/log") else os.path.join(startfolder, "logs")
-    is_debug = True if "debug" in configs else False
+    #logs_path = "/var/log/kindo" if os.path.isdir("/var/log") else os.path.join(startfolder, "logs")
+    logs_path = os.path.join(startfolder, "logs")
+    is_debug = True if "d" in configs else False
 
     logger = Logger(logs_path, is_debug)
 
@@ -93,11 +94,12 @@ def execute(context):
                 logger.debug(traceback.format_exc())
                 logger.error(e)
             finally:
-                for f in files:
-                    try:
-                        ssh_client.execute("rm -f {}".format(f))
-                    except:
-                        pass
+                pass
+#                 for f in files:
+#                     try:
+#                         ssh_client.execute("rm -f {}".format(f))
+#                     except:
+#                         pass
     except KeyboardInterrupt:
         pass
     except Exception as e:

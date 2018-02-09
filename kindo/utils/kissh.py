@@ -96,7 +96,7 @@ class OutputLooper(object):
                 if not bytelist:
                     self._flush()
                     break
-
+                
                 self._flush(bytelist.decode("utf-8"))
         except:
             print(traceback.format_exc())
@@ -160,7 +160,7 @@ class KiSSHClient:
             # if sudo, must use pty. "sudo: sorry, you must have a tty to run sudo"
             return self.exec_command(command, get_pty=sudo)
         except Exception as e:
-            return [], [str(e)]
+            return [], [str(e)], -1
 
     def sudo(self, command, cd=None, envs=None):
         if self.has_sudo is None:
@@ -419,6 +419,7 @@ class KiSSHClient:
             if get_pty:
                 channel.get_pty()
             channel.settimeout(timeout)
+            channel.input_enabled = True
             channel.exec_command(command + "\n")
 
             stdout_buf = []

@@ -116,7 +116,7 @@ class ShellModule(KindoCore):
             ) as ssh_client:
                 while True:
                     for command in commands:
-                        stdouts, stderrs = ssh_client.execute(command)
+                        stdouts, stderrs, status = ssh_client.execute(command)
                         for stdout in stdouts:
                             self.logger.info(stdout)
 
